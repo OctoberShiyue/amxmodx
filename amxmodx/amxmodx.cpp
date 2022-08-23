@@ -4389,9 +4389,8 @@ static cell AMX_NATIVE_CALL ShowSyncHudMsg(AMX *amx, cell *params)
 		for (int i = 1; i <= gpGlobals->maxClients; ++i)
 		{
 			CPlayer *pPlayer = GET_PLAYER_POINTER_I(i);
-
 			int channel;
-			if (pPlayer->ingame)
+			if (pPlayer->ingame && pPlayer->pEdict->pvPrivateData)
 			{
 				g_langMngr.SetDefLang(i);
 				channel = pPlayer->NextHUDChannel();
@@ -4411,7 +4410,7 @@ static cell AMX_NATIVE_CALL ShowSyncHudMsg(AMX *amx, cell *params)
 
 		CPlayer* pPlayer = GET_PLAYER_POINTER_I(index);
 
-		if (pPlayer->ingame)
+		if (pPlayer->ingame  && pPlayer->pEdict->pvPrivateData)
 		{
 			int channel = pPlayer->NextHUDChannel();
 			CheckAndClearPlayerHUD(pPlayer, channel, sync_obj);
