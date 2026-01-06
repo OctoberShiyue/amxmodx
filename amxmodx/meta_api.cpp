@@ -388,6 +388,7 @@ int	C_Spawn(edict_t *pent)
 
 	}
 
+	g_frameActionMngr.clear();
 	g_forwards.clear();
 
 	g_log.MapChange();
@@ -766,6 +767,7 @@ void C_ServerDeactivate_Post()
 	g_forcegeneric.clear();
 	g_grenades.clear();
 	g_tasksMngr.clear();
+	g_frameActionMngr.clear();
 	g_forwards.clear();
 	g_logevents.clearLogEvents();
 	g_events.clearEvents();
@@ -1714,6 +1716,7 @@ C_DLLEXPORT	int	Meta_Detach(PLUG_LOADTIME now, PL_UNLOAD_REASON	reason)
 	modules_callPluginsUnloading();
 
 	g_auth.clear();
+	g_frameActionMngr.clear();
 	g_forwards.clear();
 	g_commands.clear();
 	g_forcemodels.clear();
