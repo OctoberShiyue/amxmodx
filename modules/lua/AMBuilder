@@ -1,0 +1,57 @@
+# vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
+import os.path
+
+binary = AMXX.MetaModule(builder, 'lua')
+
+binary.compiler.defines += [
+  'HAVE_STDINT_H',
+]
+
+binary.compiler.cxxincludes += [
+  os.path.join(builder.currentSourcePath, '..', '..', 'third_party', 'parson')
+]
+ 
+binary.sources = [
+  '../../public/sdk/amxxmodule.cpp',
+  '../../third_party/parson/parson.c',
+  'luaMngr.cpp',
+  'lopcodes.c',
+  'lapi.c',
+  'loslib.c',
+  'lstate.c',
+  'lparser.c',
+  'lmathlib.c',
+  'llex.c',
+  'lmem.c',
+  'lobject.c',
+  'loadlib.c',
+  'lstring.c',
+  'lundump.c',
+  'luac.c',
+  'lutf8lib.c',
+  'lzio.c',
+  'lvm.c',
+  'ltable.c',
+  'lstrlib.c',
+  'ltablib.c',
+  'lua.c',
+  'ltm.c',
+  'lfunc.c',
+  'lcode.c',
+  'lgc.c',
+  'ldump.c',
+  'ldo.c',
+  'lbaselib.c',
+  'ldebug.c',
+  'lcorolib.c',
+  'liolib.c',
+  'lctype.c',
+  'ldblib.c',
+  'lauxlib.c',
+  'linit.c',
+]
+
+if builder.target_platform == 'windows':
+  binary.sources += ['version.rc']
+  
+AMXX.modules += [builder.Add(binary)]
