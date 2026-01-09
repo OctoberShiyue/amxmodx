@@ -4,36 +4,56 @@
 // typedef ke::HashMap<ke::AString, int,int> g_FuncIdMap;
 StringHashMap<int> g_LuaPawnFuncMap;
 
-// 这是一个通用的 C 函数，所有被注册的 Pawn 函数被 Lua 调用时，都会进到这里
 static int Lua_CallPawnFunction_Proxy(lua_State *L)
 {
-    // MF_Log("Lua is calling a Pawn function...%d", lua_tointeger(L, lua_upvalueindex(1)));
-    return MF_ExecuteForward(lua_tointeger(L, lua_upvalueindex(1)), (cell)L);
+    int forwardId = (int)lua_tointeger(L, lua_upvalueindex(1));
+    cell pawn_ret = MF_ExecuteForward(forwardId, (cell)L);
+    return pawn_ret;
 }
 
-// 对应的 Native 实现： lua_register_function(Lua:L, const lua_name[], const pawn_func_name[])
 cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 {
     lua_State *L = (lua_State *)params[1];
+    if (!L) {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Lua_RegisterFunction: Invalid Lua state.");
+        return 0;
+    }
 
+    // 获取字符串 (建议加上非空判断)
     char *luaName = MF_GetAmxString(amx, params[2], 0, NULL);
     char *pawnFuncName = MF_GetAmxString(amx, params[3], 1, NULL);
 
-    if (!g_LuaPawnFuncMap.find(pawnFuncName).found())
+    if (!luaName || !luaName[0] || !pawnFuncName || !pawnFuncName[0])
     {
-        MF_LogError(amx, AMX_ERR_NATIVE, "Lua_RegisterFunction: Pawn function '%s' is not registered.", pawnFuncName);
-        return 0; // Pawn 函数名未注册
+        MF_LogError(amx, AMX_ERR_NATIVE, "Lua_RegisterFunction: Invalid function name(s).");
+        return 0;
     }
 
-    lua_pushinteger(L, g_LuaPawnFuncMap.find(pawnFuncName)->value);
+    // 4. 哈希表查找优化 (只查找一次)
+    // 假设使用的是 ke::HashMap 或类似的 AMTL 结构
+    auto search = g_LuaPawnFuncMap.find(pawnFuncName);
 
-    // MF_Log("Registering Lua function '%s' mapped to Pawn function '%s'", luaName, pawnFuncName);
+    // 检查是否找到
+    if (!search.found())
+    {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Lua_RegisterFunction: Pawn function '%s' is not registered.", pawnFuncName);
+        return 0; 
+    }
 
-    // 2. 创建 C 闭包 (Closure)，它拥有 1 个 Upvalue
-    // 这意味着我们把 Proxy 函数和 Pawn 函数名绑定在一起了
+    // 5. 确保 Lua 栈有足够空间压入 upvalue 和 closure
+    if (!lua_checkstack(L, 3)) 
+    {
+        MF_LogError(amx, AMX_ERR_NATIVE, "Lua_RegisterFunction: Lua stack overflow.");
+        return 0;
+    }
+
+    // 使用查找结果 (value)
+    lua_pushinteger(L, search->value);
+
+    // 创建 C 闭包 (1个 upvalue)
     lua_pushcclosure(L, Lua_CallPawnFunction_Proxy, 1);
 
-    // 3. 设置为全局变量 (即 Lua 函数名)
+    // 设置为全局变量
     lua_setglobal(L, luaName);
 
     return 1;
