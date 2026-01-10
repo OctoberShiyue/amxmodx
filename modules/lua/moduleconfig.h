@@ -106,56 +106,56 @@
 
 // (wd) are Will Day's notes
 // - GetEntityAPI2 functions
-// #define FN_GameDLLInit				GameDLLInit					/* pfnGameInit() */
-// #define FN_DispatchSpawn				DispatchSpawn				/* pfnSpawn() */
-// #define FN_DispatchThink				DispatchThink				/* pfnThink() */
-// #define FN_DispatchUse				DispatchUse					/* pfnUse() */
-// #define FN_DispatchTouch				DispatchTouch				/* pfnTouch() */
-// #define FN_DispatchBlocked			DispatchBlocked				/* pfnBlocked() */
-// #define FN_DispatchKeyValue			DispatchKeyValue			/* pfnKeyValue() */
-// #define FN_DispatchSave				DispatchSave				/* pfnSave() */
-// #define FN_DispatchRestore			DispatchRestore				/* pfnRestore() */
-// #define FN_DispatchObjectCollsionBox	DispatchObjectCollsionBox	/* pfnSetAbsBox() */
-// #define FN_SaveWriteFields			SaveWriteFields				/* pfnSaveWriteFields() */
-// #define FN_SaveReadFields			SaveReadFields				/* pfnSaveReadFields() */
-// #define FN_SaveGlobalState			SaveGlobalState				/* pfnSaveGlobalState() */
-// #define FN_RestoreGlobalState		RestoreGlobalState			/* pfnRestoreGlobalState() */
-// #define FN_ResetGlobalState			ResetGlobalState			/* pfnResetGlobalState() */
-// #define FN_ClientConnect				ClientConnect				/* pfnClientConnect()			(wd) Client has connected */
-// #define FN_ClientDisconnect			ClientDisconnect			/* pfnClientDisconnect()		(wd) Player has left the game */
-// #define FN_ClientKill				ClientKill					/* pfnClientKill()				(wd) Player has typed "kill" */
-// #define FN_ClientPutInServer			ClientPutInServer			/* pfnClientPutInServer()		(wd) Client is entering the game */
-// #define FN_ClientCommand				ClientCommand				/* pfnClientCommand()			(wd) Player has sent a command (typed or from a bind) */
-// #define FN_ClientUserInfoChanged		ClientUserInfoChanged		/* pfnClientUserInfoChanged()	(wd) Client has updated their setinfo structure */
-// #define FN_ServerActivate			ServerActivate				/* pfnServerActivate()			(wd) Server is starting a new map */
-// #define FN_ServerDeactivate			ServerDeactivate			/* pfnServerDeactivate()		(wd) Server is leaving the map (shutdown or changelevel); SDK2 */
-// #define FN_PlayerPreThink			PlayerPreThink				/* pfnPlayerPreThink() */
-// #define FN_PlayerPostThink			PlayerPostThink				/* pfnPlayerPostThink() */
-// #define FN_StartFrame				StartFrame					/* pfnStartFrame() */
-// #define FN_ParmsNewLevel				ParmsNewLevel				/* pfnParmsNewLevel() */
-// #define FN_ParmsChangeLevel			ParmsChangeLevel			/* pfnParmsChangeLevel() */
-// #define FN_GetGameDescription		GetGameDescription			/* pfnGetGameDescription()		Returns string describing current .dll.  E.g. "TeamFotrress 2" "Half-Life" */
-// #define FN_PlayerCustomization		PlayerCustomization			/* pfnPlayerCustomization()	Notifies .dll of new customization for player. */
-// #define FN_SpectatorConnect			SpectatorConnect			/* pfnSpectatorConnect()		Called when spectator joins server */
-// #define FN_SpectatorDisconnect		SpectatorDisconnect			/* pfnSpectatorDisconnect()	Called when spectator leaves the server */
-// #define FN_SpectatorThink			SpectatorThink				/* pfnSpectatorThink()			Called when spectator sends a command packet (usercmd_t) */
-// #define FN_Sys_Error					Sys_Error					/* pfnSys_Error()				Notify game .dll that engine is going to shut down.  Allows mod authors to set a breakpoint.  SDK2 */
-// #define FN_PM_Move					PM_Move						/* pfnPM_Move()				(wd) SDK2 */
-// #define FN_PM_Init					PM_Init						/* pfnPM_Init()				Server version of player movement initialization; (wd) SDK2 */
+#define FN_GameDLLInit				GameDLLInit					/* pfnGameInit() */
+#define FN_DispatchSpawn				DispatchSpawn				/* pfnSpawn() */
+#define FN_DispatchThink				DispatchThink				/* pfnThink() */
+#define FN_DispatchUse				DispatchUse					/* pfnUse() */
+#define FN_DispatchTouch				DispatchTouch				/* pfnTouch() */
+#define FN_DispatchBlocked			DispatchBlocked				/* pfnBlocked() */
+#define FN_DispatchKeyValue			DispatchKeyValue			/* pfnKeyValue() */
+#define FN_DispatchSave				DispatchSave				/* pfnSave() */
+#define FN_DispatchRestore			DispatchRestore				/* pfnRestore() */
+#define FN_DispatchObjectCollsionBox	DispatchObjectCollsionBox	/* pfnSetAbsBox() */
+#define FN_SaveWriteFields			SaveWriteFields				/* pfnSaveWriteFields() */
+#define FN_SaveReadFields			SaveReadFields				/* pfnSaveReadFields() */
+#define FN_SaveGlobalState			SaveGlobalState				/* pfnSaveGlobalState() */
+#define FN_RestoreGlobalState		RestoreGlobalState			/* pfnRestoreGlobalState() */
+#define FN_ResetGlobalState			ResetGlobalState			/* pfnResetGlobalState() */
+#define FN_ClientConnect				ClientConnect				/* pfnClientConnect()			(wd) Client has connected */
+#define FN_ClientDisconnect			ClientDisconnect			/* pfnClientDisconnect()		(wd) Player has left the game */
+#define FN_ClientKill				ClientKill					/* pfnClientKill()				(wd) Player has typed "kill" */
+#define FN_ClientPutInServer			ClientPutInServer			/* pfnClientPutInServer()		(wd) Client is entering the game */
+#define FN_ClientCommand				ClientCommand				/* pfnClientCommand()			(wd) Player has sent a command (typed or from a bind) */
+#define FN_ClientUserInfoChanged		ClientUserInfoChanged		/* pfnClientUserInfoChanged()	(wd) Client has updated their setinfo structure */
+#define FN_ServerActivate			ServerActivate				/* pfnServerActivate()			(wd) Server is starting a new map */
+#define FN_ServerDeactivate			ServerDeactivate			/* pfnServerDeactivate()		(wd) Server is leaving the map (shutdown or changelevel); SDK2 */
+#define FN_PlayerPreThink			PlayerPreThink				/* pfnPlayerPreThink() */
+#define FN_PlayerPostThink			PlayerPostThink				/* pfnPlayerPostThink() */
+#define FN_StartFrame				StartFrame					/* pfnStartFrame() */
+#define FN_ParmsNewLevel				ParmsNewLevel				/* pfnParmsNewLevel() */
+#define FN_ParmsChangeLevel			ParmsChangeLevel			/* pfnParmsChangeLevel() */
+#define FN_GetGameDescription		GetGameDescription			/* pfnGetGameDescription()		Returns string describing current .dll.  E.g. "TeamFotrress 2" "Half-Life" */
+#define FN_PlayerCustomization		PlayerCustomization			/* pfnPlayerCustomization()	Notifies .dll of new customization for player. */
+#define FN_SpectatorConnect			SpectatorConnect			/* pfnSpectatorConnect()		Called when spectator joins server */
+#define FN_SpectatorDisconnect		SpectatorDisconnect			/* pfnSpectatorDisconnect()	Called when spectator leaves the server */
+#define FN_SpectatorThink			SpectatorThink				/* pfnSpectatorThink()			Called when spectator sends a command packet (usercmd_t) */
+#define FN_Sys_Error					Sys_Error					/* pfnSys_Error()				Notify game .dll that engine is going to shut down.  Allows mod authors to set a breakpoint.  SDK2 */
+#define FN_PM_Move					PM_Move						/* pfnPM_Move()				(wd) SDK2 */
+#define FN_PM_Init					PM_Init						/* pfnPM_Init()				Server version of player movement initialization; (wd) SDK2 */
 // #define FN_PM_FindTextureType		PM_FindTextureType			/* pfnPM_FindTextureType()		(wd) SDK2 */
-// #define FN_SetupVisibility			SetupVisibility				/* pfnSetupVisibility()		Set up PVS and PAS for networking for this client; (wd) SDK2 */
-// #define FN_UpdateClientData			UpdateClientData			/* pfnUpdateClientData()		Set up data sent only to specific client; (wd) SDK2 */
-// #define FN_AddToFullPack				AddToFullPack				/* pfnAddToFullPack()			(wd) SDK2 */
-// #define FN_CreateBaseline			CreateBaseline				/* pfnCreateBaseline()			Tweak entity baseline for network encoding allows setup of player baselines too.; (wd) SDK2 */
-// #define FN_RegisterEncoders			RegisterEncoders			/* pfnRegisterEncoders()		Callbacks for network encoding; (wd) SDK2 */
-// #define FN_GetWeaponData				GetWeaponData				/* pfnGetWeaponData()			(wd) SDK2 */
-// #define FN_CmdStart					CmdStart					/* pfnCmdStart()				(wd) SDK2 */
-// #define FN_CmdEnd					CmdEnd						/* pfnCmdEnd()					(wd) SDK2 */
-// #define FN_ConnectionlessPacket		ConnectionlessPacket		/* pfnConnectionlessPacket()	(wd) SDK2 */
-// #define FN_GetHullBounds				GetHullBounds				/* pfnGetHullBounds()			(wd) SDK2 */
-// #define FN_CreateInstancedBaselines	CreateInstancedBaselines	/* pfnCreateInstancedBaselines()	(wd) SDK2 */
-// #define FN_InconsistentFile			InconsistentFile			/* pfnInconsistentFile()		(wd) SDK2 */
-// #define FN_AllowLagCompensation		AllowLagCompensation		/* pfnAllowLagCompensation()	(wd) SDK2 */
+#define FN_SetupVisibility			SetupVisibility				/* pfnSetupVisibility()		Set up PVS and PAS for networking for this client; (wd) SDK2 */
+#define FN_UpdateClientData			UpdateClientData			/* pfnUpdateClientData()		Set up data sent only to specific client; (wd) SDK2 */
+#define FN_AddToFullPack				AddToFullPack				/* pfnAddToFullPack()			(wd) SDK2 */
+#define FN_CreateBaseline			CreateBaseline				/* pfnCreateBaseline()			Tweak entity baseline for network encoding allows setup of player baselines too.; (wd) SDK2 */
+#define FN_RegisterEncoders			RegisterEncoders			/* pfnRegisterEncoders()		Callbacks for network encoding; (wd) SDK2 */
+#define FN_GetWeaponData				GetWeaponData				/* pfnGetWeaponData()			(wd) SDK2 */
+#define FN_CmdStart					CmdStart					/* pfnCmdStart()				(wd) SDK2 */
+#define FN_CmdEnd					CmdEnd						/* pfnCmdEnd()					(wd) SDK2 */
+#define FN_ConnectionlessPacket		ConnectionlessPacket		/* pfnConnectionlessPacket()	(wd) SDK2 */
+#define FN_GetHullBounds				GetHullBounds				/* pfnGetHullBounds()			(wd) SDK2 */
+#define FN_CreateInstancedBaselines	CreateInstancedBaselines	/* pfnCreateInstancedBaselines()	(wd) SDK2 */
+#define FN_InconsistentFile			InconsistentFile			/* pfnInconsistentFile()		(wd) SDK2 */
+#define FN_AllowLagCompensation		AllowLagCompensation		/* pfnAllowLagCompensation()	(wd) SDK2 */
 
 // - GetEntityAPI2_Post functions
 // #define FN_GameDLLInit_Post					GameDLLInit_Post
