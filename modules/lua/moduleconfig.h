@@ -44,7 +44,7 @@
 };*/
 
 // metamod plugin?
-// #define USE_METAMOD
+#define USE_METAMOD
 
 // use memory manager/tester?
 // note that if you use this, you cannot construct/allocate
@@ -100,7 +100,7 @@
 // Meta query
 //#define FN_META_QUERY OnMetaQuery
 // Meta attach
-//#define FN_META_ATTACH OnMetaAttach
+// #define FN_META_ATTACH OnMetaAttach
 // Meta dettach
 //#define FN_META_DETACH OnMetaDetach
 
