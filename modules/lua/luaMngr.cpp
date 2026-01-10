@@ -208,6 +208,7 @@ cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 // ---------------------------------------------------------
 void InitLuaAPI(lua_State* L) {
     lua_register(L, "GetEntityVar", L_GetEntityVar);
+    lua_register(L, "amxx_get_gametime", L_get_gametime);
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   
