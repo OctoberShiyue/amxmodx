@@ -4,8 +4,8 @@
 // 命名空间 ke 是 AMTL 的默认命名空间
 
 lua_State *g_L = nullptr;
-float g_fCurrentTime;
-float g_fNextActionTime;
+// float g_fCurrentTime;
+// float g_fNextActionTime;
 // typedef ke::HashMap<ke::AString, int,int> g_FuncIdMap;
 StringHashMap<int> g_LuaPawnFuncMap;
 
@@ -130,6 +130,11 @@ static int L_GetEntityVar(lua_State* L)
     }
 
     return 0;
+}
+static int L_get_gametime(lua_State* L)
+{
+    lua_pushnumber(L, gpGlobals->time);
+    return 1;
 }
 
 static int Lua_CallPawnFunction_Proxy(lua_State *L)
