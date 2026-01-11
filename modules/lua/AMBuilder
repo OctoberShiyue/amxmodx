@@ -14,6 +14,11 @@ binary.compiler.cxxincludes += [
 binary.sources = [
   '../../public/sdk/amxxmodule.cpp',
   '../../third_party/parson/parson.c',
+  '../../public/memtools/MemoryUtils.cpp',
+  '../../public/memtools/CDetour/detours.cpp',
+  '../../public/memtools/CDetour/asm/asm.c',
+  '../../public/resdk/mod_rehlds_api.cpp',
+  '../../public/resdk/mod_regamedll_api.cpp',
   'luaMngr.cpp',
   'lopcodes.c',
   'lapi.c',

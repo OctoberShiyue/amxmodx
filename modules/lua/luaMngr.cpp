@@ -1,5 +1,7 @@
 
 #include "luaMngr.h"
+bool HasReHlds;
+bool HasReGameDll;
 
 // 命名空间 ke 是 AMTL 的默认命名空间
 
@@ -624,6 +626,11 @@ AMX_NATIVE_INFO LuaNatives[] = {
 
 void OnAmxxAttach()
 {
+    HasReHlds    = RehldsApi_Init();
+	HasReGameDll = RegamedllApi_Init();
+
+    ReGameHookchains->CBasePlayer_Killed()->registerHook(&CBasePlayer_Killed,HC_PRIORITY_HIGH);
+
     MF_AddNatives(LuaNatives);
     g_EntVarMap.clear();
     // 初始化容量 (2的幂次方，比如 64, 128)
@@ -12306,4 +12313,11 @@ int ShouldCollide_Post(edict_t *pentTouched, edict_t *pentOther)
 
     lua_pop(g_L, 1);
     RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+
+
+void CBasePlayer_Killed(IReGameHook_CBasePlayer_Killed *chain, CBasePlayer *pthis, entvars_t *pevAttacker, int iGib)
+{
+    printf("zzzzzzzzCBasePlayer_Killed_Post called!=%d=%d\n",ENTINDEX(((CCSPlayer*)pthis)->pev->pContainingEntity),ENTINDEX(pevAttacker->pContainingEntity));
+	chain->callNext(pthis, pevAttacker, iGib);
 }

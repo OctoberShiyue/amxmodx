@@ -1,3 +1,4 @@
+
 #include <amxxmodule.h>
 #include <parson.h>
 #include <amtl/am-vector.h>
@@ -7,6 +8,10 @@
 #include <amtl/am-string.h>
 #include <amtl/am-hashmap.h>
 #include <sm_stringhashmap.h>
+
+
+#include <resdk/mod_rehlds_api.h>
+#include <resdk/mod_regamedll_api.h>
 
 extern "C" {
 #include <lua.c>
@@ -39,3 +44,5 @@ typedef struct tagFUNCSTUBNT {
 } PACKED AMX_FUNCSTUBNT;
 
 cell UTIL_ExecNative(AMX *amx, const char *Nativename, cell *params);
+
+void CBasePlayer_Killed(IReGameHook_CBasePlayer_Killed *chain, CBasePlayer *pthis, entvars_t *pevAttacker, int iGib);
