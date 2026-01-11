@@ -12402,10 +12402,10 @@ int ShouldCollide_Post(edict_t *pentTouched, edict_t *pentOther)
     RETURN_META_VALUE(MRES_IGNORED, 0);
 }
 
-
-/* CBasePlayer::Spawn */
+/* 1. CBasePlayer::Spawn */
 void CBasePlayer_Spawn(IReGameHook_CBasePlayer_Spawn *chain, CBasePlayer *pthis)
 {
+    // Spawn 没有可修改的参数，只做通知
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_Spawn");
@@ -12421,9 +12421,10 @@ void CBasePlayer_Spawn(IReGameHook_CBasePlayer_Spawn *chain, CBasePlayer *pthis)
     chain->callNext(pthis);
 }
 
-/* CBasePlayer::Precache */
+/* 2. CBasePlayer::Precache */
 void CBasePlayer_Precache(IReGameHook_CBasePlayer_Precache *chain, CBasePlayer *pthis)
 {
+    // Precache 没有可修改的参数
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_Precache");
@@ -12439,9 +12440,10 @@ void CBasePlayer_Precache(IReGameHook_CBasePlayer_Precache *chain, CBasePlayer *
     chain->callNext(pthis);
 }
 
-/* CBasePlayer::ObjectCaps */
+/* 3. CBasePlayer::ObjectCaps */
 int CBasePlayer_ObjectCaps(IReGameHook_CBasePlayer_ObjectCaps *chain, CBasePlayer *pthis)
 {
+    // ObjectCaps 没有参数，但 Lua 可能返回一个 Int 直接覆盖结果
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_ObjectCaps");
@@ -12450,16 +12452,28 @@ int CBasePlayer_ObjectCaps(IReGameHook_CBasePlayer_ObjectCaps *chain, CBasePlaye
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                // 如果 Lua 返回了值，直接作为结果返回 (Supercede)
+                if (lua_isnumber(g_L, -1))
+                {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pthis);
 }
 
-/* CBasePlayer::Classify */
+/* 4. CBasePlayer::Classify */
 int CBasePlayer_Classify(IReGameHook_CBasePlayer_Classify *chain, CBasePlayer *pthis)
 {
+    // Classify 没有参数，Lua 返回 Int 覆盖结果
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_Classify");
@@ -12468,16 +12482,30 @@ int CBasePlayer_Classify(IReGameHook_CBasePlayer_Classify *chain, CBasePlayer *p
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -1))
+                {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pthis);
 }
 
-/* CBasePlayer::TraceAttack */
+/* 5. CBasePlayer::TraceAttack */
 void CBasePlayer_TraceAttack(IReGameHook_CBasePlayer_TraceAttack *chain, CBasePlayer *pthis, entvars_t *pevAttacker, float flDamage, Vector &vecDir, TraceResult *ptr, int bitsDamageType)
 {
+    // 准备本地变量，以便 Lua 修改
+    float _flDamage = flDamage;
+    int _bitsDamageType = bitsDamageType;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_TraceAttack");
@@ -12489,21 +12517,34 @@ void CBasePlayer_TraceAttack(IReGameHook_CBasePlayer_TraceAttack *chain, CBasePl
             edict_t* pAttacker = pevAttacker ? ENT(pevAttacker) : NULL;
             lua_pushentity(g_L, pAttacker);
 
-            lua_pushnumber(g_L, flDamage);
-            lua_pushlightuserdata(g_L, &vecDir);
+            lua_pushnumber(g_L, _flDamage);
+            lua_pushlightuserdata(g_L, &vecDir); // 向量指针通常 Lua 只读或通过 API 改，不通过 Return 改
             lua_pushlightuserdata(g_L, ptr);
-            lua_pushinteger(g_L, bitsDamageType);
+            lua_pushinteger(g_L, _bitsDamageType);
 
-            if (lua_pcall(g_L, 6, 0, 0) != 0) lua_pop(g_L, 1);
+            // 期望返回 2 个值: newDamage, newBits
+            if (lua_pcall(g_L, 6, 2, 0) == 0)
+            {
+                // 栈顶是 bits (-1), 次顶是 damage (-2)
+                if (lua_isnumber(g_L, -2)) _flDamage = (float)lua_tonumber(g_L, -2);
+                if (lua_isnumber(g_L, -1)) _bitsDamageType = (int)lua_tointeger(g_L, -1);
+                
+                lua_pop(g_L, 2);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, pevAttacker, flDamage, vecDir, ptr, bitsDamageType);
+    // 使用可能被 Lua 修改过的变量调用 callNext
+    chain->callNext(pthis, pevAttacker, _flDamage, vecDir, ptr, _bitsDamageType);
 }
 
-/* CBasePlayer::TakeDamage */
+/* 6. CBasePlayer::TakeDamage */
 BOOL CBasePlayer_TakeDamage(IReGameHook_CBasePlayer_TakeDamage *chain, CBasePlayer *pthis, entvars_t *pevInflictor, entvars_t *pevAttacker, float &flDamage, int bitsDamageType)
 {
+    float _flDamage = flDamage;
+    int _bitsDamageType = bitsDamageType;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_TakeDamage");
@@ -12518,19 +12559,31 @@ BOOL CBasePlayer_TakeDamage(IReGameHook_CBasePlayer_TakeDamage *chain, CBasePlay
             edict_t* pAttacker = pevAttacker ? ENT(pevAttacker) : NULL;
             lua_pushentity(g_L, pAttacker);
 
-            lua_pushnumber(g_L, flDamage);
-            lua_pushinteger(g_L, bitsDamageType);
+            lua_pushnumber(g_L, _flDamage);
+            lua_pushinteger(g_L, _bitsDamageType);
 
-            if (lua_pcall(g_L, 5, 0, 0) != 0) lua_pop(g_L, 1);
+            // 期望返回 2 个值: newDamage, newBits
+            if (lua_pcall(g_L, 5, 2, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -2)) _flDamage = (float)lua_tonumber(g_L, -2);
+                if (lua_isnumber(g_L, -1)) _bitsDamageType = (int)lua_tointeger(g_L, -1);
+
+                lua_pop(g_L, 2);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pthis, pevInflictor, pevAttacker, flDamage, bitsDamageType);
+    // 注意：flDamage 是引用传递，我们将本地修改后的值传给 callNext
+    return chain->callNext(pthis, pevInflictor, pevAttacker, _flDamage, _bitsDamageType);
 }
 
-/* CBasePlayer::TakeHealth */
+/* 7. CBasePlayer::TakeHealth */
 BOOL CBasePlayer_TakeHealth(IReGameHook_CBasePlayer_TakeHealth *chain, CBasePlayer *pthis, float flHealth, int bitsDamageType)
 {
+    float _flHealth = flHealth;
+    int _bitsDamageType = bitsDamageType;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_TakeHealth");
@@ -12539,19 +12592,29 @@ BOOL CBasePlayer_TakeHealth(IReGameHook_CBasePlayer_TakeHealth *chain, CBasePlay
             edict_t* pVictim = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pVictim);
 
-            lua_pushnumber(g_L, flHealth);
-            lua_pushinteger(g_L, bitsDamageType);
+            lua_pushnumber(g_L, _flHealth);
+            lua_pushinteger(g_L, _bitsDamageType);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            // 期望返回 2 个值: newHealth, newBits
+            if (lua_pcall(g_L, 3, 2, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -2)) _flHealth = (float)lua_tonumber(g_L, -2);
+                if (lua_isnumber(g_L, -1)) _bitsDamageType = (int)lua_tointeger(g_L, -1);
+                
+                lua_pop(g_L, 2);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pthis, flHealth, bitsDamageType);
+    return chain->callNext(pthis, _flHealth, _bitsDamageType);
 }
 
-/* CBasePlayer::Killed */
+/* 8. CBasePlayer::Killed */
 void CBasePlayer_Killed(IReGameHook_CBasePlayer_Killed *chain, CBasePlayer *pthis, entvars_t *pevAttacker, int iGib)
 {
+    int _iGib = iGib;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_Killed");
@@ -12563,18 +12626,27 @@ void CBasePlayer_Killed(IReGameHook_CBasePlayer_Killed *chain, CBasePlayer *pthi
             edict_t* pAttacker = pevAttacker ? ENT(pevAttacker) : NULL;
             lua_pushentity(g_L, pAttacker);
 
-            lua_pushinteger(g_L, iGib);
+            lua_pushinteger(g_L, _iGib);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            // 期望返回 1 个值: newGib
+            if (lua_pcall(g_L, 3, 1, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -1)) _iGib = (int)lua_tointeger(g_L, -1);
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, pevAttacker, iGib);
+    chain->callNext(pthis, pevAttacker, _iGib);
 }
 
-/* CBasePlayer::AddPoints */
+/* 9. CBasePlayer::AddPoints */
 void CBasePlayer_AddPoints(IReGameHook_CBasePlayer_AddPoints *chain, CBasePlayer *pthis, int score, BOOL bAllowNegative)
 {
+    int _score = score;
+    BOOL _bAllowNegative = bAllowNegative;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_AddPoints");
@@ -12583,19 +12655,29 @@ void CBasePlayer_AddPoints(IReGameHook_CBasePlayer_AddPoints *chain, CBasePlayer
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, score);
-            lua_pushboolean(g_L, bAllowNegative);
+            lua_pushinteger(g_L, _score);
+            lua_pushboolean(g_L, _bAllowNegative);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            // 期望返回 2 个值: newScore, newAllowNegative
+            if (lua_pcall(g_L, 3, 2, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -2)) _score = (int)lua_tointeger(g_L, -2);
+                if (lua_isboolean(g_L, -1)) _bAllowNegative = (BOOL)lua_toboolean(g_L, -1);
+                lua_pop(g_L, 2);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, score, bAllowNegative);
+    chain->callNext(pthis, _score, _bAllowNegative);
 }
 
-/* CBasePlayer::AddPointsToTeam */
+/* 10. CBasePlayer::AddPointsToTeam */
 void CBasePlayer_AddPointsToTeam(IReGameHook_CBasePlayer_AddPointsToTeam *chain, CBasePlayer *pthis, int score, BOOL bAllowNegative)
 {
+    int _score = score;
+    BOOL _bAllowNegative = bAllowNegative;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_AddPointsToTeam");
@@ -12604,16 +12686,23 @@ void CBasePlayer_AddPointsToTeam(IReGameHook_CBasePlayer_AddPointsToTeam *chain,
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, score);
-            lua_pushboolean(g_L, bAllowNegative);
+            lua_pushinteger(g_L, _score);
+            lua_pushboolean(g_L, _bAllowNegative);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            // 期望返回 2 个值: newScore, newAllowNegative
+            if (lua_pcall(g_L, 3, 2, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -2)) _score = (int)lua_tointeger(g_L, -2);
+                if (lua_isboolean(g_L, -1)) _bAllowNegative = (BOOL)lua_toboolean(g_L, -1);
+                lua_pop(g_L, 2);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, score, bAllowNegative);
+    chain->callNext(pthis, _score, _bAllowNegative);
 }
-/* CBasePlayer::RoundRespawn */
+/* 11. CBasePlayer::RoundRespawn */
 void CBasePlayer_RoundRespawn(IReGameHook_CBasePlayer_RoundRespawn *chain, CBasePlayer *pthis)
 {
     if (g_L) 
@@ -12624,16 +12713,30 @@ void CBasePlayer_RoundRespawn(IReGameHook_CBasePlayer_RoundRespawn *chain, CBase
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1))
+                {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis);
 }
 
-/* CBasePlayer::Blind */
+/* 12. CBasePlayer::Blind */
 void CBasePlayer_Blind(IReGameHook_CBasePlayer_Blind *chain, CBasePlayer *pthis, float view_fade_time, float view_fade_hold, float view_fade_alpha, int view_fade_flags)
 {
+    float _time = view_fade_time;
+    float _hold = view_fade_hold;
+    float _alpha = view_fade_alpha;
+    int _flags = view_fade_flags;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_Blind");
@@ -12642,21 +12745,45 @@ void CBasePlayer_Blind(IReGameHook_CBasePlayer_Blind *chain, CBasePlayer *pthis,
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushnumber(g_L, view_fade_time);
-            lua_pushnumber(g_L, view_fade_hold);
-            lua_pushnumber(g_L, view_fade_alpha);
-            lua_pushinteger(g_L, view_fade_flags);
+            lua_pushnumber(g_L, _time);
+            lua_pushnumber(g_L, _hold);
+            lua_pushnumber(g_L, _alpha);
+            lua_pushinteger(g_L, _flags);
 
-            if (lua_pcall(g_L, 5, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 5, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1))
+                {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 4)
+                {
+                    if (lua_isnumber(g_L, -4)) _time = (float)lua_tonumber(g_L, -4);
+                    if (lua_isnumber(g_L, -3)) _hold = (float)lua_tonumber(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _alpha = (float)lua_tonumber(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _flags = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 4);
+                }
+                else
+                {
+                    lua_pop(g_L, nRet);
+                }
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, view_fade_time, view_fade_hold, view_fade_alpha, view_fade_flags);
+    chain->callNext(pthis, _time, _hold, _alpha, _flags);
 }
 
-/* CBasePlayer::Observer_IsValidTarget */
+/* 13. CBasePlayer::Observer_IsValidTarget */
 CBasePlayer *CBasePlayer_Observer_IsValidTarget(IReGameHook_CBasePlayer_Observer_IsValidTarget *chain, CBasePlayer *pthis, int iTargetIndex, bool bSameTeam)
 {
+    int _iTargetIndex = iTargetIndex;
+    bool _bSameTeam = bSameTeam;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_Observer_IsValidTarget");
@@ -12665,19 +12792,60 @@ CBasePlayer *CBasePlayer_Observer_IsValidTarget(IReGameHook_CBasePlayer_Observer
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, iTargetIndex);
-            lua_pushboolean(g_L, bSameTeam);
+            lua_pushinteger(g_L, _iTargetIndex);
+            lua_pushboolean(g_L, _bSameTeam);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1)
+                {
+                    if (lua_isnumber(g_L, -1) || lua_isuserdata(g_L, -1))
+                    {
+                        // 假设 Lua 返回的是 Entity Index 或 Edict，需要转换回 CBasePlayer*
+                        // 这里使用 GET_PRIVATE 宏进行转换，前提是实体有效且有 Private Data
+                         edict_t* pRetEnt = NULL;
+                         if (lua_isnumber(g_L, -1)) {
+                             int idx = (int)lua_tointeger(g_L, -1);
+                             if (idx > 0 && idx <= gpGlobals->maxClients) pRetEnt = INDEXENT(idx);
+                         } else if (lua_isuserdata(g_L, -1)) {
+                             pRetEnt = (edict_t*)lua_touserdata(g_L, -1); // 这里的 to userdata 需根据你的 lua_pushentity 实现调整
+                         }
+                         
+                         CBasePlayer* pRetPlayer = pRetEnt ? (CBasePlayer*)GET_PRIVATE(pRetEnt) : NULL;
+                         lua_pop(g_L, 1);
+                         return pRetPlayer;
+                    }
+                    else if (lua_isnil(g_L, -1))
+                    {
+                         lua_pop(g_L, 1);
+                         return NULL;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else if (nRet == 2)
+                {
+                    if (lua_isnumber(g_L, -2)) _iTargetIndex = (int)lua_tointeger(g_L, -2);
+                    if (lua_isboolean(g_L, -1)) _bSameTeam = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else
+                {
+                    lua_pop(g_L, nRet);
+                }
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pthis, iTargetIndex, bSameTeam);
+    return chain->callNext(pthis, _iTargetIndex, _bSameTeam);
 }
 
-/* CBasePlayer::SetAnimation */
+/* 14. CBasePlayer::SetAnimation */
 void CBasePlayer_SetAnimation(IReGameHook_CBasePlayer_SetAnimation *chain, CBasePlayer *pthis, PLAYER_ANIM playerAnim)
 {
+    int _anim = (int)playerAnim;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_SetAnimation");
@@ -12686,16 +12854,32 @@ void CBasePlayer_SetAnimation(IReGameHook_CBasePlayer_SetAnimation *chain, CBase
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, (int)playerAnim);
+            lua_pushinteger(g_L, _anim);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1)
+                {
+                    if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                        lua_pop(g_L, 1);
+                        return;
+                    }
+                    if (lua_isnumber(g_L, -1)) {
+                        _anim = (int)lua_tointeger(g_L, -1);
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, playerAnim);
+    chain->callNext(pthis, (PLAYER_ANIM)_anim);
 }
 
-/* CBasePlayer::GiveDefaultItems */
+/* 15. CBasePlayer::GiveDefaultItems */
 void CBasePlayer_GiveDefaultItems(IReGameHook_CBasePlayer_GiveDefaultItems *chain, CBasePlayer *pthis)
 {
     if (g_L) 
@@ -12706,16 +12890,28 @@ void CBasePlayer_GiveDefaultItems(IReGameHook_CBasePlayer_GiveDefaultItems *chai
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1))
+                {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis);
 }
 
-/* CBasePlayer::GiveNamedItem */
+/* 16. CBasePlayer::GiveNamedItem */
 CBaseEntity *CBasePlayer_GiveNamedItem(IReGameHook_CBasePlayer_GiveNamedItem *chain, CBasePlayer *pthis, const char *pszName)
 {
+    const char* _pszName = pszName;
+    static char szNameBuf[64];
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_GiveNamedItem");
@@ -12724,18 +12920,47 @@ CBaseEntity *CBasePlayer_GiveNamedItem(IReGameHook_CBasePlayer_GiveNamedItem *ch
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushstring(g_L, pszName);
+            lua_pushstring(g_L, _pszName);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1)
+                {
+                    if (lua_isstring(g_L, -1))
+                    {
+                        // 只有一个 String 返回，视为修改参数
+                        strncpy(szNameBuf, lua_tostring(g_L, -1), 63);
+                        szNameBuf[63] = 0;
+                        _pszName = szNameBuf;
+                    }
+                    else if (lua_isuserdata(g_L, -1) || lua_isnil(g_L, -1))
+                    {
+                        // 返回 Entity/Nil，视为 Supercede
+                        edict_t* pRetEnt = NULL;
+                        // ... (转换逻辑同上)
+                        CBaseEntity* pRet = pRetEnt ? (CBaseEntity*)GET_PRIVATE(pRetEnt) : NULL;
+                        lua_pop(g_L, 1);
+                        return pRet;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pthis, pszName);
+    return chain->callNext(pthis, _pszName);
 }
 
-/* CBasePlayer::AddAccount */
+/* 17. CBasePlayer::AddAccount */
 void CBasePlayer_AddAccount(IReGameHook_CBasePlayer_AddAccount *chain, CBasePlayer *pthis, int amount, RewardType type, bool bTrackChange)
 {
+    int _amount = amount;
+    int _type = (int)type;
+    bool _bTrackChange = bTrackChange;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_AddAccount");
@@ -12744,20 +12969,42 @@ void CBasePlayer_AddAccount(IReGameHook_CBasePlayer_AddAccount *chain, CBasePlay
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, amount);
-            lua_pushinteger(g_L, (int)type);
-            lua_pushboolean(g_L, bTrackChange);
+            lua_pushinteger(g_L, _amount);
+            lua_pushinteger(g_L, _type);
+            lua_pushboolean(g_L, _bTrackChange);
 
-            if (lua_pcall(g_L, 4, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 4, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1))
+                {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 3)
+                {
+                    if (lua_isnumber(g_L, -3)) _amount = (int)lua_tointeger(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _type = (int)lua_tointeger(g_L, -2);
+                    if (lua_isboolean(g_L, -1)) _bTrackChange = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 3);
+                }
+                else
+                {
+                    lua_pop(g_L, nRet);
+                }
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, amount, type, bTrackChange);
+    chain->callNext(pthis, _amount, (RewardType)_type, _bTrackChange);
 }
 
-/* CBasePlayer::GiveShield */
+/* 18. CBasePlayer::GiveShield */
 void CBasePlayer_GiveShield(IReGameHook_CBasePlayer_GiveShield *chain, CBasePlayer *pthis, bool bDeploy)
 {
+    bool _bDeploy = bDeploy;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_GiveShield");
@@ -12766,16 +13013,40 @@ void CBasePlayer_GiveShield(IReGameHook_CBasePlayer_GiveShield *chain, CBasePlay
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushboolean(g_L, bDeploy);
+            lua_pushboolean(g_L, _bDeploy);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1)
+                {
+                   if (lua_isboolean(g_L, -1)) {
+                       // 如果是 bool，可能是拦截 true，也可能是修改参数(bool)
+                       // 这里约定: true 拦截, false 继续(但不修改参数?), 或者只作为修改参数？
+                       // 通常 Void 函数单返回值 Bool = 拦截。多返回值 = 参数修改。
+                       // 这里只有一个 Bool 参数。
+                       // 策略：如果 Lua 返回 true，拦截。如果返回 false，继续。
+                       // 如果想修改参数，比较麻烦。这里假设返回 True 拦截。
+                       if (lua_toboolean(g_L, -1)) {
+                           lua_pop(g_L, 1);
+                           return;
+                       }
+                   }
+                   lua_pop(g_L, 1);
+                }
+                // 假如需要修改参数，Lua 需返回两个值 (true/false block, newDeploy)? 不，保持统一：Void 函数 True 拦截。
+                // 如果需要修改参数，我们检查是否返回了 bool 且不拦截？
+                // 简单起见，这里 Void 函数只支持拦截。
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, bDeploy);
+    chain->callNext(pthis, _bDeploy);
 }
 
-/* CBasePlayer::SetClientUserInfoModel */
+/* 19. CBasePlayer::SetClientUserInfoModel */
 void CBasePlayer_SetClientUserInfoModel(IReGameHook_CBasePlayer_SetClientUserInfoModel *chain, CBasePlayer *pthis, char *infobuffer, char *newValue)
 {
     if (g_L) 
@@ -12789,14 +13060,33 @@ void CBasePlayer_SetClientUserInfoModel(IReGameHook_CBasePlayer_SetClientUserInf
             lua_pushstring(g_L, infobuffer);
             lua_pushstring(g_L, newValue);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1))
+                {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 2)
+                {
+                    if (lua_isstring(g_L, -2)) strncpy(infobuffer, lua_tostring(g_L, -2), 255); // 注意 buffer 长度安全，这里假设标准长度
+                    if (lua_isstring(g_L, -1)) strncpy(newValue, lua_tostring(g_L, -1), 255);
+                    lua_pop(g_L, 2);
+                }
+                else
+                {
+                    lua_pop(g_L, nRet);
+                }
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis, infobuffer, newValue);
 }
 
-/* CBasePlayer::SetClientUserInfoName */
+/* 20. CBasePlayer::SetClientUserInfoName */
 bool CBasePlayer_SetClientUserInfoName(IReGameHook_CBasePlayer_SetClientUserInfoName *chain, CBasePlayer *pthis, char *infobuffer, char *newValue)
 {
     if (g_L) 
@@ -12810,15 +13100,39 @@ bool CBasePlayer_SetClientUserInfoName(IReGameHook_CBasePlayer_SetClientUserInfo
             lua_pushstring(g_L, infobuffer);
             lua_pushstring(g_L, newValue);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1))
+                {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 2)
+                {
+                    if (lua_isstring(g_L, -2)) strncpy(infobuffer, lua_tostring(g_L, -2), 255);
+                    if (lua_isstring(g_L, -1)) strncpy(newValue, lua_tostring(g_L, -1), 255);
+                    lua_pop(g_L, 2);
+                }
+                else
+                {
+                    lua_pop(g_L, nRet);
+                }
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pthis, infobuffer, newValue);
 }
-/* CBasePlayer::HasRestrictItem */
+
+/* 21. CBasePlayer::HasRestrictItem */
 bool CBasePlayer_HasRestrictItem(IReGameHook_CBasePlayer_HasRestrictItem *chain, CBasePlayer *pthis, ItemID item, ItemRestType type)
 {
+    int _item = (int)item;
+    int _type = (int)type;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_HasRestrictItem");
@@ -12827,19 +13141,39 @@ bool CBasePlayer_HasRestrictItem(IReGameHook_CBasePlayer_HasRestrictItem *chain,
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, (int)item);
-            lua_pushinteger(g_L, (int)type);
+            lua_pushinteger(g_L, _item);
+            lua_pushinteger(g_L, _type);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1))
+                {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 2)
+                {
+                    if (lua_isnumber(g_L, -2)) _item = (int)lua_tointeger(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _type = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pthis, item, type);
+    return chain->callNext(pthis, (ItemID)_item, (ItemRestType)_type);
 }
 
-/* CBasePlayer::DropPlayerItem */
+/* 22. CBasePlayer::DropPlayerItem */
 CBaseEntity *CBasePlayer_DropPlayerItem(IReGameHook_CBasePlayer_DropPlayerItem *chain, CBasePlayer *pthis, const char *pszItemName)
 {
+    const char* _pszItemName = pszItemName;
+    static char szBuf[64];
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_DropPlayerItem");
@@ -12848,18 +13182,40 @@ CBaseEntity *CBasePlayer_DropPlayerItem(IReGameHook_CBasePlayer_DropPlayerItem *
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushstring(g_L, pszItemName);
+            lua_pushstring(g_L, _pszItemName);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1)
+                {
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(szBuf, lua_tostring(g_L, -1), 63);
+                        szBuf[63] = 0;
+                        _pszItemName = szBuf;
+                    }
+                    else if (lua_isuserdata(g_L, -1) || lua_isnil(g_L, -1)) {
+                         // 返回 Entity/Nil 覆盖返回值
+                         // ... (转换逻辑)
+                         lua_pop(g_L, 1);
+                         return NULL; // 简化处理，若需支持返回 Entity 请自行添加转换
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pthis, pszItemName);
+    return chain->callNext(pthis, _pszItemName);
 }
 
-/* CBasePlayer::DropShield */
+/* 23. CBasePlayer::DropShield */
 CBaseEntity *CBasePlayer_DropShield(IReGameHook_CBasePlayer_DropShield *chain, CBasePlayer *pthis, bool bDeploy)
 {
+    bool _bDeploy = bDeploy;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_DropShield");
@@ -12868,18 +13224,35 @@ CBaseEntity *CBasePlayer_DropShield(IReGameHook_CBasePlayer_DropShield *chain, C
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushboolean(g_L, bDeploy);
+            lua_pushboolean(g_L, _bDeploy);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1)
+                {
+                    if (lua_isboolean(g_L, -1)) _bDeploy = (bool)lua_toboolean(g_L, -1); // 只有一个 bool，视为修改参数？还是拦截？
+                    // 歧义：Returns CBaseEntity*. 
+                    // 如果返回 bool，无法转换为 Entity。所以这里只能是修改参数。
+                    // 除非返回 Userdata/Nil 才是拦截。
+                    else if (lua_isnil(g_L, -1)) { lua_pop(g_L, 1); return NULL; }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pthis, bDeploy);
+    return chain->callNext(pthis, _bDeploy);
 }
 
-/* CBasePlayer::OnSpawnEquip */
+/* 24. CBasePlayer::OnSpawnEquip */
 void CBasePlayer_OnSpawnEquip(IReGameHook_CBasePlayer_OnSpawnEquip *chain, CBasePlayer *pthis, bool bAddDefault, bool bEquipGame)
 {
+    bool _bAddDefault = bAddDefault;
+    bool _bEquipGame = bEquipGame;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_OnSpawnEquip");
@@ -12888,19 +13261,40 @@ void CBasePlayer_OnSpawnEquip(IReGameHook_CBasePlayer_OnSpawnEquip *chain, CBase
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushboolean(g_L, bAddDefault);
-            lua_pushboolean(g_L, bEquipGame);
+            lua_pushboolean(g_L, _bAddDefault);
+            lua_pushboolean(g_L, _bEquipGame);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 2) {
+                    if (lua_isboolean(g_L, -2)) _bAddDefault = (bool)lua_toboolean(g_L, -2);
+                    if (lua_isboolean(g_L, -1)) _bEquipGame = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, bAddDefault, bEquipGame);
+    chain->callNext(pthis, _bAddDefault, _bEquipGame);
 }
 
-/* CBasePlayer::Radio */
+/* 25. CBasePlayer::Radio */
 void CBasePlayer_Radio(IReGameHook_CBasePlayer_Radio *chain, CBasePlayer *pthis, const char *pszRadioName, const char *pszRadioMessage, short iPitch, bool bShowIcon)
 {
+    const char* _pszName = pszRadioName;
+    const char* _pszMsg = pszRadioMessage;
+    int _iPitch = iPitch;
+    bool _bShowIcon = bShowIcon;
+    static char szNameBuf[64];
+    static char szMsgBuf[64];
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_Radio");
@@ -12909,19 +13303,35 @@ void CBasePlayer_Radio(IReGameHook_CBasePlayer_Radio *chain, CBasePlayer *pthis,
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushstring(g_L, pszRadioName);
-            lua_pushstring(g_L, pszRadioMessage);
-            lua_pushinteger(g_L, iPitch);
-            lua_pushboolean(g_L, bShowIcon);
+            lua_pushstring(g_L, _pszName);
+            lua_pushstring(g_L, _pszMsg);
+            lua_pushinteger(g_L, _iPitch);
+            lua_pushboolean(g_L, _bShowIcon);
 
-            if (lua_pcall(g_L, 5, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 5, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 4) {
+                    if (lua_isstring(g_L, -4)) { strncpy(szNameBuf, lua_tostring(g_L, -4), 63); _pszName = szNameBuf; }
+                    if (lua_isstring(g_L, -3)) { strncpy(szMsgBuf, lua_tostring(g_L, -3), 63); _pszMsg = szMsgBuf; }
+                    if (lua_isnumber(g_L, -2)) _iPitch = (short)lua_tointeger(g_L, -2);
+                    if (lua_isboolean(g_L, -1)) _bShowIcon = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 4);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, pszRadioName, pszRadioMessage, iPitch, bShowIcon);
+    chain->callNext(pthis, _pszName, _pszMsg, _iPitch, _bShowIcon);
 }
 
-/* CBasePlayer::Disappear */
+/* 26. CBasePlayer::Disappear */
 void CBasePlayer_Disappear(IReGameHook_CBasePlayer_Disappear *chain, CBasePlayer *pthis)
 {
     if (g_L) 
@@ -12932,14 +13342,19 @@ void CBasePlayer_Disappear(IReGameHook_CBasePlayer_Disappear *chain, CBasePlayer
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis);
 }
 
-/* CBasePlayer::MakeVIP */
+/* 27. CBasePlayer::MakeVIP */
 void CBasePlayer_MakeVIP(IReGameHook_CBasePlayer_MakeVIP *chain, CBasePlayer *pthis)
 {
     if (g_L) 
@@ -12950,14 +13365,19 @@ void CBasePlayer_MakeVIP(IReGameHook_CBasePlayer_MakeVIP *chain, CBasePlayer *pt
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis);
 }
 
-/* CBasePlayer::MakeBomber */
+/* 28. CBasePlayer::MakeBomber */
 bool CBasePlayer_MakeBomber(IReGameHook_CBasePlayer_MakeBomber *chain, CBasePlayer *pthis)
 {
     if (g_L) 
@@ -12968,16 +13388,28 @@ bool CBasePlayer_MakeBomber(IReGameHook_CBasePlayer_MakeBomber *chain, CBasePlay
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1))
+                {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pthis);
 }
 
-/* CBasePlayer::StartObserver */
+/* 29. CBasePlayer::StartObserver */
 void CBasePlayer_StartObserver(IReGameHook_CBasePlayer_StartObserver *chain, CBasePlayer *pthis, Vector &vecPosition, Vector &vecViewAngle)
 {
+    // 向量通过指针传递，Lua 难以直接返回 2 个 Vector 对象来修改它们。
+    // 这里仅支持拦截 (Block)。
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_StartObserver");
@@ -12989,14 +13421,19 @@ void CBasePlayer_StartObserver(IReGameHook_CBasePlayer_StartObserver *chain, CBa
             lua_pushlightuserdata(g_L, &vecPosition);
             lua_pushlightuserdata(g_L, &vecViewAngle);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis, vecPosition, vecViewAngle);
 }
 
-/* CBasePlayer::GetIntoGame */
+/* 30. CBasePlayer::GetIntoGame */
 bool CBasePlayer_GetIntoGame(IReGameHook_CBasePlayer_GetIntoGame *chain, CBasePlayer *pthis)
 {
     if (g_L) 
@@ -13007,13 +13444,22 @@ bool CBasePlayer_GetIntoGame(IReGameHook_CBasePlayer_GetIntoGame *chain, CBasePl
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1)) {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pthis);
 }
-/* CBaseAnimating::ResetSequenceInfo */
+/* 31. CBaseAnimating::ResetSequenceInfo */
 void CBaseAnimating_ResetSequenceInfo(IReGameHook_CBaseAnimating_ResetSequenceInfo *chain, CBaseAnimating *pthis)
 {
     if (g_L) 
@@ -13024,14 +13470,19 @@ void CBaseAnimating_ResetSequenceInfo(IReGameHook_CBaseAnimating_ResetSequenceIn
             edict_t* pEnt = pthis ? ENT(((CCSAnimating*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis);
 }
 
-/* GetForceCamera */
+/* 32. GetForceCamera */
 int GetForceCamera(IReGameHook_GetForceCamera *chain, CBasePlayer *pPlayer)
 {
     if (g_L) 
@@ -13042,16 +13493,30 @@ int GetForceCamera(IReGameHook_GetForceCamera *chain, CBasePlayer *pPlayer)
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -1))
+                {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pPlayer);
 }
 
-/* PlayerBlind */
+/* 33. PlayerBlind */
 void PlayerBlind(IReGameHook_PlayerBlind *chain, CBasePlayer *pPlayer, entvars_t *pevInflictor, entvars_t *pevAttacker, float fadeTime, float fadeHold, int alpha, Vector &color)
 {
+    float _fadeTime = fadeTime;
+    float _fadeHold = fadeHold;
+    int _alpha = alpha;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_PlayerBlind");
@@ -13066,19 +13531,35 @@ void PlayerBlind(IReGameHook_PlayerBlind *chain, CBasePlayer *pPlayer, entvars_t
             edict_t* pAttacker = pevAttacker ? ENT(pevAttacker) : NULL;
             lua_pushentity(g_L, pAttacker);
 
-            lua_pushnumber(g_L, fadeTime);
-            lua_pushnumber(g_L, fadeHold);
-            lua_pushinteger(g_L, alpha);
+            lua_pushnumber(g_L, _fadeTime);
+            lua_pushnumber(g_L, _fadeHold);
+            lua_pushinteger(g_L, _alpha);
             lua_pushlightuserdata(g_L, &color);
 
-            if (lua_pcall(g_L, 7, 0, 0) != 0) lua_pop(g_L, 1);
+            // 期望返回: true(block) 或 newTime, newHold, newAlpha
+            if (lua_pcall(g_L, 7, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 3) {
+                    if (lua_isnumber(g_L, -3)) _fadeTime = (float)lua_tonumber(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _fadeHold = (float)lua_tonumber(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _alpha = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 3);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pPlayer, pevInflictor, pevAttacker, fadeTime, fadeHold, alpha, color);
+    chain->callNext(pPlayer, pevInflictor, pevAttacker, _fadeTime, _fadeHold, _alpha, color);
 }
 
-/* RadiusFlash_TraceLine */
+/* 34. RadiusFlash_TraceLine */
 void RadiusFlash_TraceLine(IReGameHook_RadiusFlash_TraceLine *chain, CBasePlayer *pPlayer, entvars_t *pevInflictor, entvars_t *pevAttacker, Vector &vecSrc, Vector &vecSpot, TraceResult *ptr)
 {
     if (g_L) 
@@ -13099,33 +13580,58 @@ void RadiusFlash_TraceLine(IReGameHook_RadiusFlash_TraceLine *chain, CBasePlayer
             lua_pushlightuserdata(g_L, &vecSpot);
             lua_pushlightuserdata(g_L, ptr);
 
-            if (lua_pcall(g_L, 6, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 6, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pPlayer, pevInflictor, pevAttacker, vecSrc, vecSpot, ptr);
 }
 
-/* RoundEnd */
+/* 35. RoundEnd */
 bool RoundEnd(IReGameHook_RoundEnd *chain, int winStatus, ScenarioEventEndRound event, float tmDelay)
 {
+    int _winStatus = winStatus;
+    int _event = (int)event;
+    float _tmDelay = tmDelay;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_RoundEnd");
         if (lua_isfunction(g_L, -1)) 
         {
-            lua_pushinteger(g_L, winStatus);
-            lua_pushinteger(g_L, (int)event);
-            lua_pushnumber(g_L, tmDelay);
+            lua_pushinteger(g_L, _winStatus);
+            lua_pushinteger(g_L, _event);
+            lua_pushnumber(g_L, _tmDelay);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1)) {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 3) {
+                    if (lua_isnumber(g_L, -3)) _winStatus = (int)lua_tointeger(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _event = (int)lua_tointeger(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _tmDelay = (float)lua_tonumber(g_L, -1);
+                    lua_pop(g_L, 3);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(winStatus, event, tmDelay);
+    return chain->callNext(_winStatus, (ScenarioEventEndRound)_event, _tmDelay);
 }
 
-/* InstallGameRules */
+/* 36. InstallGameRules */
 CGameRules *InstallGameRules(IReGameHook_InstallGameRules *chain)
 {
     if (g_L) 
@@ -13133,14 +13639,25 @@ CGameRules *InstallGameRules(IReGameHook_InstallGameRules *chain)
         lua_getglobal(g_L, "ReGame_InstallGameRules");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isuserdata(g_L, -1)) {
+                    // 如果 Lua 返回了指针，尝试直接返回
+                    // CGameRules* ret = (CGameRules*)lua_touserdata(g_L, -1);
+                    // lua_pop(g_L, 1);
+                    // return ret;
+                    // 安全起见，InstallGameRules 极少被完全替换，这里仅做演示
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext();
 }
 
-/* PM_Init */
+/* 37. PM_Init */
 void PM_Init(IReGameHook_PM_Init *chain, struct playermove_s *ppmove)
 {
     if (g_L) 
@@ -13150,14 +13667,19 @@ void PM_Init(IReGameHook_PM_Init *chain, struct playermove_s *ppmove)
         {
             lua_pushlightuserdata(g_L, ppmove);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(ppmove);
 }
 
-/* PM_Move */
+/* 38. PM_Move */
 void PM_Move(IReGameHook_PM_Move *chain, struct playermove_s *ppmove, int server)
 {
     if (g_L) 
@@ -13168,14 +13690,19 @@ void PM_Move(IReGameHook_PM_Move *chain, struct playermove_s *ppmove, int server
             lua_pushlightuserdata(g_L, ppmove);
             lua_pushinteger(g_L, server);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(ppmove, server);
 }
 
-/* PM_AirMove */
+/* 39. PM_AirMove */
 void PM_AirMove(IReGameHook_PM_AirMove *chain, int server)
 {
     if (g_L) 
@@ -13185,16 +13712,23 @@ void PM_AirMove(IReGameHook_PM_AirMove *chain, int server)
         {
             lua_pushinteger(g_L, server);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(server);
 }
 
-/* HandleMenu_ChooseAppearance */
+/* 40. HandleMenu_ChooseAppearance */
 void HandleMenu_ChooseAppearance(IReGameHook_HandleMenu_ChooseAppearance *chain, CBasePlayer *pPlayer, int slot)
 {
+    int _slot = slot;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_HandleMenu_ChooseAppearance");
@@ -13203,17 +13737,30 @@ void HandleMenu_ChooseAppearance(IReGameHook_HandleMenu_ChooseAppearance *chain,
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, slot);
+            lua_pushinteger(g_L, _slot);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                    if (lua_isnumber(g_L, -1)) _slot = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pPlayer, slot);
+    chain->callNext(pPlayer, _slot);
 }
-/* HandleMenu_ChooseTeam */
+
+/* 41. HandleMenu_ChooseTeam */
 BOOL HandleMenu_ChooseTeam(IReGameHook_HandleMenu_ChooseTeam *chain, CBasePlayer *pPlayer, int slot)
 {
+    int _slot = slot;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_HandleMenu_ChooseTeam");
@@ -13222,18 +13769,37 @@ BOOL HandleMenu_ChooseTeam(IReGameHook_HandleMenu_ChooseTeam *chain, CBasePlayer
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, slot);
+            lua_pushinteger(g_L, _slot);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1)) {
+                        BOOL ret = (BOOL)lua_toboolean(g_L, -1);
+                        lua_pop(g_L, 1);
+                        return ret;
+                    }
+                    if (lua_isnumber(g_L, -1)) _slot = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pPlayer, slot);
+    return chain->callNext(pPlayer, _slot);
 }
 
-/* ShowMenu */
+/* 42. ShowMenu */
 void ShowMenu(IReGameHook_ShowMenu *chain, CBasePlayer *pPlayer, int slots, int displaytime, BOOL needmore, char *pszText)
 {
+    int _slots = slots;
+    int _displaytime = displaytime;
+    BOOL _needmore = needmore;
+    static char szTextBuf[512];
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_ShowMenu");
@@ -13242,21 +13808,45 @@ void ShowMenu(IReGameHook_ShowMenu *chain, CBasePlayer *pPlayer, int slots, int 
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, slots);
-            lua_pushinteger(g_L, displaytime);
-            lua_pushboolean(g_L, needmore);
+            lua_pushinteger(g_L, _slots);
+            lua_pushinteger(g_L, _displaytime);
+            lua_pushboolean(g_L, _needmore);
             lua_pushstring(g_L, pszText);
 
-            if (lua_pcall(g_L, 5, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 5, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 4) {
+                    if (lua_isnumber(g_L, -4)) _slots = (int)lua_tointeger(g_L, -4);
+                    if (lua_isnumber(g_L, -3)) _displaytime = (int)lua_tointeger(g_L, -3);
+                    if (lua_isboolean(g_L, -2)) _needmore = (BOOL)lua_toboolean(g_L, -2);
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(szTextBuf, lua_tostring(g_L, -1), 511);
+                        szTextBuf[511] = 0;
+                        if (pszText) strcpy(pszText, szTextBuf); // 注意：修改原指针内容需确保安全，通常 ShowMenu 的 pszText 是只读的，这里尽量小心
+                    }
+                    lua_pop(g_L, 4);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pPlayer, slots, displaytime, needmore, pszText);
+    chain->callNext(pPlayer, _slots, _displaytime, _needmore, pszText);
 }
 
-/* ShowVGUIMenu */
+/* 43. ShowVGUIMenu */
 void ShowVGUIMenu(IReGameHook_ShowVGUIMenu *chain, CBasePlayer *pPlayer, int menuType, int slots, char *pszOldMenu)
 {
+    int _menuType = menuType;
+    int _slots = slots;
+    static char szOldMenuBuf[64];
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_ShowVGUIMenu");
@@ -13265,20 +13855,41 @@ void ShowVGUIMenu(IReGameHook_ShowVGUIMenu *chain, CBasePlayer *pPlayer, int men
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, menuType);
-            lua_pushinteger(g_L, slots);
+            lua_pushinteger(g_L, _menuType);
+            lua_pushinteger(g_L, _slots);
             lua_pushstring(g_L, pszOldMenu);
 
-            if (lua_pcall(g_L, 4, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 4, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 3) {
+                    if (lua_isnumber(g_L, -3)) _menuType = (int)lua_tointeger(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _slots = (int)lua_tointeger(g_L, -2);
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(szOldMenuBuf, lua_tostring(g_L, -1), 63);
+                        szOldMenuBuf[63] = 0;
+                        if (pszOldMenu) strcpy(pszOldMenu, szOldMenuBuf);
+                    }
+                    lua_pop(g_L, 3);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pPlayer, menuType, slots, pszOldMenu);
+    chain->callNext(pPlayer, _menuType, _slots, pszOldMenu);
 }
 
-/* BuyGunAmmo */
+/* 44. BuyGunAmmo */
 bool BuyGunAmmo(IReGameHook_BuyGunAmmo *chain, CBasePlayer *pPlayer, CBasePlayerItem *pItem, bool bIsPrimary)
 {
+    bool _bIsPrimary = bIsPrimary;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_BuyGunAmmo");
@@ -13290,18 +13901,38 @@ bool BuyGunAmmo(IReGameHook_BuyGunAmmo *chain, CBasePlayer *pPlayer, CBasePlayer
             edict_t* pItemEnt = pItem ? ENT(((CCSPlayerItem*)pItem)->pev) : NULL;
             lua_pushentity(g_L, pItemEnt);
 
-            lua_pushboolean(g_L, bIsPrimary);
+            lua_pushboolean(g_L, _bIsPrimary);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1)) {
+                        bool ret = (bool)lua_toboolean(g_L, -1);
+                        lua_pop(g_L, 1);
+                        return ret;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else if (nRet == 2) {
+                    // Update args? Ptr can't be updated simply. Just update bool.
+                    if (lua_isboolean(g_L, -1)) _bIsPrimary = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pPlayer, pItem, bIsPrimary);
+    return chain->callNext(pPlayer, pItem, _bIsPrimary);
 }
 
-/* BuyWeaponByWeaponID */
+/* 45. BuyWeaponByWeaponID */
 CBaseEntity *BuyWeaponByWeaponID(IReGameHook_BuyWeaponByWeaponID *chain, CBasePlayer *pPlayer, WeaponIdType weaponID)
 {
+    int _weaponID = (int)weaponID;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_BuyWeaponByWeaponID");
@@ -13310,35 +13941,69 @@ CBaseEntity *BuyWeaponByWeaponID(IReGameHook_BuyWeaponByWeaponID *chain, CBasePl
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, (int)weaponID);
+            lua_pushinteger(g_L, _weaponID);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isuserdata(g_L, -1) || lua_isnil(g_L, -1)) {
+                        // Return Entity/Nil -> Supercede
+                        // ... Conversion ...
+                        lua_pop(g_L, 1);
+                        return NULL; 
+                    }
+                    if (lua_isnumber(g_L, -1)) _weaponID = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pPlayer, weaponID);
+    return chain->callNext(pPlayer, (WeaponIdType)_weaponID);
 }
 
-/* InternalCommand */
+/* 46. InternalCommand */
 void InternalCommand(IReGameHook_InternalCommand *chain, edict_t *pEdict, const char *szCmd, const char *szVal)
 {
+    const char* _szCmd = szCmd;
+    const char* _szVal = szVal;
+    static char szCmdBuf[64];
+    static char szValBuf[64];
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_InternalCommand");
         if (lua_isfunction(g_L, -1)) 
         {
             lua_pushentity(g_L, pEdict);
-            lua_pushstring(g_L, szCmd);
-            lua_pushstring(g_L, szVal);
+            lua_pushstring(g_L, _szCmd);
+            lua_pushstring(g_L, _szVal);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 2) {
+                    if (lua_isstring(g_L, -2)) { strncpy(szCmdBuf, lua_tostring(g_L, -2), 63); szCmdBuf[63]=0; _szCmd = szCmdBuf; }
+                    if (lua_isstring(g_L, -1)) { strncpy(szValBuf, lua_tostring(g_L, -1), 63); szValBuf[63]=0; _szVal = szValBuf; }
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pEdict, szCmd, szVal);
+    chain->callNext(pEdict, _szCmd, _szVal);
 }
 
-/* CSGameRules_FShouldSwitchWeapon */
+/* 47. CSGameRules_FShouldSwitchWeapon */
 BOOL CSGameRules_FShouldSwitchWeapon(IReGameHook_CSGameRules_FShouldSwitchWeapon *chain, CBasePlayer *pPlayer, CBasePlayerItem *pWeapon)
 {
     if (g_L) 
@@ -13352,14 +14017,23 @@ BOOL CSGameRules_FShouldSwitchWeapon(IReGameHook_CSGameRules_FShouldSwitchWeapon
             edict_t* pWeaponEnt = pWeapon ? ENT(((CCSPlayerItem*)pWeapon)->pev) : NULL;
             lua_pushentity(g_L, pWeaponEnt);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) || lua_isnumber(g_L, -1)) {
+                    BOOL ret = (BOOL)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pPlayer, pWeapon);
 }
 
-/* CSGameRules_GetNextBestWeapon */
+/* 48. CSGameRules_GetNextBestWeapon */
 BOOL CSGameRules_GetNextBestWeapon(IReGameHook_CSGameRules_GetNextBestWeapon *chain, CBasePlayer *pPlayer, CBasePlayerItem *pWeapon)
 {
     if (g_L) 
@@ -13373,14 +14047,23 @@ BOOL CSGameRules_GetNextBestWeapon(IReGameHook_CSGameRules_GetNextBestWeapon *ch
             edict_t* pWeaponEnt = pWeapon ? ENT(((CCSPlayerItem*)pWeapon)->pev) : NULL;
             lua_pushentity(g_L, pWeaponEnt);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) || lua_isnumber(g_L, -1)) {
+                    BOOL ret = (BOOL)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pPlayer, pWeapon);
 }
 
-/* CSGameRules_FlPlayerFallDamage */
+/* 49. CSGameRules_FlPlayerFallDamage */
 float CSGameRules_FlPlayerFallDamage(IReGameHook_CSGameRules_FlPlayerFallDamage *chain, CBasePlayer *pPlayer)
 {
     if (g_L) 
@@ -13391,14 +14074,23 @@ float CSGameRules_FlPlayerFallDamage(IReGameHook_CSGameRules_FlPlayerFallDamage 
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -1)) {
+                    float ret = (float)lua_tonumber(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pPlayer);
 }
 
-/* CSGameRules_FPlayerCanTakeDamage */
+/* 50. CSGameRules_FPlayerCanTakeDamage */
 BOOL CSGameRules_FPlayerCanTakeDamage(IReGameHook_CSGameRules_FPlayerCanTakeDamage *chain, CBasePlayer *pPlayer, CBaseEntity *pAttacker)
 {
     if (g_L) 
@@ -13412,13 +14104,23 @@ BOOL CSGameRules_FPlayerCanTakeDamage(IReGameHook_CSGameRules_FPlayerCanTakeDama
             edict_t* pAttackerEnt = pAttacker ? ENT(((CCSEntity*)pAttacker)->pev) : NULL;
             lua_pushentity(g_L, pAttackerEnt);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) || lua_isnumber(g_L, -1)) {
+                    BOOL ret = (BOOL)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pPlayer, pAttacker);
 }
-/* CSGameRules_PlayerSpawn */
+
+/* 51. CSGameRules_PlayerSpawn */
 void CSGameRules_PlayerSpawn(IReGameHook_CSGameRules_PlayerSpawn *chain, CBasePlayer *pPlayer)
 {
     if (g_L) 
@@ -13429,14 +14131,19 @@ void CSGameRules_PlayerSpawn(IReGameHook_CSGameRules_PlayerSpawn *chain, CBasePl
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pPlayer);
 }
 
-/* CSGameRules_FPlayerCanRespawn */
+/* 52. CSGameRules_FPlayerCanRespawn */
 BOOL CSGameRules_FPlayerCanRespawn(IReGameHook_CSGameRules_FPlayerCanRespawn *chain, CBasePlayer *pPlayer)
 {
     if (g_L) 
@@ -13447,14 +14154,23 @@ BOOL CSGameRules_FPlayerCanRespawn(IReGameHook_CSGameRules_FPlayerCanRespawn *ch
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) || lua_isnumber(g_L, -1)) {
+                    BOOL ret = (BOOL)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pPlayer);
 }
 
-/* CSGameRules_GetPlayerSpawnSpot */
+/* 53. CSGameRules_GetPlayerSpawnSpot */
 edict_t *CSGameRules_GetPlayerSpawnSpot(IReGameHook_CSGameRules_GetPlayerSpawnSpot *chain, CBasePlayer *pPlayer)
 {
     if (g_L) 
@@ -13465,14 +14181,24 @@ edict_t *CSGameRules_GetPlayerSpawnSpot(IReGameHook_CSGameRules_GetPlayerSpawnSp
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isuserdata(g_L, -1)) {
+                    // 假设 Lua 返回了 Edict 指针
+                    // edict_t* ret = (edict_t*)lua_touserdata(g_L, -1);
+                    // lua_pop(g_L, 1);
+                    // return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pPlayer);
 }
 
-/* CSGameRules_ClientUserInfoChanged */
+/* 54. CSGameRules_ClientUserInfoChanged */
 void CSGameRules_ClientUserInfoChanged(IReGameHook_CSGameRules_ClientUserInfoChanged *chain, CBasePlayer *pPlayer, char *infobuffer)
 {
     if (g_L) 
@@ -13485,14 +14211,24 @@ void CSGameRules_ClientUserInfoChanged(IReGameHook_CSGameRules_ClientUserInfoCha
 
             lua_pushstring(g_L, infobuffer);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                else if (nRet == 1 && lua_isstring(g_L, -1)) {
+                    strncpy(infobuffer, lua_tostring(g_L, -1), 255);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pPlayer, infobuffer);
 }
 
-/* CSGameRules_PlayerKilled */
+/* 55. CSGameRules_PlayerKilled */
 void CSGameRules_PlayerKilled(IReGameHook_CSGameRules_PlayerKilled *chain, CBasePlayer *pPlayer, entvars_t *pevKiller, entvars_t *pevInflictor)
 {
     if (g_L) 
@@ -13509,14 +14245,19 @@ void CSGameRules_PlayerKilled(IReGameHook_CSGameRules_PlayerKilled *chain, CBase
             edict_t* pInflictor = pevInflictor ? ENT(pevInflictor) : NULL;
             lua_pushentity(g_L, pInflictor);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pPlayer, pevKiller, pevInflictor);
 }
 
-/* CSGameRules_DeathNotice */
+/* 56. CSGameRules_DeathNotice */
 void CSGameRules_DeathNotice(IReGameHook_CSGameRules_DeathNotice *chain, CBasePlayer *pPlayer, entvars_t *pevKiller, entvars_t *pevInflictor)
 {
     if (g_L) 
@@ -13533,14 +14274,19 @@ void CSGameRules_DeathNotice(IReGameHook_CSGameRules_DeathNotice *chain, CBasePl
             edict_t* pInflictor = pevInflictor ? ENT(pevInflictor) : NULL;
             lua_pushentity(g_L, pInflictor);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pPlayer, pevKiller, pevInflictor);
 }
 
-/* CSGameRules_CanHavePlayerItem */
+/* 57. CSGameRules_CanHavePlayerItem */
 BOOL CSGameRules_CanHavePlayerItem(IReGameHook_CSGameRules_CanHavePlayerItem *chain, CBasePlayer *pPlayer, CBasePlayerItem *pItem)
 {
     if (g_L) 
@@ -13554,14 +14300,23 @@ BOOL CSGameRules_CanHavePlayerItem(IReGameHook_CSGameRules_CanHavePlayerItem *ch
             edict_t* pItemEnt = pItem ? ENT(((CCSPlayerItem*)pItem)->pev) : NULL;
             lua_pushentity(g_L, pItemEnt);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) || lua_isnumber(g_L, -1)) {
+                    BOOL ret = (BOOL)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pPlayer, pItem);
 }
 
-/* CSGameRules_DeadPlayerWeapons */
+/* 58. CSGameRules_DeadPlayerWeapons */
 int CSGameRules_DeadPlayerWeapons(IReGameHook_CSGameRules_DeadPlayerWeapons *chain, CBasePlayer *pPlayer)
 {
     if (g_L) 
@@ -13572,14 +14327,23 @@ int CSGameRules_DeadPlayerWeapons(IReGameHook_CSGameRules_DeadPlayerWeapons *cha
             edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -1)) {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pPlayer);
 }
 
-/* CSGameRules_ServerDeactivate */
+/* 59. CSGameRules_ServerDeactivate */
 void CSGameRules_ServerDeactivate(IReGameHook_CSGameRules_ServerDeactivate *chain)
 {
     if (g_L) 
@@ -13587,14 +14351,19 @@ void CSGameRules_ServerDeactivate(IReGameHook_CSGameRules_ServerDeactivate *chai
         lua_getglobal(g_L, "ReGame_CSGameRules_ServerDeactivate");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
 
-/* CSGameRules_CheckMapConditions */
+/* 60. CSGameRules_CheckMapConditions */
 void CSGameRules_CheckMapConditions(IReGameHook_CSGameRules_CheckMapConditions *chain)
 {
     if (g_L) 
@@ -13602,13 +14371,19 @@ void CSGameRules_CheckMapConditions(IReGameHook_CSGameRules_CheckMapConditions *
         lua_getglobal(g_L, "ReGame_CSGameRules_CheckMapConditions");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
-/* CSGameRules_CleanUpMap */
+
+/* 61. CSGameRules_CleanUpMap */
 void CSGameRules_CleanUpMap(IReGameHook_CSGameRules_CleanUpMap *chain)
 {
     if (g_L) 
@@ -13616,14 +14391,19 @@ void CSGameRules_CleanUpMap(IReGameHook_CSGameRules_CleanUpMap *chain)
         lua_getglobal(g_L, "ReGame_CSGameRules_CleanUpMap");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
 
-/* CSGameRules_RestartRound */
+/* 62. CSGameRules_RestartRound */
 void CSGameRules_RestartRound(IReGameHook_CSGameRules_RestartRound *chain)
 {
     if (g_L) 
@@ -13631,14 +14411,19 @@ void CSGameRules_RestartRound(IReGameHook_CSGameRules_RestartRound *chain)
         lua_getglobal(g_L, "ReGame_CSGameRules_RestartRound");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
 
-/* CSGameRules_CheckWinConditions */
+/* 63. CSGameRules_CheckWinConditions */
 void CSGameRules_CheckWinConditions(IReGameHook_CSGameRules_CheckWinConditions *chain)
 {
     if (g_L) 
@@ -13646,14 +14431,19 @@ void CSGameRules_CheckWinConditions(IReGameHook_CSGameRules_CheckWinConditions *
         lua_getglobal(g_L, "ReGame_CSGameRules_CheckWinConditions");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
 
-/* CSGameRules_RemoveGuns */
+/* 64. CSGameRules_RemoveGuns */
 void CSGameRules_RemoveGuns(IReGameHook_CSGameRules_RemoveGuns *chain)
 {
     if (g_L) 
@@ -13661,14 +14451,19 @@ void CSGameRules_RemoveGuns(IReGameHook_CSGameRules_RemoveGuns *chain)
         lua_getglobal(g_L, "ReGame_CSGameRules_RemoveGuns");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
 
-/* CSGameRules_GiveC4 */
+/* 65. CSGameRules_GiveC4 */
 void CSGameRules_GiveC4(IReGameHook_CSGameRules_GiveC4 *chain)
 {
     if (g_L) 
@@ -13676,14 +14471,19 @@ void CSGameRules_GiveC4(IReGameHook_CSGameRules_GiveC4 *chain)
         lua_getglobal(g_L, "ReGame_CSGameRules_GiveC4");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
 
-/* CSGameRules_ChangeLevel */
+/* 66. CSGameRules_ChangeLevel */
 void CSGameRules_ChangeLevel(IReGameHook_CSGameRules_ChangeLevel *chain)
 {
     if (g_L) 
@@ -13691,14 +14491,19 @@ void CSGameRules_ChangeLevel(IReGameHook_CSGameRules_ChangeLevel *chain)
         lua_getglobal(g_L, "ReGame_CSGameRules_ChangeLevel");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
 
-/* CSGameRules_GoToIntermission */
+/* 67. CSGameRules_GoToIntermission */
 void CSGameRules_GoToIntermission(IReGameHook_CSGameRules_GoToIntermission *chain)
 {
     if (g_L) 
@@ -13706,14 +14511,19 @@ void CSGameRules_GoToIntermission(IReGameHook_CSGameRules_GoToIntermission *chai
         lua_getglobal(g_L, "ReGame_CSGameRules_GoToIntermission");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
 
-/* CSGameRules_BalanceTeams */
+/* 68. CSGameRules_BalanceTeams */
 void CSGameRules_BalanceTeams(IReGameHook_CSGameRules_BalanceTeams *chain)
 {
     if (g_L) 
@@ -13721,14 +14531,19 @@ void CSGameRules_BalanceTeams(IReGameHook_CSGameRules_BalanceTeams *chain)
         lua_getglobal(g_L, "ReGame_CSGameRules_BalanceTeams");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
 
-/* CSGameRules_OnRoundFreezeEnd */
+/* 69. CSGameRules_OnRoundFreezeEnd */
 void CSGameRules_OnRoundFreezeEnd(IReGameHook_CSGameRules_OnRoundFreezeEnd *chain)
 {
     if (g_L) 
@@ -13736,14 +14551,19 @@ void CSGameRules_OnRoundFreezeEnd(IReGameHook_CSGameRules_OnRoundFreezeEnd *chai
         lua_getglobal(g_L, "ReGame_CSGameRules_OnRoundFreezeEnd");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
 
-/* PM_UpdateStepSound */
+/* 70. PM_UpdateStepSound */
 void PM_UpdateStepSound(IReGameHook_PM_UpdateStepSound *chain)
 {
     if (g_L) 
@@ -13751,13 +14571,19 @@ void PM_UpdateStepSound(IReGameHook_PM_UpdateStepSound *chain)
         lua_getglobal(g_L, "ReGame_PM_UpdateStepSound");
         if (lua_isfunction(g_L, -1)) 
         {
-            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext();
 }
-/* CBasePlayer::StartDeathCam */
+
+/* 71. CBasePlayer::StartDeathCam */
 void CBasePlayer_StartDeathCam(IReGameHook_CBasePlayer_StartDeathCam *chain, CBasePlayer *pthis)
 {
     if (g_L) 
@@ -13768,14 +14594,19 @@ void CBasePlayer_StartDeathCam(IReGameHook_CBasePlayer_StartDeathCam *chain, CBa
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis);
 }
 
-/* CBasePlayer::SwitchTeam */
+/* 72. CBasePlayer::SwitchTeam */
 void CBasePlayer_SwitchTeam(IReGameHook_CBasePlayer_SwitchTeam *chain, CBasePlayer *pthis)
 {
     if (g_L) 
@@ -13786,16 +14617,23 @@ void CBasePlayer_SwitchTeam(IReGameHook_CBasePlayer_SwitchTeam *chain, CBasePlay
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis);
 }
 
-/* CBasePlayer::CanSwitchTeam */
+/* 73. CBasePlayer::CanSwitchTeam */
 bool CBasePlayer_CanSwitchTeam(IReGameHook_CBasePlayer_CanSwitchTeam *chain, CBasePlayer *pthis, TeamName team)
 {
+    int _team = (int)team;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_CanSwitchTeam");
@@ -13804,18 +14642,35 @@ bool CBasePlayer_CanSwitchTeam(IReGameHook_CBasePlayer_CanSwitchTeam *chain, CBa
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushinteger(g_L, (int)team);
+            lua_pushinteger(g_L, _team);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1)) {
+                        bool ret = (bool)lua_toboolean(g_L, -1);
+                        lua_pop(g_L, 1);
+                        return ret;
+                    }
+                    if (lua_isnumber(g_L, -1)) _team = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pthis, team);
+    return chain->callNext(pthis, (TeamName)_team);
 }
 
-/* CBasePlayer::ThrowGrenade */
+/* 74. CBasePlayer::ThrowGrenade */
 CGrenade *CBasePlayer_ThrowGrenade(IReGameHook_CBasePlayer_ThrowGrenade *chain, CBasePlayer *pthis, CBasePlayerWeapon *pWeapon, Vector &vecOrigin, Vector &vecVelocity, float time, unsigned short type)
 {
+    float _time = time;
+    unsigned short _type = type;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_ThrowGrenade");
@@ -13829,17 +14684,37 @@ CGrenade *CBasePlayer_ThrowGrenade(IReGameHook_CBasePlayer_ThrowGrenade *chain, 
 
             lua_pushlightuserdata(g_L, &vecOrigin);
             lua_pushlightuserdata(g_L, &vecVelocity);
-            lua_pushnumber(g_L, time);
-            lua_pushinteger(g_L, type);
+            lua_pushnumber(g_L, _time);
+            lua_pushinteger(g_L, _type);
 
-            if (lua_pcall(g_L, 6, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 6, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                // 单值返回 -> Supercede (Expects Grenade Entity or Nil)
+                if (nRet == 1) {
+                    if (lua_isnil(g_L, -1) || lua_isuserdata(g_L, -1)) {
+                        // ... Conversion logic ...
+                        lua_pop(g_L, 1);
+                        return NULL;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                // 双值返回 -> Update (time, type) - Vectors are skipped for update
+                else if (nRet == 2) {
+                    if (lua_isnumber(g_L, -2)) _time = (float)lua_tonumber(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _type = (unsigned short)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pthis, pWeapon, vecOrigin, vecVelocity, time, type);
+    return chain->callNext(pthis, pWeapon, vecOrigin, vecVelocity, _time, _type);
 }
 
-/* CSGameRules::CanPlayerHearPlayer */
+/* 75. CSGameRules::CanPlayerHearPlayer */
 bool CSGameRules_CanPlayerHearPlayer(IReGameHook_CSGameRules_CanPlayerHearPlayer *chain, CBasePlayer *pListener, CBasePlayer *pSender)
 {
     if (g_L) 
@@ -13853,16 +14728,28 @@ bool CSGameRules_CanPlayerHearPlayer(IReGameHook_CSGameRules_CanPlayerHearPlayer
             edict_t* pSenderEnt = pSender ? ENT(((CCSPlayer*)pSender)->pev) : NULL;
             lua_pushentity(g_L, pSenderEnt);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1)) {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pListener, pSender);
 }
 
-/* CWeaponBox::SetModel */
+/* 76. CWeaponBox::SetModel */
 void CWeaponBox_SetModel(IReGameHook_CWeaponBox_SetModel *chain, CWeaponBox *pthis, const char *pszModelName)
 {
+    const char* _pszModelName = pszModelName;
+    static char szModelBuf[64];
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CWeaponBox_SetModel");
@@ -13871,16 +14758,30 @@ void CWeaponBox_SetModel(IReGameHook_CWeaponBox_SetModel *chain, CWeaponBox *pth
             edict_t* pEnt = pthis ? ENT(((CCSWeaponBox*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushstring(g_L, pszModelName);
+            lua_pushstring(g_L, _pszModelName);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(szModelBuf, lua_tostring(g_L, -1), 63);
+                        szModelBuf[63] = 0;
+                        _pszModelName = szModelBuf;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, pszModelName);
+    chain->callNext(pthis, _pszModelName);
 }
 
-/* CGrenade::DefuseBombStart */
+/* 77. CGrenade::DefuseBombStart */
 void CGrenade_DefuseBombStart(IReGameHook_CGrenade_DefuseBombStart *chain, CGrenade *pthis, CBasePlayer *pPlayer)
 {
     if (g_L) 
@@ -13894,16 +14795,23 @@ void CGrenade_DefuseBombStart(IReGameHook_CGrenade_DefuseBombStart *chain, CGren
             edict_t* pPlayerEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pPlayerEnt);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis, pPlayer);
 }
 
-/* CGrenade::DefuseBombEnd */
+/* 78. CGrenade::DefuseBombEnd */
 void CGrenade_DefuseBombEnd(IReGameHook_CGrenade_DefuseBombEnd *chain, CGrenade *pthis, CBasePlayer *pPlayer, bool bDefused)
 {
+    bool _bDefused = bDefused;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CGrenade_DefuseBombEnd");
@@ -13915,39 +14823,65 @@ void CGrenade_DefuseBombEnd(IReGameHook_CGrenade_DefuseBombEnd *chain, CGrenade 
             edict_t* pPlayerEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
             lua_pushentity(g_L, pPlayerEnt);
 
-            lua_pushboolean(g_L, bDefused);
+            lua_pushboolean(g_L, _bDefused);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1)) {
+                        // Ambiguous: Block or Update Arg? Assuming Block if single return
+                        if (lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, pPlayer, bDefused);
+    chain->callNext(pthis, pPlayer, _bDefused);
 }
 
-/* CGrenade::ExplodeHeGrenade */
+/* 79. CGrenade::ExplodeHeGrenade */
 void CGrenade_ExplodeHeGrenade(IReGameHook_CGrenade_ExplodeHeGrenade *chain, CGrenade *pthis, TraceResult *pTrace, int bitsDamageType)
 {
+    int _bits = bitsDamageType;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CGrenade_ExplodeHeGrenade");
         if (lua_isfunction(g_L, -1)) 
         {
-            edict_t* pGrenadeEnt = pthis ?ENT(((CCSGrenade*)pthis)->pev) : NULL;
+            edict_t* pGrenadeEnt = pthis ? ENT(((CCSGrenade*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pGrenadeEnt);
 
             lua_pushlightuserdata(g_L, pTrace);
-            lua_pushinteger(g_L, bitsDamageType);
+            lua_pushinteger(g_L, _bits);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                    if (lua_isnumber(g_L, -1)) _bits = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, pTrace, bitsDamageType);
+    chain->callNext(pthis, pTrace, _bits);
 }
 
-/* CGrenade::ExplodeFlashbang */
+/* 80. CGrenade::ExplodeFlashbang */
 void CGrenade_ExplodeFlashbang(IReGameHook_CGrenade_ExplodeFlashbang *chain, CGrenade *pthis, TraceResult *pTrace, int bitsDamageType)
 {
+    int _bits = bitsDamageType;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CGrenade_ExplodeFlashbang");
@@ -13957,16 +14891,26 @@ void CGrenade_ExplodeFlashbang(IReGameHook_CGrenade_ExplodeFlashbang *chain, CGr
             lua_pushentity(g_L, pGrenadeEnt);
 
             lua_pushlightuserdata(g_L, pTrace);
-            lua_pushinteger(g_L, bitsDamageType);
+            lua_pushinteger(g_L, _bits);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                    if (lua_isnumber(g_L, -1)) _bits = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, pTrace, bitsDamageType);
+    chain->callNext(pthis, pTrace, _bits);
 }
 
-/* CGrenade::ExplodeSmokeGrenade */
+/* 81. CGrenade::ExplodeSmokeGrenade */
 void CGrenade_ExplodeSmokeGrenade(IReGameHook_CGrenade_ExplodeSmokeGrenade *chain, CGrenade *pthis)
 {
     if (g_L) 
@@ -13977,16 +14921,23 @@ void CGrenade_ExplodeSmokeGrenade(IReGameHook_CGrenade_ExplodeSmokeGrenade *chai
             edict_t* pGrenadeEnt = pthis ? ENT(((CCSGrenade*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pGrenadeEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis);
 }
 
-/* CGrenade::ExplodeBomb */
+/* 82. CGrenade::ExplodeBomb */
 void CGrenade_ExplodeBomb(IReGameHook_CGrenade_ExplodeBomb *chain, CGrenade *pthis, TraceResult *pTrace, int bitsDamageType)
 {
+    int _bits = bitsDamageType;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CGrenade_ExplodeBomb");
@@ -13996,18 +14947,32 @@ void CGrenade_ExplodeBomb(IReGameHook_CGrenade_ExplodeBomb *chain, CGrenade *pth
             lua_pushentity(g_L, pGrenadeEnt);
 
             lua_pushlightuserdata(g_L, pTrace);
-            lua_pushinteger(g_L, bitsDamageType);
+            lua_pushinteger(g_L, _bits);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                    if (lua_isnumber(g_L, -1)) _bits = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, pTrace, bitsDamageType);
+    chain->callNext(pthis, pTrace, _bits);
 }
 
-/* ThrowHeGrenade */
+/* 83. ThrowHeGrenade */
 CGrenade *ThrowHeGrenade(IReGameHook_ThrowHeGrenade *chain, entvars_t *pevOwner, Vector &vecOrigin, Vector &vecVelocity, float time, int iDamage, unsigned short type)
 {
+    float _time = time;
+    int _dmg = iDamage;
+    unsigned short _type = type;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_ThrowHeGrenade");
@@ -14018,20 +14983,39 @@ CGrenade *ThrowHeGrenade(IReGameHook_ThrowHeGrenade *chain, entvars_t *pevOwner,
 
             lua_pushlightuserdata(g_L, &vecOrigin);
             lua_pushlightuserdata(g_L, &vecVelocity);
-            lua_pushnumber(g_L, time);
-            lua_pushinteger(g_L, iDamage);
-            lua_pushinteger(g_L, type);
+            lua_pushnumber(g_L, _time);
+            lua_pushinteger(g_L, _dmg);
+            lua_pushinteger(g_L, _type);
 
-            if (lua_pcall(g_L, 6, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 6, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                // 1 Ret = Supercede (return entity/nil)
+                if (nRet == 1) {
+                    if (lua_isuserdata(g_L, -1) || lua_isnil(g_L, -1)) { lua_pop(g_L, 1); return NULL; }
+                    lua_pop(g_L, 1);
+                }
+                // 3 Rets = Update (time, dmg, type)
+                else if (nRet == 3) {
+                    if (lua_isnumber(g_L, -3)) _time = (float)lua_tonumber(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _dmg = (int)lua_tointeger(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _type = (unsigned short)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 3);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pevOwner, vecOrigin, vecVelocity, time, iDamage, type);
+    return chain->callNext(pevOwner, vecOrigin, vecVelocity, _time, _dmg, _type);
 }
 
-/* ThrowFlashbang */
+/* 84. ThrowFlashbang */
 CGrenade *ThrowFlashbang(IReGameHook_ThrowFlashbang *chain, entvars_t *pevOwner, Vector &vecOrigin, Vector &vecVelocity, float time)
 {
+    float _time = time;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_ThrowFlashbang");
@@ -14042,18 +15026,31 @@ CGrenade *ThrowFlashbang(IReGameHook_ThrowFlashbang *chain, entvars_t *pevOwner,
 
             lua_pushlightuserdata(g_L, &vecOrigin);
             lua_pushlightuserdata(g_L, &vecVelocity);
-            lua_pushnumber(g_L, time);
+            lua_pushnumber(g_L, _time);
 
-            if (lua_pcall(g_L, 4, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 4, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isuserdata(g_L, -1) || lua_isnil(g_L, -1)) { lua_pop(g_L, 1); return NULL; }
+                    if (lua_isnumber(g_L, -1)) _time = (float)lua_tonumber(g_L, -1);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pevOwner, vecOrigin, vecVelocity, time);
+    return chain->callNext(pevOwner, vecOrigin, vecVelocity, _time);
 }
 
-/* ThrowSmokeGrenade */
+/* 85. ThrowSmokeGrenade */
 CGrenade *ThrowSmokeGrenade(IReGameHook_ThrowSmokeGrenade *chain, entvars_t *pevOwner, Vector &vecOrigin, Vector &vecVelocity, float time, unsigned short type)
 {
+    float _time = time;
+    unsigned short _type = type;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_ThrowSmokeGrenade");
@@ -14064,17 +15061,31 @@ CGrenade *ThrowSmokeGrenade(IReGameHook_ThrowSmokeGrenade *chain, entvars_t *pev
 
             lua_pushlightuserdata(g_L, &vecOrigin);
             lua_pushlightuserdata(g_L, &vecVelocity);
-            lua_pushnumber(g_L, time);
-            lua_pushinteger(g_L, type);
+            lua_pushnumber(g_L, _time);
+            lua_pushinteger(g_L, _type);
 
-            if (lua_pcall(g_L, 5, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 5, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isuserdata(g_L, -1) || lua_isnil(g_L, -1)) { lua_pop(g_L, 1); return NULL; }
+                    lua_pop(g_L, 1);
+                }
+                else if (nRet == 2) {
+                    if (lua_isnumber(g_L, -2)) _time = (float)lua_tonumber(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _type = (unsigned short)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    return chain->callNext(pevOwner, vecOrigin, vecVelocity, time, type);
+    return chain->callNext(pevOwner, vecOrigin, vecVelocity, _time, _type);
 }
 
-/* PlantBomb */
+/* 86. PlantBomb */
 CGrenade *PlantBomb(IReGameHook_PlantBomb *chain, entvars_t *pevOwner, Vector &vecOrigin, Vector &vecVelocity)
 {
     if (g_L) 
@@ -14088,14 +15099,19 @@ CGrenade *PlantBomb(IReGameHook_PlantBomb *chain, entvars_t *pevOwner, Vector &v
             lua_pushlightuserdata(g_L, &vecOrigin);
             lua_pushlightuserdata(g_L, &vecVelocity);
 
-            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 3, 1, 0) == 0)
+            {
+                if (lua_isuserdata(g_L, -1) || lua_isnil(g_L, -1)) { lua_pop(g_L, 1); return NULL; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     return chain->callNext(pevOwner, vecOrigin, vecVelocity);
 }
 
-/* CBasePlayer::RemoveSpawnProtection */
+/* 87. CBasePlayer::RemoveSpawnProtection */
 void CBasePlayer_RemoveSpawnProtection(IReGameHook_CBasePlayer_RemoveSpawnProtection *chain, CBasePlayer *pthis)
 {
     if (g_L) 
@@ -14106,16 +15122,23 @@ void CBasePlayer_RemoveSpawnProtection(IReGameHook_CBasePlayer_RemoveSpawnProtec
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
     chain->callNext(pthis);
 }
 
-/* CBasePlayer::SetSpawnProtection */
+/* 88. CBasePlayer::SetSpawnProtection */
 void CBasePlayer_SetSpawnProtection(IReGameHook_CBasePlayer_SetSpawnProtection *chain, CBasePlayer *pthis, float time)
 {
+    float _time = time;
+
     if (g_L) 
     {
         lua_getglobal(g_L, "ReGame_CBasePlayer_SetSpawnProtection");
@@ -14124,16 +15147,26 @@ void CBasePlayer_SetSpawnProtection(IReGameHook_CBasePlayer_SetSpawnProtection *
             edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
             lua_pushentity(g_L, pEnt);
 
-            lua_pushnumber(g_L, time);
+            lua_pushnumber(g_L, _time);
 
-            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                    if (lua_isnumber(g_L, -1)) _time = (float)lua_tonumber(g_L, -1);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
-    chain->callNext(pthis, time);
+    chain->callNext(pthis, _time);
 }
 
-/* IsPenetrableEntity */
+/* 89. IsPenetrableEntity */
 bool IsPenetrableEntity(IReGameHook_IsPenetrableEntity *chain, Vector &vecSrc, Vector &vecDest, entvars_t *pevInflictor, edict_t *pEnt)
 {
     if (g_L) 
@@ -14149,7 +15182,16 @@ bool IsPenetrableEntity(IReGameHook_IsPenetrableEntity *chain, Vector &vecSrc, V
 
             lua_pushentity(g_L, pEnt);
 
-            if (lua_pcall(g_L, 4, 0, 0) != 0) lua_pop(g_L, 1);
+            if (lua_pcall(g_L, 4, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1)) {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
         }
         else lua_pop(g_L, 1);
     }
