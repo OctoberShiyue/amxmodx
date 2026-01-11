@@ -9,6 +9,13 @@ lua_State *g_L = nullptr;
 // typedef ke::HashMap<ke::AString, int,int> g_FuncIdMap;
 StringHashMap<int> g_LuaPawnFuncMap;
 
+inline void lua_pushentity(lua_State* L, edict_t* pent) {
+    if (pent && !FNullEnt(pent)) 
+        lua_pushinteger(L, ENTINDEX(pent));
+    else 
+        lua_pushinteger(L, 0);
+}
+
 
 // 1. 定义数据结构
 enum VarType {
@@ -649,7 +656,6 @@ void OnAmxxAttach()
     REG_VAR("owner",      owner,      TYPE_EDICT);
     REG_VAR("aiment",     aiment,     TYPE_EDICT);
 
-    MF_Log("Lua for AMX Mod X========================");
 }
 void TrimString(char *str)
 {
@@ -729,7 +735,7 @@ int DispatchSpawn(edict_t *pent)
     }
 
     // Push: edict_t* (pointer)
-    lua_pushlightuserdata(g_L, pent);
+    lua_pushentity(g_L, pent);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -754,7 +760,7 @@ void DispatchThink(edict_t *pent)
     }
 
     // Push: edict_t* (pointer)
-    lua_pushlightuserdata(g_L, pent);
+    lua_pushentity(g_L, pent);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -779,8 +785,8 @@ void DispatchUse(edict_t *pentUsed, edict_t *pentOther)
     }
 
     // Push: edict_t* (Used), edict_t* (Other)
-    lua_pushlightuserdata(g_L, pentUsed);
-    lua_pushlightuserdata(g_L, pentOther);
+    lua_pushentity(g_L, pentUsed);
+    lua_pushentity(g_L, pentOther);
 
     if (lua_pcall(g_L, 2, 0, 0) != 0)
     {
@@ -805,8 +811,8 @@ void DispatchTouch(edict_t *pentTouched, edict_t *pentOther)
     }
 
     // Push: edict_t* (Touched), edict_t* (Other)
-    lua_pushlightuserdata(g_L, pentTouched);
-    lua_pushlightuserdata(g_L, pentOther);
+    lua_pushentity(g_L, pentTouched);
+    lua_pushentity(g_L, pentOther);
 
     if (lua_pcall(g_L, 2, 0, 0) != 0)
     {
@@ -831,8 +837,8 @@ void DispatchBlocked(edict_t *pentBlocked, edict_t *pentOther)
     }
 
     // Push: edict_t* (Blocked), edict_t* (Other)
-    lua_pushlightuserdata(g_L, pentBlocked);
-    lua_pushlightuserdata(g_L, pentOther);
+    lua_pushentity(g_L, pentBlocked);
+    lua_pushentity(g_L, pentOther);
 
     if (lua_pcall(g_L, 2, 0, 0) != 0)
     {
@@ -857,7 +863,7 @@ void DispatchKeyValue(edict_t *pentKeyvalue, KeyValueData *pkvd)
     }
 
     // Push: edict_t* (Entity)
-    lua_pushlightuserdata(g_L, pentKeyvalue);
+    lua_pushentity(g_L, pentKeyvalue);
     
     // Push: Key (string), Value (string), ClassName (string)
     // 这样在 Lua 里可以直接读取配置，而不是拿到一个空指针
@@ -894,7 +900,7 @@ void DispatchSave(edict_t *pent, SAVERESTOREDATA *pSaveData)
     }
 
     // Push: edict_t* (Entity), SAVERESTOREDATA* (pointer)
-    lua_pushlightuserdata(g_L, pent);
+    lua_pushentity(g_L, pent);
     lua_pushlightuserdata(g_L, pSaveData);
 
     if (lua_pcall(g_L, 2, 0, 0) != 0)
@@ -920,7 +926,7 @@ int DispatchRestore(edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity)
     }
 
     // Push: edict_t* (Entity), SAVERESTOREDATA* (pointer), globalEntity (int)
-    lua_pushlightuserdata(g_L, pent);
+    lua_pushentity(g_L, pent);
     lua_pushlightuserdata(g_L, pSaveData);
     lua_pushinteger(g_L, globalEntity);
 
@@ -947,7 +953,7 @@ void DispatchObjectCollsionBox(edict_t *pent)
     }
 
     // Push: edict_t* (pointer)
-    lua_pushlightuserdata(g_L, pent);
+    lua_pushentity(g_L, pent);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -1096,7 +1102,6 @@ void ResetGlobalState(void)
 }
 
 /* pfnClientConnect() */
-/* pfnClientConnect() */
 qboolean ClientConnect(edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[128])
 {
     if (!g_L)
@@ -1111,7 +1116,7 @@ qboolean ClientConnect(edict_t *pEntity, const char *pszName, const char *pszAdd
     }
 
     // Push: edict_t* (玩家实体)
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
     // Push: Name (名字)
     lua_pushstring(g_L, pszName);
     // Push: IP (IP地址)
@@ -1161,7 +1166,7 @@ void ClientDisconnect(edict_t *pEntity)
     }
 
     // Push: edict_t* (Player Entity)
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -1186,7 +1191,7 @@ void ClientKill(edict_t *pEntity)
     }
 
     // Push: edict_t* (Player Entity)
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -1211,7 +1216,7 @@ void ClientPutInServer(edict_t *pEntity)
     }
 
     // Push: edict_t* (Player Entity)
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -1236,7 +1241,7 @@ void ClientCommand(edict_t *pEntity)
     }
 
     // Push: edict_t* (Player Entity)
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
     // 注意: 命令的具体内容在 Lua 中需要通过调用 engine.Cmd_Args() 等函数获取
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
@@ -1262,7 +1267,7 @@ void ClientUserInfoChanged(edict_t *pEntity, char *infobuffer)
     }
 
     // Push: edict_t* (Player Entity)
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
     // Push: infobuffer string (因为只是读取，复制一份给Lua没问题)
     lua_pushstring(g_L, infobuffer);
 
@@ -1292,7 +1297,7 @@ void ServerActivate(edict_t *pEdictList, int edictCount, int clientMax)
     }
 
     // Push: pEdictList (指针)
-    lua_pushlightuserdata(g_L, pEdictList);
+    lua_pushentity(g_L, pEdictList);
     // Push: edictCount (int)
     lua_pushinteger(g_L, edictCount);
     // Push: clientMax (int)
@@ -1343,7 +1348,7 @@ void PlayerPreThink(edict_t *pEntity)
     }
 
     // Push: edict_t* (Player Entity)
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -1368,7 +1373,7 @@ void PlayerPostThink(edict_t *pEntity)
     }
 
     // Push: edict_t* (Player Entity)
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -1498,7 +1503,7 @@ void PlayerCustomization(edict_t *pEntity, customization_t *pCustom)
         RETURN_META(MRES_IGNORED);
     }
 
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
     lua_pushlightuserdata(g_L, pCustom);
 
     if (lua_pcall(g_L, 2, 0, 0) != 0)
@@ -1523,7 +1528,7 @@ void SpectatorConnect(edict_t *pEntity)
         RETURN_META(MRES_IGNORED);
     }
 
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -1547,7 +1552,7 @@ void SpectatorDisconnect(edict_t *pEntity)
         RETURN_META(MRES_IGNORED);
     }
 
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -1571,7 +1576,7 @@ void SpectatorThink(edict_t *pEntity)
         RETURN_META(MRES_IGNORED);
     }
 
-    lua_pushlightuserdata(g_L, pEntity);
+    lua_pushentity(g_L, pEntity);
 
     if (lua_pcall(g_L, 1, 0, 0) != 0)
     {
@@ -1667,8 +1672,8 @@ void SetupVisibility(struct edict_s *pViewEntity, struct edict_s *pClient, unsig
     }
 
     // Args: ViewEntity, Client, pvs ptr, pas ptr
-    lua_pushlightuserdata(g_L, pViewEntity);
-    lua_pushlightuserdata(g_L, pClient);
+    lua_pushentity(g_L, pViewEntity);
+    lua_pushentity(g_L, pClient);
     lua_pushlightuserdata(g_L, pvs);
     lua_pushlightuserdata(g_L, pas);
 
@@ -1714,8 +1719,8 @@ int AddToFullPack(struct entity_state_s *state, int e, edict_t *ent, edict_t *ho
     // Args: state*, e_index, ent*, host*, hostflags, player(bool/int), pSet*
     lua_pushlightuserdata(g_L, state);
     lua_pushinteger(g_L, e);
-    lua_pushlightuserdata(g_L, ent);
-    lua_pushlightuserdata(g_L, host);
+    lua_pushentity(g_L, ent);
+    lua_pushentity(g_L, host);
     lua_pushinteger(g_L, hostflags);
     lua_pushinteger(g_L, player);
     lua_pushlightuserdata(g_L, pSet);
@@ -1750,7 +1755,7 @@ void CreateBaseline(int player, int eindex, struct entity_state_s *baseline, str
     lua_pushinteger(g_L, player);
     lua_pushinteger(g_L, eindex);
     lua_pushlightuserdata(g_L, baseline);
-    lua_pushlightuserdata(g_L, entity);
+    lua_pushentity(g_L, entity);
     lua_pushinteger(g_L, playermodelindex);
     // vec3_t 是 float数组，直接作为指针传过去
     lua_pushlightuserdata(g_L, player_mins); 
@@ -1790,7 +1795,7 @@ int GetWeaponData(struct edict_s *player, struct weapon_data_s *info)
         RETURN_META_VALUE(MRES_IGNORED, 0);
     }
 
-    lua_pushlightuserdata(g_L, player);
+    lua_pushentity(g_L, player);
     lua_pushlightuserdata(g_L, info);
 
     if (lua_pcall(g_L, 2, 1, 0) != 0) {
@@ -1892,8 +1897,8 @@ int GetHullBounds(int hullnumber, float *mins, float *maxs)
     }
 
     lua_pushinteger(g_L, hullnumber);
-    lua_pushlightuserdata(g_L, mins);
-    lua_pushlightuserdata(g_L, maxs);
+    lua_pushnumber(g_L, *mins);
+    lua_pushnumber(g_L, *maxs);
 
     if (lua_pcall(g_L, 3, 1, 0) != 0) {
         lua_pop(g_L, 1);
