@@ -212,43 +212,6 @@ void InitLuaAPI(lua_State* L) {
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   
-    g_EntVarMap.clear();
-    // 初始化容量 (2的幂次方，比如 64, 128)
-    g_EntVarMap.init(128);
-
-    // --- Float ---
-    REG_VAR("health",     health,     TYPE_FLOAT);
-    REG_VAR("gravity",    gravity,    TYPE_FLOAT);
-    REG_VAR("friction",   friction,   TYPE_FLOAT);
-    REG_VAR("max_health", max_health, TYPE_FLOAT);
-    REG_VAR("dmg",        dmg,        TYPE_FLOAT);
-    REG_VAR("takedamage", takedamage, TYPE_FLOAT);
-
-    // --- String ---
-    REG_VAR("classname",  classname,  TYPE_STRING);
-    REG_VAR("model",      model,      TYPE_STRING);
-    REG_VAR("netname",    netname,    TYPE_STRING);
-    REG_VAR("targetname", targetname, TYPE_STRING);
-
-    // --- Int ---
-    REG_VAR("flags",      flags,      TYPE_INT);
-    REG_VAR("movetype",   movetype,   TYPE_INT);
-    REG_VAR("solid",      solid,      TYPE_INT);
-    REG_VAR("team",       team,       TYPE_INT);
-    REG_VAR("button",     button,     TYPE_INT);
-    REG_VAR("deadflag",   deadflag,   TYPE_INT);
-
-    // --- Vector ---
-    REG_VAR("origin",     origin,     TYPE_VECTOR);
-    REG_VAR("angles",     angles,     TYPE_VECTOR);
-    REG_VAR("velocity",   velocity,   TYPE_VECTOR);
-    REG_VAR("v_angle",    v_angle,    TYPE_VECTOR);
-
-    // --- Edict ---
-    REG_VAR("owner",      owner,      TYPE_EDICT);
-    REG_VAR("aiment",     aiment,     TYPE_EDICT);
-
-    
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
     InitLuaAPI(L);
@@ -650,6 +613,43 @@ AMX_NATIVE_INFO LuaNatives[] = {
 void OnAmxxAttach()
 {
     MF_AddNatives(LuaNatives);
+    g_EntVarMap.clear();
+    // 初始化容量 (2的幂次方，比如 64, 128)
+    g_EntVarMap.init(128);
+
+    // --- Float ---
+    REG_VAR("health",     health,     TYPE_FLOAT);
+    REG_VAR("gravity",    gravity,    TYPE_FLOAT);
+    REG_VAR("friction",   friction,   TYPE_FLOAT);
+    REG_VAR("max_health", max_health, TYPE_FLOAT);
+    REG_VAR("dmg",        dmg,        TYPE_FLOAT);
+    REG_VAR("takedamage", takedamage, TYPE_FLOAT);
+
+    // --- String ---
+    REG_VAR("classname",  classname,  TYPE_STRING);
+    REG_VAR("model",      model,      TYPE_STRING);
+    REG_VAR("netname",    netname,    TYPE_STRING);
+    REG_VAR("targetname", targetname, TYPE_STRING);
+
+    // --- Int ---
+    REG_VAR("flags",      flags,      TYPE_INT);
+    REG_VAR("movetype",   movetype,   TYPE_INT);
+    REG_VAR("solid",      solid,      TYPE_INT);
+    REG_VAR("team",       team,       TYPE_INT);
+    REG_VAR("button",     button,     TYPE_INT);
+    REG_VAR("deadflag",   deadflag,   TYPE_INT);
+
+    // --- Vector ---
+    REG_VAR("origin",     origin,     TYPE_VECTOR);
+    REG_VAR("angles",     angles,     TYPE_VECTOR);
+    REG_VAR("velocity",   velocity,   TYPE_VECTOR);
+    REG_VAR("v_angle",    v_angle,    TYPE_VECTOR);
+
+    // --- Edict ---
+    REG_VAR("owner",      owner,      TYPE_EDICT);
+    REG_VAR("aiment",     aiment,     TYPE_EDICT);
+
+    MF_Log("Lua for AMX Mod X========================");
 }
 void TrimString(char *str)
 {
