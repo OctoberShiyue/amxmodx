@@ -629,8 +629,95 @@ void OnAmxxAttach()
     HasReHlds    = RehldsApi_Init();
 	HasReGameDll = RegamedllApi_Init();
 
-    ReGameHookchains->CBasePlayer_Killed()->registerHook(&CBasePlayer_Killed,HC_PRIORITY_HIGH);
-
+    ReGameHookchains->CBasePlayer_Spawn()->registerHook(&CBasePlayer_Spawn, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_Precache()->registerHook(&CBasePlayer_Precache, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_ObjectCaps()->registerHook(&CBasePlayer_ObjectCaps, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_Classify()->registerHook(&CBasePlayer_Classify, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_TraceAttack()->registerHook(&CBasePlayer_TraceAttack, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_TakeDamage()->registerHook(&CBasePlayer_TakeDamage, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_TakeHealth()->registerHook(&CBasePlayer_TakeHealth, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_Killed()->registerHook(&CBasePlayer_Killed, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_AddPoints()->registerHook(&CBasePlayer_AddPoints, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_AddPointsToTeam()->registerHook(&CBasePlayer_AddPointsToTeam, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_RoundRespawn()->registerHook(&CBasePlayer_RoundRespawn, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_Blind()->registerHook(&CBasePlayer_Blind, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_Observer_IsValidTarget()->registerHook(&CBasePlayer_Observer_IsValidTarget, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_SetAnimation()->registerHook(&CBasePlayer_SetAnimation, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_GiveDefaultItems()->registerHook(&CBasePlayer_GiveDefaultItems, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_GiveNamedItem()->registerHook(&CBasePlayer_GiveNamedItem, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_AddAccount()->registerHook(&CBasePlayer_AddAccount, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_GiveShield()->registerHook(&CBasePlayer_GiveShield, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_SetClientUserInfoModel()->registerHook(&CBasePlayer_SetClientUserInfoModel, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_SetClientUserInfoName()->registerHook(&CBasePlayer_SetClientUserInfoName, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_HasRestrictItem()->registerHook(&CBasePlayer_HasRestrictItem, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_DropPlayerItem()->registerHook(&CBasePlayer_DropPlayerItem, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_DropShield()->registerHook(&CBasePlayer_DropShield, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_OnSpawnEquip()->registerHook(&CBasePlayer_OnSpawnEquip, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_Radio()->registerHook(&CBasePlayer_Radio, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_Disappear()->registerHook(&CBasePlayer_Disappear, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_MakeVIP()->registerHook(&CBasePlayer_MakeVIP, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_MakeBomber()->registerHook(&CBasePlayer_MakeBomber, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_StartObserver()->registerHook(&CBasePlayer_StartObserver, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_GetIntoGame()->registerHook(&CBasePlayer_GetIntoGame, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBaseAnimating_ResetSequenceInfo()->registerHook(&CBaseAnimating_ResetSequenceInfo, HC_PRIORITY_HIGH);
+    ReGameHookchains->GetForceCamera()->registerHook(&GetForceCamera, HC_PRIORITY_HIGH);
+    ReGameHookchains->PlayerBlind()->registerHook(&PlayerBlind, HC_PRIORITY_HIGH);
+    ReGameHookchains->RadiusFlash_TraceLine()->registerHook(&RadiusFlash_TraceLine, HC_PRIORITY_HIGH);
+    ReGameHookchains->RoundEnd()->registerHook(&RoundEnd, HC_PRIORITY_HIGH);
+    ReGameHookchains->InstallGameRules()->registerHook(&InstallGameRules, HC_PRIORITY_HIGH);
+    ReGameHookchains->PM_Init()->registerHook(&PM_Init, HC_PRIORITY_HIGH);
+    ReGameHookchains->PM_Move()->registerHook(&PM_Move, HC_PRIORITY_HIGH);
+    ReGameHookchains->PM_AirMove()->registerHook(&PM_AirMove, HC_PRIORITY_HIGH);
+    ReGameHookchains->HandleMenu_ChooseAppearance()->registerHook(&HandleMenu_ChooseAppearance, HC_PRIORITY_HIGH);
+    ReGameHookchains->HandleMenu_ChooseTeam()->registerHook(&HandleMenu_ChooseTeam, HC_PRIORITY_HIGH);
+    ReGameHookchains->ShowMenu()->registerHook(&ShowMenu, HC_PRIORITY_HIGH);
+    ReGameHookchains->ShowVGUIMenu()->registerHook(&ShowVGUIMenu, HC_PRIORITY_HIGH);
+    ReGameHookchains->BuyGunAmmo()->registerHook(&BuyGunAmmo, HC_PRIORITY_HIGH);
+    ReGameHookchains->BuyWeaponByWeaponID()->registerHook(&BuyWeaponByWeaponID, HC_PRIORITY_HIGH);
+    ReGameHookchains->InternalCommand()->registerHook(&InternalCommand, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_FShouldSwitchWeapon()->registerHook(&CSGameRules_FShouldSwitchWeapon, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_GetNextBestWeapon()->registerHook(&CSGameRules_GetNextBestWeapon, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_FlPlayerFallDamage()->registerHook(&CSGameRules_FlPlayerFallDamage, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_FPlayerCanTakeDamage()->registerHook(&CSGameRules_FPlayerCanTakeDamage, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_PlayerSpawn()->registerHook(&CSGameRules_PlayerSpawn, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_FPlayerCanRespawn()->registerHook(&CSGameRules_FPlayerCanRespawn, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_GetPlayerSpawnSpot()->registerHook(&CSGameRules_GetPlayerSpawnSpot, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_ClientUserInfoChanged()->registerHook(&CSGameRules_ClientUserInfoChanged, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_PlayerKilled()->registerHook(&CSGameRules_PlayerKilled, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_DeathNotice()->registerHook(&CSGameRules_DeathNotice, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_CanHavePlayerItem()->registerHook(&CSGameRules_CanHavePlayerItem, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_DeadPlayerWeapons()->registerHook(&CSGameRules_DeadPlayerWeapons, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_ServerDeactivate()->registerHook(&CSGameRules_ServerDeactivate, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_CheckMapConditions()->registerHook(&CSGameRules_CheckMapConditions, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_CleanUpMap()->registerHook(&CSGameRules_CleanUpMap, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_RestartRound()->registerHook(&CSGameRules_RestartRound, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_CheckWinConditions()->registerHook(&CSGameRules_CheckWinConditions, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_RemoveGuns()->registerHook(&CSGameRules_RemoveGuns, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_GiveC4()->registerHook(&CSGameRules_GiveC4, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_ChangeLevel()->registerHook(&CSGameRules_ChangeLevel, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_GoToIntermission()->registerHook(&CSGameRules_GoToIntermission, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_BalanceTeams()->registerHook(&CSGameRules_BalanceTeams, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_OnRoundFreezeEnd()->registerHook(&CSGameRules_OnRoundFreezeEnd, HC_PRIORITY_HIGH);
+    ReGameHookchains->PM_UpdateStepSound()->registerHook(&PM_UpdateStepSound, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_StartDeathCam()->registerHook(&CBasePlayer_StartDeathCam, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_SwitchTeam()->registerHook(&CBasePlayer_SwitchTeam, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_CanSwitchTeam()->registerHook(&CBasePlayer_CanSwitchTeam, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_ThrowGrenade()->registerHook(&CBasePlayer_ThrowGrenade, HC_PRIORITY_HIGH);
+    ReGameHookchains->CSGameRules_CanPlayerHearPlayer()->registerHook(&CSGameRules_CanPlayerHearPlayer, HC_PRIORITY_HIGH);
+    ReGameHookchains->CWeaponBox_SetModel()->registerHook(&CWeaponBox_SetModel, HC_PRIORITY_HIGH);
+    ReGameHookchains->CGrenade_DefuseBombStart()->registerHook(&CGrenade_DefuseBombStart, HC_PRIORITY_HIGH);
+    ReGameHookchains->CGrenade_DefuseBombEnd()->registerHook(&CGrenade_DefuseBombEnd, HC_PRIORITY_HIGH);
+    ReGameHookchains->CGrenade_ExplodeHeGrenade()->registerHook(&CGrenade_ExplodeHeGrenade, HC_PRIORITY_HIGH);
+    ReGameHookchains->CGrenade_ExplodeFlashbang()->registerHook(&CGrenade_ExplodeFlashbang, HC_PRIORITY_HIGH);
+    ReGameHookchains->CGrenade_ExplodeSmokeGrenade()->registerHook(&CGrenade_ExplodeSmokeGrenade, HC_PRIORITY_HIGH);
+    ReGameHookchains->CGrenade_ExplodeBomb()->registerHook(&CGrenade_ExplodeBomb, HC_PRIORITY_HIGH);
+    ReGameHookchains->ThrowHeGrenade()->registerHook(&ThrowHeGrenade, HC_PRIORITY_HIGH);
+    ReGameHookchains->ThrowFlashbang()->registerHook(&ThrowFlashbang, HC_PRIORITY_HIGH);
+    ReGameHookchains->ThrowSmokeGrenade()->registerHook(&ThrowSmokeGrenade, HC_PRIORITY_HIGH);
+    ReGameHookchains->PlantBomb()->registerHook(&PlantBomb, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_RemoveSpawnProtection()->registerHook(&CBasePlayer_RemoveSpawnProtection, HC_PRIORITY_HIGH);
+    ReGameHookchains->CBasePlayer_SetSpawnProtection()->registerHook(&CBasePlayer_SetSpawnProtection, HC_PRIORITY_HIGH);
+    ReGameHookchains->IsPenetrableEntity()->registerHook(&IsPenetrableEntity, HC_PRIORITY_HIGH);
     MF_AddNatives(LuaNatives);
     g_EntVarMap.clear();
     // 初始化容量 (2的幂次方，比如 64, 128)
@@ -12316,8 +12403,1755 @@ int ShouldCollide_Post(edict_t *pentTouched, edict_t *pentOther)
 }
 
 
+/* CBasePlayer::Spawn */
+void CBasePlayer_Spawn(IReGameHook_CBasePlayer_Spawn *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_Spawn");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* CBasePlayer::Precache */
+void CBasePlayer_Precache(IReGameHook_CBasePlayer_Precache *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_Precache");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* CBasePlayer::ObjectCaps */
+int CBasePlayer_ObjectCaps(IReGameHook_CBasePlayer_ObjectCaps *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_ObjectCaps");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis);
+}
+
+/* CBasePlayer::Classify */
+int CBasePlayer_Classify(IReGameHook_CBasePlayer_Classify *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_Classify");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis);
+}
+
+/* CBasePlayer::TraceAttack */
+void CBasePlayer_TraceAttack(IReGameHook_CBasePlayer_TraceAttack *chain, CBasePlayer *pthis, entvars_t *pevAttacker, float flDamage, Vector &vecDir, TraceResult *ptr, int bitsDamageType)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_TraceAttack");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pVictim = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pVictim);
+            
+            edict_t* pAttacker = pevAttacker ? ENT(pevAttacker) : NULL;
+            lua_pushentity(g_L, pAttacker);
+
+            lua_pushnumber(g_L, flDamage);
+            lua_pushlightuserdata(g_L, &vecDir);
+            lua_pushlightuserdata(g_L, ptr);
+            lua_pushinteger(g_L, bitsDamageType);
+
+            if (lua_pcall(g_L, 6, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, pevAttacker, flDamage, vecDir, ptr, bitsDamageType);
+}
+
+/* CBasePlayer::TakeDamage */
+BOOL CBasePlayer_TakeDamage(IReGameHook_CBasePlayer_TakeDamage *chain, CBasePlayer *pthis, entvars_t *pevInflictor, entvars_t *pevAttacker, float &flDamage, int bitsDamageType)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_TakeDamage");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pVictim = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pVictim);
+
+            edict_t* pInflictor = pevInflictor ? ENT(pevInflictor) : NULL;
+            lua_pushentity(g_L, pInflictor);
+
+            edict_t* pAttacker = pevAttacker ? ENT(pevAttacker) : NULL;
+            lua_pushentity(g_L, pAttacker);
+
+            lua_pushnumber(g_L, flDamage);
+            lua_pushinteger(g_L, bitsDamageType);
+
+            if (lua_pcall(g_L, 5, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis, pevInflictor, pevAttacker, flDamage, bitsDamageType);
+}
+
+/* CBasePlayer::TakeHealth */
+BOOL CBasePlayer_TakeHealth(IReGameHook_CBasePlayer_TakeHealth *chain, CBasePlayer *pthis, float flHealth, int bitsDamageType)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_TakeHealth");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pVictim = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pVictim);
+
+            lua_pushnumber(g_L, flHealth);
+            lua_pushinteger(g_L, bitsDamageType);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis, flHealth, bitsDamageType);
+}
+
+/* CBasePlayer::Killed */
 void CBasePlayer_Killed(IReGameHook_CBasePlayer_Killed *chain, CBasePlayer *pthis, entvars_t *pevAttacker, int iGib)
 {
-    printf("zzzzzzzzCBasePlayer_Killed_Post called!=%d=%d\n",ENTINDEX(((CCSPlayer*)pthis)->pev->pContainingEntity),ENTINDEX(pevAttacker->pContainingEntity));
-	chain->callNext(pthis, pevAttacker, iGib);
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_Killed");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pVictim = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pVictim);
+
+            edict_t* pAttacker = pevAttacker ? ENT(pevAttacker) : NULL;
+            lua_pushentity(g_L, pAttacker);
+
+            lua_pushinteger(g_L, iGib);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, pevAttacker, iGib);
+}
+
+/* CBasePlayer::AddPoints */
+void CBasePlayer_AddPoints(IReGameHook_CBasePlayer_AddPoints *chain, CBasePlayer *pthis, int score, BOOL bAllowNegative)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_AddPoints");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, score);
+            lua_pushboolean(g_L, bAllowNegative);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, score, bAllowNegative);
+}
+
+/* CBasePlayer::AddPointsToTeam */
+void CBasePlayer_AddPointsToTeam(IReGameHook_CBasePlayer_AddPointsToTeam *chain, CBasePlayer *pthis, int score, BOOL bAllowNegative)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_AddPointsToTeam");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, score);
+            lua_pushboolean(g_L, bAllowNegative);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, score, bAllowNegative);
+}
+/* CBasePlayer::RoundRespawn */
+void CBasePlayer_RoundRespawn(IReGameHook_CBasePlayer_RoundRespawn *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_RoundRespawn");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* CBasePlayer::Blind */
+void CBasePlayer_Blind(IReGameHook_CBasePlayer_Blind *chain, CBasePlayer *pthis, float view_fade_time, float view_fade_hold, float view_fade_alpha, int view_fade_flags)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_Blind");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushnumber(g_L, view_fade_time);
+            lua_pushnumber(g_L, view_fade_hold);
+            lua_pushnumber(g_L, view_fade_alpha);
+            lua_pushinteger(g_L, view_fade_flags);
+
+            if (lua_pcall(g_L, 5, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, view_fade_time, view_fade_hold, view_fade_alpha, view_fade_flags);
+}
+
+/* CBasePlayer::Observer_IsValidTarget */
+CBasePlayer *CBasePlayer_Observer_IsValidTarget(IReGameHook_CBasePlayer_Observer_IsValidTarget *chain, CBasePlayer *pthis, int iTargetIndex, bool bSameTeam)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_Observer_IsValidTarget");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, iTargetIndex);
+            lua_pushboolean(g_L, bSameTeam);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis, iTargetIndex, bSameTeam);
+}
+
+/* CBasePlayer::SetAnimation */
+void CBasePlayer_SetAnimation(IReGameHook_CBasePlayer_SetAnimation *chain, CBasePlayer *pthis, PLAYER_ANIM playerAnim)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_SetAnimation");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, (int)playerAnim);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, playerAnim);
+}
+
+/* CBasePlayer::GiveDefaultItems */
+void CBasePlayer_GiveDefaultItems(IReGameHook_CBasePlayer_GiveDefaultItems *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_GiveDefaultItems");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* CBasePlayer::GiveNamedItem */
+CBaseEntity *CBasePlayer_GiveNamedItem(IReGameHook_CBasePlayer_GiveNamedItem *chain, CBasePlayer *pthis, const char *pszName)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_GiveNamedItem");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushstring(g_L, pszName);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis, pszName);
+}
+
+/* CBasePlayer::AddAccount */
+void CBasePlayer_AddAccount(IReGameHook_CBasePlayer_AddAccount *chain, CBasePlayer *pthis, int amount, RewardType type, bool bTrackChange)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_AddAccount");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, amount);
+            lua_pushinteger(g_L, (int)type);
+            lua_pushboolean(g_L, bTrackChange);
+
+            if (lua_pcall(g_L, 4, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, amount, type, bTrackChange);
+}
+
+/* CBasePlayer::GiveShield */
+void CBasePlayer_GiveShield(IReGameHook_CBasePlayer_GiveShield *chain, CBasePlayer *pthis, bool bDeploy)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_GiveShield");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushboolean(g_L, bDeploy);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, bDeploy);
+}
+
+/* CBasePlayer::SetClientUserInfoModel */
+void CBasePlayer_SetClientUserInfoModel(IReGameHook_CBasePlayer_SetClientUserInfoModel *chain, CBasePlayer *pthis, char *infobuffer, char *newValue)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_SetClientUserInfoModel");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushstring(g_L, infobuffer);
+            lua_pushstring(g_L, newValue);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, infobuffer, newValue);
+}
+
+/* CBasePlayer::SetClientUserInfoName */
+bool CBasePlayer_SetClientUserInfoName(IReGameHook_CBasePlayer_SetClientUserInfoName *chain, CBasePlayer *pthis, char *infobuffer, char *newValue)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_SetClientUserInfoName");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushstring(g_L, infobuffer);
+            lua_pushstring(g_L, newValue);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis, infobuffer, newValue);
+}
+/* CBasePlayer::HasRestrictItem */
+bool CBasePlayer_HasRestrictItem(IReGameHook_CBasePlayer_HasRestrictItem *chain, CBasePlayer *pthis, ItemID item, ItemRestType type)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_HasRestrictItem");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, (int)item);
+            lua_pushinteger(g_L, (int)type);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis, item, type);
+}
+
+/* CBasePlayer::DropPlayerItem */
+CBaseEntity *CBasePlayer_DropPlayerItem(IReGameHook_CBasePlayer_DropPlayerItem *chain, CBasePlayer *pthis, const char *pszItemName)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_DropPlayerItem");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushstring(g_L, pszItemName);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis, pszItemName);
+}
+
+/* CBasePlayer::DropShield */
+CBaseEntity *CBasePlayer_DropShield(IReGameHook_CBasePlayer_DropShield *chain, CBasePlayer *pthis, bool bDeploy)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_DropShield");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushboolean(g_L, bDeploy);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis, bDeploy);
+}
+
+/* CBasePlayer::OnSpawnEquip */
+void CBasePlayer_OnSpawnEquip(IReGameHook_CBasePlayer_OnSpawnEquip *chain, CBasePlayer *pthis, bool bAddDefault, bool bEquipGame)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_OnSpawnEquip");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushboolean(g_L, bAddDefault);
+            lua_pushboolean(g_L, bEquipGame);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, bAddDefault, bEquipGame);
+}
+
+/* CBasePlayer::Radio */
+void CBasePlayer_Radio(IReGameHook_CBasePlayer_Radio *chain, CBasePlayer *pthis, const char *pszRadioName, const char *pszRadioMessage, short iPitch, bool bShowIcon)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_Radio");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushstring(g_L, pszRadioName);
+            lua_pushstring(g_L, pszRadioMessage);
+            lua_pushinteger(g_L, iPitch);
+            lua_pushboolean(g_L, bShowIcon);
+
+            if (lua_pcall(g_L, 5, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, pszRadioName, pszRadioMessage, iPitch, bShowIcon);
+}
+
+/* CBasePlayer::Disappear */
+void CBasePlayer_Disappear(IReGameHook_CBasePlayer_Disappear *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_Disappear");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* CBasePlayer::MakeVIP */
+void CBasePlayer_MakeVIP(IReGameHook_CBasePlayer_MakeVIP *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_MakeVIP");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* CBasePlayer::MakeBomber */
+bool CBasePlayer_MakeBomber(IReGameHook_CBasePlayer_MakeBomber *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_MakeBomber");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis);
+}
+
+/* CBasePlayer::StartObserver */
+void CBasePlayer_StartObserver(IReGameHook_CBasePlayer_StartObserver *chain, CBasePlayer *pthis, Vector &vecPosition, Vector &vecViewAngle)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_StartObserver");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushlightuserdata(g_L, &vecPosition);
+            lua_pushlightuserdata(g_L, &vecViewAngle);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, vecPosition, vecViewAngle);
+}
+
+/* CBasePlayer::GetIntoGame */
+bool CBasePlayer_GetIntoGame(IReGameHook_CBasePlayer_GetIntoGame *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_GetIntoGame");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis);
+}
+/* CBaseAnimating::ResetSequenceInfo */
+void CBaseAnimating_ResetSequenceInfo(IReGameHook_CBaseAnimating_ResetSequenceInfo *chain, CBaseAnimating *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBaseAnimating_ResetSequenceInfo");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSAnimating*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* GetForceCamera */
+int GetForceCamera(IReGameHook_GetForceCamera *chain, CBasePlayer *pPlayer)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_GetForceCamera");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer);
+}
+
+/* PlayerBlind */
+void PlayerBlind(IReGameHook_PlayerBlind *chain, CBasePlayer *pPlayer, entvars_t *pevInflictor, entvars_t *pevAttacker, float fadeTime, float fadeHold, int alpha, Vector &color)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_PlayerBlind");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            edict_t* pInflictor = pevInflictor ? ENT(pevInflictor) : NULL;
+            lua_pushentity(g_L, pInflictor);
+
+            edict_t* pAttacker = pevAttacker ? ENT(pevAttacker) : NULL;
+            lua_pushentity(g_L, pAttacker);
+
+            lua_pushnumber(g_L, fadeTime);
+            lua_pushnumber(g_L, fadeHold);
+            lua_pushinteger(g_L, alpha);
+            lua_pushlightuserdata(g_L, &color);
+
+            if (lua_pcall(g_L, 7, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pPlayer, pevInflictor, pevAttacker, fadeTime, fadeHold, alpha, color);
+}
+
+/* RadiusFlash_TraceLine */
+void RadiusFlash_TraceLine(IReGameHook_RadiusFlash_TraceLine *chain, CBasePlayer *pPlayer, entvars_t *pevInflictor, entvars_t *pevAttacker, Vector &vecSrc, Vector &vecSpot, TraceResult *ptr)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_RadiusFlash_TraceLine");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            edict_t* pInflictor = pevInflictor ? ENT(pevInflictor) : NULL;
+            lua_pushentity(g_L, pInflictor);
+
+            edict_t* pAttacker = pevAttacker ? ENT(pevAttacker) : NULL;
+            lua_pushentity(g_L, pAttacker);
+
+            lua_pushlightuserdata(g_L, &vecSrc);
+            lua_pushlightuserdata(g_L, &vecSpot);
+            lua_pushlightuserdata(g_L, ptr);
+
+            if (lua_pcall(g_L, 6, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pPlayer, pevInflictor, pevAttacker, vecSrc, vecSpot, ptr);
+}
+
+/* RoundEnd */
+bool RoundEnd(IReGameHook_RoundEnd *chain, int winStatus, ScenarioEventEndRound event, float tmDelay)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_RoundEnd");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushinteger(g_L, winStatus);
+            lua_pushinteger(g_L, (int)event);
+            lua_pushnumber(g_L, tmDelay);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(winStatus, event, tmDelay);
+}
+
+/* InstallGameRules */
+CGameRules *InstallGameRules(IReGameHook_InstallGameRules *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_InstallGameRules");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext();
+}
+
+/* PM_Init */
+void PM_Init(IReGameHook_PM_Init *chain, struct playermove_s *ppmove)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_PM_Init");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, ppmove);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(ppmove);
+}
+
+/* PM_Move */
+void PM_Move(IReGameHook_PM_Move *chain, struct playermove_s *ppmove, int server)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_PM_Move");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, ppmove);
+            lua_pushinteger(g_L, server);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(ppmove, server);
+}
+
+/* PM_AirMove */
+void PM_AirMove(IReGameHook_PM_AirMove *chain, int server)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_PM_AirMove");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushinteger(g_L, server);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(server);
+}
+
+/* HandleMenu_ChooseAppearance */
+void HandleMenu_ChooseAppearance(IReGameHook_HandleMenu_ChooseAppearance *chain, CBasePlayer *pPlayer, int slot)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_HandleMenu_ChooseAppearance");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, slot);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pPlayer, slot);
+}
+/* HandleMenu_ChooseTeam */
+BOOL HandleMenu_ChooseTeam(IReGameHook_HandleMenu_ChooseTeam *chain, CBasePlayer *pPlayer, int slot)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_HandleMenu_ChooseTeam");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, slot);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer, slot);
+}
+
+/* ShowMenu */
+void ShowMenu(IReGameHook_ShowMenu *chain, CBasePlayer *pPlayer, int slots, int displaytime, BOOL needmore, char *pszText)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_ShowMenu");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, slots);
+            lua_pushinteger(g_L, displaytime);
+            lua_pushboolean(g_L, needmore);
+            lua_pushstring(g_L, pszText);
+
+            if (lua_pcall(g_L, 5, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pPlayer, slots, displaytime, needmore, pszText);
+}
+
+/* ShowVGUIMenu */
+void ShowVGUIMenu(IReGameHook_ShowVGUIMenu *chain, CBasePlayer *pPlayer, int menuType, int slots, char *pszOldMenu)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_ShowVGUIMenu");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, menuType);
+            lua_pushinteger(g_L, slots);
+            lua_pushstring(g_L, pszOldMenu);
+
+            if (lua_pcall(g_L, 4, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pPlayer, menuType, slots, pszOldMenu);
+}
+
+/* BuyGunAmmo */
+bool BuyGunAmmo(IReGameHook_BuyGunAmmo *chain, CBasePlayer *pPlayer, CBasePlayerItem *pItem, bool bIsPrimary)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_BuyGunAmmo");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            edict_t* pItemEnt = pItem ? ENT(((CCSPlayerItem*)pItem)->pev) : NULL;
+            lua_pushentity(g_L, pItemEnt);
+
+            lua_pushboolean(g_L, bIsPrimary);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer, pItem, bIsPrimary);
+}
+
+/* BuyWeaponByWeaponID */
+CBaseEntity *BuyWeaponByWeaponID(IReGameHook_BuyWeaponByWeaponID *chain, CBasePlayer *pPlayer, WeaponIdType weaponID)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_BuyWeaponByWeaponID");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, (int)weaponID);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer, weaponID);
+}
+
+/* InternalCommand */
+void InternalCommand(IReGameHook_InternalCommand *chain, edict_t *pEdict, const char *szCmd, const char *szVal)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_InternalCommand");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushentity(g_L, pEdict);
+            lua_pushstring(g_L, szCmd);
+            lua_pushstring(g_L, szVal);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pEdict, szCmd, szVal);
+}
+
+/* CSGameRules_FShouldSwitchWeapon */
+BOOL CSGameRules_FShouldSwitchWeapon(IReGameHook_CSGameRules_FShouldSwitchWeapon *chain, CBasePlayer *pPlayer, CBasePlayerItem *pWeapon)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_FShouldSwitchWeapon");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            edict_t* pWeaponEnt = pWeapon ? ENT(((CCSPlayerItem*)pWeapon)->pev) : NULL;
+            lua_pushentity(g_L, pWeaponEnt);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer, pWeapon);
+}
+
+/* CSGameRules_GetNextBestWeapon */
+BOOL CSGameRules_GetNextBestWeapon(IReGameHook_CSGameRules_GetNextBestWeapon *chain, CBasePlayer *pPlayer, CBasePlayerItem *pWeapon)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_GetNextBestWeapon");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            edict_t* pWeaponEnt = pWeapon ? ENT(((CCSPlayerItem*)pWeapon)->pev) : NULL;
+            lua_pushentity(g_L, pWeaponEnt);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer, pWeapon);
+}
+
+/* CSGameRules_FlPlayerFallDamage */
+float CSGameRules_FlPlayerFallDamage(IReGameHook_CSGameRules_FlPlayerFallDamage *chain, CBasePlayer *pPlayer)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_FlPlayerFallDamage");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer);
+}
+
+/* CSGameRules_FPlayerCanTakeDamage */
+BOOL CSGameRules_FPlayerCanTakeDamage(IReGameHook_CSGameRules_FPlayerCanTakeDamage *chain, CBasePlayer *pPlayer, CBaseEntity *pAttacker)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_FPlayerCanTakeDamage");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            edict_t* pAttackerEnt = pAttacker ? ENT(((CCSEntity*)pAttacker)->pev) : NULL;
+            lua_pushentity(g_L, pAttackerEnt);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer, pAttacker);
+}
+/* CSGameRules_PlayerSpawn */
+void CSGameRules_PlayerSpawn(IReGameHook_CSGameRules_PlayerSpawn *chain, CBasePlayer *pPlayer)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_PlayerSpawn");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pPlayer);
+}
+
+/* CSGameRules_FPlayerCanRespawn */
+BOOL CSGameRules_FPlayerCanRespawn(IReGameHook_CSGameRules_FPlayerCanRespawn *chain, CBasePlayer *pPlayer)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_FPlayerCanRespawn");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer);
+}
+
+/* CSGameRules_GetPlayerSpawnSpot */
+edict_t *CSGameRules_GetPlayerSpawnSpot(IReGameHook_CSGameRules_GetPlayerSpawnSpot *chain, CBasePlayer *pPlayer)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_GetPlayerSpawnSpot");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer);
+}
+
+/* CSGameRules_ClientUserInfoChanged */
+void CSGameRules_ClientUserInfoChanged(IReGameHook_CSGameRules_ClientUserInfoChanged *chain, CBasePlayer *pPlayer, char *infobuffer)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_ClientUserInfoChanged");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushstring(g_L, infobuffer);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pPlayer, infobuffer);
+}
+
+/* CSGameRules_PlayerKilled */
+void CSGameRules_PlayerKilled(IReGameHook_CSGameRules_PlayerKilled *chain, CBasePlayer *pPlayer, entvars_t *pevKiller, entvars_t *pevInflictor)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_PlayerKilled");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pVictim = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pVictim);
+
+            edict_t* pKiller = pevKiller ? ENT(pevKiller) : NULL;
+            lua_pushentity(g_L, pKiller);
+
+            edict_t* pInflictor = pevInflictor ? ENT(pevInflictor) : NULL;
+            lua_pushentity(g_L, pInflictor);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pPlayer, pevKiller, pevInflictor);
+}
+
+/* CSGameRules_DeathNotice */
+void CSGameRules_DeathNotice(IReGameHook_CSGameRules_DeathNotice *chain, CBasePlayer *pPlayer, entvars_t *pevKiller, entvars_t *pevInflictor)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_DeathNotice");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pVictim = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pVictim);
+
+            edict_t* pKiller = pevKiller ? ENT(pevKiller) : NULL;
+            lua_pushentity(g_L, pKiller);
+
+            edict_t* pInflictor = pevInflictor ? ENT(pevInflictor) : NULL;
+            lua_pushentity(g_L, pInflictor);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pPlayer, pevKiller, pevInflictor);
+}
+
+/* CSGameRules_CanHavePlayerItem */
+BOOL CSGameRules_CanHavePlayerItem(IReGameHook_CSGameRules_CanHavePlayerItem *chain, CBasePlayer *pPlayer, CBasePlayerItem *pItem)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_CanHavePlayerItem");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            edict_t* pItemEnt = pItem ? ENT(((CCSPlayerItem*)pItem)->pev) : NULL;
+            lua_pushentity(g_L, pItemEnt);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer, pItem);
+}
+
+/* CSGameRules_DeadPlayerWeapons */
+int CSGameRules_DeadPlayerWeapons(IReGameHook_CSGameRules_DeadPlayerWeapons *chain, CBasePlayer *pPlayer)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_DeadPlayerWeapons");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pPlayer);
+}
+
+/* CSGameRules_ServerDeactivate */
+void CSGameRules_ServerDeactivate(IReGameHook_CSGameRules_ServerDeactivate *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_ServerDeactivate");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* CSGameRules_CheckMapConditions */
+void CSGameRules_CheckMapConditions(IReGameHook_CSGameRules_CheckMapConditions *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_CheckMapConditions");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+/* CSGameRules_CleanUpMap */
+void CSGameRules_CleanUpMap(IReGameHook_CSGameRules_CleanUpMap *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_CleanUpMap");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* CSGameRules_RestartRound */
+void CSGameRules_RestartRound(IReGameHook_CSGameRules_RestartRound *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_RestartRound");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* CSGameRules_CheckWinConditions */
+void CSGameRules_CheckWinConditions(IReGameHook_CSGameRules_CheckWinConditions *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_CheckWinConditions");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* CSGameRules_RemoveGuns */
+void CSGameRules_RemoveGuns(IReGameHook_CSGameRules_RemoveGuns *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_RemoveGuns");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* CSGameRules_GiveC4 */
+void CSGameRules_GiveC4(IReGameHook_CSGameRules_GiveC4 *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_GiveC4");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* CSGameRules_ChangeLevel */
+void CSGameRules_ChangeLevel(IReGameHook_CSGameRules_ChangeLevel *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_ChangeLevel");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* CSGameRules_GoToIntermission */
+void CSGameRules_GoToIntermission(IReGameHook_CSGameRules_GoToIntermission *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_GoToIntermission");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* CSGameRules_BalanceTeams */
+void CSGameRules_BalanceTeams(IReGameHook_CSGameRules_BalanceTeams *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_BalanceTeams");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* CSGameRules_OnRoundFreezeEnd */
+void CSGameRules_OnRoundFreezeEnd(IReGameHook_CSGameRules_OnRoundFreezeEnd *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_OnRoundFreezeEnd");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* PM_UpdateStepSound */
+void PM_UpdateStepSound(IReGameHook_PM_UpdateStepSound *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_PM_UpdateStepSound");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+/* CBasePlayer::StartDeathCam */
+void CBasePlayer_StartDeathCam(IReGameHook_CBasePlayer_StartDeathCam *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_StartDeathCam");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* CBasePlayer::SwitchTeam */
+void CBasePlayer_SwitchTeam(IReGameHook_CBasePlayer_SwitchTeam *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_SwitchTeam");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* CBasePlayer::CanSwitchTeam */
+bool CBasePlayer_CanSwitchTeam(IReGameHook_CBasePlayer_CanSwitchTeam *chain, CBasePlayer *pthis, TeamName team)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_CanSwitchTeam");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushinteger(g_L, (int)team);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis, team);
+}
+
+/* CBasePlayer::ThrowGrenade */
+CGrenade *CBasePlayer_ThrowGrenade(IReGameHook_CBasePlayer_ThrowGrenade *chain, CBasePlayer *pthis, CBasePlayerWeapon *pWeapon, Vector &vecOrigin, Vector &vecVelocity, float time, unsigned short type)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_ThrowGrenade");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            edict_t* pWeaponEnt = pWeapon ? ENT(((CCSPlayerWeapon*)pWeapon)->pev) : NULL;
+            lua_pushentity(g_L, pWeaponEnt);
+
+            lua_pushlightuserdata(g_L, &vecOrigin);
+            lua_pushlightuserdata(g_L, &vecVelocity);
+            lua_pushnumber(g_L, time);
+            lua_pushinteger(g_L, type);
+
+            if (lua_pcall(g_L, 6, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pthis, pWeapon, vecOrigin, vecVelocity, time, type);
+}
+
+/* CSGameRules::CanPlayerHearPlayer */
+bool CSGameRules_CanPlayerHearPlayer(IReGameHook_CSGameRules_CanPlayerHearPlayer *chain, CBasePlayer *pListener, CBasePlayer *pSender)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CSGameRules_CanPlayerHearPlayer");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pListenerEnt = pListener ? ENT(((CCSPlayer*)pListener)->pev) : NULL;
+            lua_pushentity(g_L, pListenerEnt);
+
+            edict_t* pSenderEnt = pSender ? ENT(((CCSPlayer*)pSender)->pev) : NULL;
+            lua_pushentity(g_L, pSenderEnt);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pListener, pSender);
+}
+
+/* CWeaponBox::SetModel */
+void CWeaponBox_SetModel(IReGameHook_CWeaponBox_SetModel *chain, CWeaponBox *pthis, const char *pszModelName)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CWeaponBox_SetModel");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSWeaponBox*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushstring(g_L, pszModelName);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, pszModelName);
+}
+
+/* CGrenade::DefuseBombStart */
+void CGrenade_DefuseBombStart(IReGameHook_CGrenade_DefuseBombStart *chain, CGrenade *pthis, CBasePlayer *pPlayer)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CGrenade_DefuseBombStart");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pGrenadeEnt = pthis ? ENT(((CCSGrenade*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pGrenadeEnt);
+
+            edict_t* pPlayerEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pPlayerEnt);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, pPlayer);
+}
+
+/* CGrenade::DefuseBombEnd */
+void CGrenade_DefuseBombEnd(IReGameHook_CGrenade_DefuseBombEnd *chain, CGrenade *pthis, CBasePlayer *pPlayer, bool bDefused)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CGrenade_DefuseBombEnd");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pGrenadeEnt = pthis ? ENT(((CCSGrenade*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pGrenadeEnt);
+
+            edict_t* pPlayerEnt = pPlayer ? ENT(((CCSPlayer*)pPlayer)->pev) : NULL;
+            lua_pushentity(g_L, pPlayerEnt);
+
+            lua_pushboolean(g_L, bDefused);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, pPlayer, bDefused);
+}
+
+/* CGrenade::ExplodeHeGrenade */
+void CGrenade_ExplodeHeGrenade(IReGameHook_CGrenade_ExplodeHeGrenade *chain, CGrenade *pthis, TraceResult *pTrace, int bitsDamageType)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CGrenade_ExplodeHeGrenade");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pGrenadeEnt = pthis ?ENT(((CCSGrenade*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pGrenadeEnt);
+
+            lua_pushlightuserdata(g_L, pTrace);
+            lua_pushinteger(g_L, bitsDamageType);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, pTrace, bitsDamageType);
+}
+
+/* CGrenade::ExplodeFlashbang */
+void CGrenade_ExplodeFlashbang(IReGameHook_CGrenade_ExplodeFlashbang *chain, CGrenade *pthis, TraceResult *pTrace, int bitsDamageType)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CGrenade_ExplodeFlashbang");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pGrenadeEnt = pthis ? ENT(((CCSGrenade*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pGrenadeEnt);
+
+            lua_pushlightuserdata(g_L, pTrace);
+            lua_pushinteger(g_L, bitsDamageType);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, pTrace, bitsDamageType);
+}
+
+/* CGrenade::ExplodeSmokeGrenade */
+void CGrenade_ExplodeSmokeGrenade(IReGameHook_CGrenade_ExplodeSmokeGrenade *chain, CGrenade *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CGrenade_ExplodeSmokeGrenade");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pGrenadeEnt = pthis ? ENT(((CCSGrenade*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pGrenadeEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* CGrenade::ExplodeBomb */
+void CGrenade_ExplodeBomb(IReGameHook_CGrenade_ExplodeBomb *chain, CGrenade *pthis, TraceResult *pTrace, int bitsDamageType)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CGrenade_ExplodeBomb");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pGrenadeEnt = pthis ? ENT(((CCSGrenade*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pGrenadeEnt);
+
+            lua_pushlightuserdata(g_L, pTrace);
+            lua_pushinteger(g_L, bitsDamageType);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, pTrace, bitsDamageType);
+}
+
+/* ThrowHeGrenade */
+CGrenade *ThrowHeGrenade(IReGameHook_ThrowHeGrenade *chain, entvars_t *pevOwner, Vector &vecOrigin, Vector &vecVelocity, float time, int iDamage, unsigned short type)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_ThrowHeGrenade");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pOwner = pevOwner ? ENT(pevOwner) : NULL;
+            lua_pushentity(g_L, pOwner);
+
+            lua_pushlightuserdata(g_L, &vecOrigin);
+            lua_pushlightuserdata(g_L, &vecVelocity);
+            lua_pushnumber(g_L, time);
+            lua_pushinteger(g_L, iDamage);
+            lua_pushinteger(g_L, type);
+
+            if (lua_pcall(g_L, 6, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pevOwner, vecOrigin, vecVelocity, time, iDamage, type);
+}
+
+/* ThrowFlashbang */
+CGrenade *ThrowFlashbang(IReGameHook_ThrowFlashbang *chain, entvars_t *pevOwner, Vector &vecOrigin, Vector &vecVelocity, float time)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_ThrowFlashbang");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pOwner = pevOwner ? ENT(pevOwner) : NULL;
+            lua_pushentity(g_L, pOwner);
+
+            lua_pushlightuserdata(g_L, &vecOrigin);
+            lua_pushlightuserdata(g_L, &vecVelocity);
+            lua_pushnumber(g_L, time);
+
+            if (lua_pcall(g_L, 4, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pevOwner, vecOrigin, vecVelocity, time);
+}
+
+/* ThrowSmokeGrenade */
+CGrenade *ThrowSmokeGrenade(IReGameHook_ThrowSmokeGrenade *chain, entvars_t *pevOwner, Vector &vecOrigin, Vector &vecVelocity, float time, unsigned short type)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_ThrowSmokeGrenade");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pOwner = pevOwner ? ENT(pevOwner) : NULL;
+            lua_pushentity(g_L, pOwner);
+
+            lua_pushlightuserdata(g_L, &vecOrigin);
+            lua_pushlightuserdata(g_L, &vecVelocity);
+            lua_pushnumber(g_L, time);
+            lua_pushinteger(g_L, type);
+
+            if (lua_pcall(g_L, 5, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pevOwner, vecOrigin, vecVelocity, time, type);
+}
+
+/* PlantBomb */
+CGrenade *PlantBomb(IReGameHook_PlantBomb *chain, entvars_t *pevOwner, Vector &vecOrigin, Vector &vecVelocity)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_PlantBomb");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pOwner = pevOwner ? ENT(pevOwner) : NULL;
+            lua_pushentity(g_L, pOwner);
+
+            lua_pushlightuserdata(g_L, &vecOrigin);
+            lua_pushlightuserdata(g_L, &vecVelocity);
+
+            if (lua_pcall(g_L, 3, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pevOwner, vecOrigin, vecVelocity);
+}
+
+/* CBasePlayer::RemoveSpawnProtection */
+void CBasePlayer_RemoveSpawnProtection(IReGameHook_CBasePlayer_RemoveSpawnProtection *chain, CBasePlayer *pthis)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_RemoveSpawnProtection");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis);
+}
+
+/* CBasePlayer::SetSpawnProtection */
+void CBasePlayer_SetSpawnProtection(IReGameHook_CBasePlayer_SetSpawnProtection *chain, CBasePlayer *pthis, float time)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_CBasePlayer_SetSpawnProtection");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = pthis ? ENT(((CCSPlayer*)pthis)->pev) : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            lua_pushnumber(g_L, time);
+
+            if (lua_pcall(g_L, 2, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(pthis, time);
+}
+
+/* IsPenetrableEntity */
+bool IsPenetrableEntity(IReGameHook_IsPenetrableEntity *chain, Vector &vecSrc, Vector &vecDest, entvars_t *pevInflictor, edict_t *pEnt)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "ReGame_IsPenetrableEntity");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, &vecSrc);
+            lua_pushlightuserdata(g_L, &vecDest);
+            
+            edict_t* pInflictor = pevInflictor ? ENT(pevInflictor) : NULL;
+            lua_pushentity(g_L, pInflictor);
+
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 4, 0, 0) != 0) lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(vecSrc, vecDest, pevInflictor, pEnt);
 }
