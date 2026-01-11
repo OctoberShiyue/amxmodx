@@ -143,7 +143,11 @@ static int L_get_gametime(lua_State* L)
     lua_pushnumber(L, gpGlobals->time);
     return 1;
 }
-
+static int L_random_num(lua_State* L)
+{
+    lua_pushinteger(L, RANDOM_LONG(lua_tointeger(L, 1), lua_tointeger(L, 2)));
+    return 1;
+}
 static int Lua_CallPawnFunction_Proxy(lua_State *L)
 {
     if (!L)
@@ -216,6 +220,7 @@ cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 void InitLuaAPI(lua_State* L) {
     lua_register(L, "GetEntityVar", L_GetEntityVar);
     lua_register(L, "amxx_get_gametime", L_get_gametime);
+    lua_register(L, "amxx_random_num", L_random_num);
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   
