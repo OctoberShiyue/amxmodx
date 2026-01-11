@@ -698,7 +698,18 @@ void OnPluginsLoaded()
 
     fclose(fp);
 }
-
+//----------------------------------
+// - GetEntityAPI2 functions
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
 /* pfnGameInit() */
 void GameDLLInit(void)
 {
@@ -2000,6 +2011,1345 @@ int AllowLagCompensation(void)
         RETURN_META_VALUE(MRES_IGNORED, 0);
 
     lua_getglobal(g_L, "MetaAllowLagCompensation");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    if (lua_pcall(g_L, 0, 1, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    // 如果 Lua 返回了 0 或 1，覆盖引擎设置
+    if (lua_isnumber(g_L, -1))
+    {
+        int ret = (int)lua_tointeger(g_L, -1);
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_SUPERCEDE, ret);
+    }
+
+    lua_pop(g_L, 1);
+    RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+
+//----------------------------------
+// - GetEntityAPI2_Post functions
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+//----------------------------------
+
+/* pfnGameInit() */
+void GameDLLInit_Post(void)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaGameDLLInit_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    if (lua_pcall(g_L, 0, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+/* pfnSpawn() */
+int DispatchSpawn_Post(edict_t *pent)
+{
+    if (!g_L)
+        RETURN_META_VALUE(MRES_IGNORED, -1);
+
+    lua_getglobal(g_L, "MetaDispatchSpawn_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, -1);
+    }
+
+    // Push: edict_t* (pointer)
+    lua_pushentity(g_L, pent);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+
+/* pfnThink() */
+void DispatchThink_Post(edict_t *pent)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaDispatchThink_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (pointer)
+    lua_pushentity(g_L, pent);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnUse() */
+void DispatchUse_Post(edict_t *pentUsed, edict_t *pentOther)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaDispatchUse_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Used), edict_t* (Other)
+    lua_pushentity(g_L, pentUsed);
+    lua_pushentity(g_L, pentOther);
+
+    if (lua_pcall(g_L, 2, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnTouch() */
+void DispatchTouch_Post(edict_t *pentTouched, edict_t *pentOther)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaDispatchTouch_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Touched), edict_t* (Other)
+    lua_pushentity(g_L, pentTouched);
+    lua_pushentity(g_L, pentOther);
+
+    if (lua_pcall(g_L, 2, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnBlocked() */
+void DispatchBlocked_Post(edict_t *pentBlocked, edict_t *pentOther)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaDispatchBlocked_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Blocked), edict_t* (Other)
+    lua_pushentity(g_L, pentBlocked);
+    lua_pushentity(g_L, pentOther);
+
+    if (lua_pcall(g_L, 2, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnKeyValue() */
+void DispatchKeyValue_Post(edict_t *pentKeyvalue, KeyValueData *pkvd)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaDispatchKeyValue_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Entity)
+    lua_pushentity(g_L, pentKeyvalue);
+    
+    // Push: Key (string), Value (string), ClassName (string)
+    // 这样在 Lua 里可以直接读取配置，而不是拿到一个空指针
+    if (pkvd) {
+        lua_pushstring(g_L, pkvd->szKeyName);
+        lua_pushstring(g_L, pkvd->szValue);
+        lua_pushstring(g_L, pkvd->szClassName);
+    } else {
+        lua_pushnil(g_L);
+        lua_pushnil(g_L);
+        lua_pushnil(g_L);
+    }
+
+    if (lua_pcall(g_L, 4, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnSave() */
+void DispatchSave_Post(edict_t *pent, SAVERESTOREDATA *pSaveData)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaDispatchSave_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Entity), SAVERESTOREDATA* (pointer)
+    lua_pushentity(g_L, pent);
+    lua_pushlightuserdata(g_L, pSaveData);
+
+    if (lua_pcall(g_L, 2, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnRestore() */
+int DispatchRestore_Post(edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity)
+{
+    if (!g_L)
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+
+    lua_getglobal(g_L, "MetaDispatchRestore_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    // Push: edict_t* (Entity), SAVERESTOREDATA* (pointer), globalEntity (int)
+    lua_pushentity(g_L, pent);
+    lua_pushlightuserdata(g_L, pSaveData);
+    lua_pushinteger(g_L, globalEntity);
+
+    if (lua_pcall(g_L, 3, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+
+/* pfnSetAbsBox() */
+void DispatchObjectCollsionBox_Post(edict_t *pent)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaDispatchObjectCollsionBox_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (pointer)
+    lua_pushentity(g_L, pent);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnSaveWriteFields() */
+void SaveWriteFields_Post(SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaSaveWriteFields_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: SAVERESTOREDATA* (ptr)
+    lua_pushlightuserdata(g_L, pSaveData);
+    // Push: Name (string)
+    lua_pushstring(g_L, pname);
+    // Push: BaseData* (ptr)
+    lua_pushlightuserdata(g_L, pBaseData);
+    // Push: TYPEDESCRIPTION* (ptr)
+    lua_pushlightuserdata(g_L, pFields);
+    // Push: fieldCount (int)
+    lua_pushinteger(g_L, fieldCount);
+
+    if (lua_pcall(g_L, 5, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnSaveReadFields() */
+void SaveReadFields_Post(SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseData, TYPEDESCRIPTION *pFields, int fieldCount)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaSaveReadFields_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: SAVERESTOREDATA* (ptr)
+    lua_pushlightuserdata(g_L, pSaveData);
+    // Push: Name (string)
+    lua_pushstring(g_L, pname);
+    // Push: BaseData* (ptr)
+    lua_pushlightuserdata(g_L, pBaseData);
+    // Push: TYPEDESCRIPTION* (ptr)
+    lua_pushlightuserdata(g_L, pFields);
+    // Push: fieldCount (int)
+    lua_pushinteger(g_L, fieldCount);
+
+    if (lua_pcall(g_L, 5, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnSaveGlobalState() */
+void SaveGlobalState_Post(SAVERESTOREDATA *pSaveData)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaSaveGlobalState_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: SAVERESTOREDATA* (ptr)
+    lua_pushlightuserdata(g_L, pSaveData);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnRestoreGlobalState() */
+void RestoreGlobalState_Post(SAVERESTOREDATA *pSaveData)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaRestoreGlobalState_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: SAVERESTOREDATA* (ptr)
+    lua_pushlightuserdata(g_L, pSaveData);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnResetGlobalState() */
+void ResetGlobalState_Post(void)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaResetGlobalState_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    if (lua_pcall(g_L, 0, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnClientConnect() */
+qboolean ClientConnect_Post(edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[128])
+{
+    if (!g_L)
+        RETURN_META_VALUE(MRES_IGNORED, 0); // 0 = FALSE, 但 META 会忽略
+
+    lua_getglobal(g_L, "MetaClientConnect_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    // Push: edict_t* (玩家实体)
+    lua_pushentity(g_L, pEntity);
+    // Push: Name (名字)
+    lua_pushstring(g_L, pszName);
+    // Push: IP (IP地址)
+    lua_pushstring(g_L, pszAddress);
+    
+    // 调用 Lua: 3个参数, 1个返回值
+    if (lua_pcall(g_L, 3, 1, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    // 处理返回值
+    // 如果 Lua 返回了一个字符串，说明要拒绝连接，并且这个字符串是拒绝理由
+    if (lua_isstring(g_L, -1))
+    {
+        const char* reason = lua_tostring(g_L, -1);
+        
+        // 把 Lua 的拒绝理由复制回 C++ 的 buffer
+        // 注意防止溢出 (128字节)
+        strncpy(szRejectReason, reason, 127);
+        szRejectReason[127] = '\0'; // 确保结尾
+
+        lua_pop(g_L, 1); // 弹出返回值
+
+        // 返回 FALSE 告诉引擎拒绝连接，并使用 MRES_SUPERCEDE 覆盖引擎原本的逻辑
+        RETURN_META_VALUE(MRES_SUPERCEDE, 0); 
+    }
+
+    // 如果没返回字符串（比如返回 nil 或 true），则允许连接
+    lua_pop(g_L, 1);
+    RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+
+/* pfnClientDisconnect() */
+void ClientDisconnect_Post(edict_t *pEntity)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaClientDisconnect_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Player Entity)
+    lua_pushentity(g_L, pEntity);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnClientKill() */
+void ClientKill_Post(edict_t *pEntity)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaClientKill_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Player Entity)
+    lua_pushentity(g_L, pEntity);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnClientPutInServer() */
+void ClientPutInServer_Post(edict_t *pEntity)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaClientPutInServer_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Player Entity)
+    lua_pushentity(g_L, pEntity);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnClientCommand() */
+void ClientCommand_Post(edict_t *pEntity)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaClientCommand_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Player Entity)
+    lua_pushentity(g_L, pEntity);
+    // 注意: 命令的具体内容在 Lua 中需要通过调用 engine.Cmd_Args() 等函数获取
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnClientUserInfoChanged() */
+void ClientUserInfoChanged_Post(edict_t *pEntity, char *infobuffer)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaClientUserInfoChanged_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Player Entity)
+    lua_pushentity(g_L, pEntity);
+    // Push: infobuffer string (因为只是读取，复制一份给Lua没问题)
+    lua_pushstring(g_L, infobuffer);
+
+    if (lua_pcall(g_L, 2, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnServerActivate() */
+void ServerActivate_Post(edict_t *pEdictList, int edictCount, int clientMax)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    // 可以在这里做一些 Map 初始化相关的工作，比如清空之前的缓存
+    // g_EntVarMap.clear(); // 如果需要在换图时重置，看具体需求
+
+    lua_getglobal(g_L, "MetaServerActivate_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: pEdictList (指针)
+    lua_pushentity(g_L, pEdictList);
+    // Push: edictCount (int)
+    lua_pushinteger(g_L, edictCount);
+    // Push: clientMax (int)
+    lua_pushinteger(g_L, clientMax);
+
+    if (lua_pcall(g_L, 3, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnServerDeactivate() */
+void ServerDeactivate_Post(void)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaServerDeactivate_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    if (lua_pcall(g_L, 0, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnPlayerPreThink() */
+void PlayerPreThink_Post(edict_t *pEntity)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaPlayerPreThink_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Player Entity)
+    lua_pushentity(g_L, pEntity);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnPlayerPostThink() */
+void PlayerPostThink_Post(edict_t *pEntity)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaPlayerPostThink_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Push: edict_t* (Player Entity)
+    lua_pushentity(g_L, pEntity);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnStartFrame() */
+void StartFrame_Post(void)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaStartFrame_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    if (lua_pcall(g_L, 0, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+/* pfnParmsNewLevel() */
+void ParmsNewLevel_Post(void)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaParmsNewLevel_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    if (lua_pcall(g_L, 0, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnParmsChangeLevel() */
+void ParmsChangeLevel_Post(void)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaParmsChangeLevel_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    if (lua_pcall(g_L, 0, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnGetGameDescription() */
+// 注意：这个函数返回 const char*，用于显示在服务器浏览器的 "Game" 列
+const char *GetGameDescription_Post(void)
+{
+    if (!g_L)
+        RETURN_META_VALUE(MRES_IGNORED, NULL);
+
+    lua_getglobal(g_L, "MetaGetGameDescription_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, NULL);
+    }
+
+    // 调用 Lua
+    if (lua_pcall(g_L, 0, 1, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, NULL);
+    }
+
+    // 处理返回值
+    if (lua_isstring(g_L, -1))
+    {
+        // 我们必须使用静态缓冲区，因为一旦 lua_pop，指针可能失效
+        static char staticGameDesc[64];
+        const char *ret = lua_tostring(g_L, -1);
+        
+        strncpy(staticGameDesc, ret, 63);
+        staticGameDesc[63] = '\0';
+
+        lua_pop(g_L, 1);
+        // 返回 SUPERCEDE 并带上我们的新名字
+        RETURN_META_VALUE(MRES_SUPERCEDE, staticGameDesc);
+    }
+
+    lua_pop(g_L, 1);
+    RETURN_META_VALUE(MRES_IGNORED, NULL);
+}
+
+/* pfnPlayerCustomization() */
+void PlayerCustomization_Post(edict_t *pEntity, customization_t *pCustom)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaPlayerCustomization_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    lua_pushentity(g_L, pEntity);
+    lua_pushlightuserdata(g_L, pCustom);
+
+    if (lua_pcall(g_L, 2, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnSpectatorConnect() */
+void SpectatorConnect_Post(edict_t *pEntity)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaSpectatorConnect_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    lua_pushentity(g_L, pEntity);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnSpectatorDisconnect() */
+void SpectatorDisconnect_Post(edict_t *pEntity)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaSpectatorDisconnect_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    lua_pushentity(g_L, pEntity);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnSpectatorThink() */
+void SpectatorThink_Post(edict_t *pEntity)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaSpectatorThink_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    lua_pushentity(g_L, pEntity);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnSys_Error() */
+void Sys_Error_Post(const char *error_string)
+{
+    // 这个函数调用意味着服务器即将崩溃或强制关闭
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaSys_Error_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    lua_pushstring(g_L, error_string);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnPM_Move() */
+void PM_Move_Post(struct playermove_s *ppmove, qboolean server)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaPM_Move_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    lua_pushlightuserdata(g_L, ppmove);
+    lua_pushboolean(g_L, server); // qboolean 本质是 int，但在 Lua 里用 bool 更直观
+
+    if (lua_pcall(g_L, 2, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnPM_Init() */
+void PM_Init_Post(struct playermove_s *ppmove)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaPM_Init_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    lua_pushlightuserdata(g_L, ppmove);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnSetupVisibility() */
+void SetupVisibility_Post(struct edict_s *pViewEntity, struct edict_s *pClient, unsigned char **pvs, unsigned char **pas)
+{
+    if (!g_L) RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaSetupVisibility_Post");
+    if (!lua_isfunction(g_L, -1)) {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Args: ViewEntity, Client, pvs ptr, pas ptr
+    lua_pushentity(g_L, pViewEntity);
+    lua_pushentity(g_L, pClient);
+    lua_pushlightuserdata(g_L, pvs);
+    lua_pushlightuserdata(g_L, pas);
+
+    if (lua_pcall(g_L, 4, 0, 0) != 0) {
+        lua_pop(g_L, 1);
+    }
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnUpdateClientData() */
+void UpdateClientData_Post(const struct edict_s *ent, int sendweapons, struct clientdata_s *cd)
+{
+    if (!g_L) RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaUpdateClientData_Post");
+    if (!lua_isfunction(g_L, -1)) {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    // Args: Entity, SendWeapons(int), ClientData ptr
+    lua_pushlightuserdata(g_L, (void*)ent);
+    lua_pushinteger(g_L, sendweapons);
+    lua_pushlightuserdata(g_L, cd);
+
+    if (lua_pcall(g_L, 3, 0, 0) != 0) {
+        lua_pop(g_L, 1);
+    }
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnAddToFullPack() - 警告：高频调用 */
+int AddToFullPack_Post(struct entity_state_s *state, int e, edict_t *ent, edict_t *host, int hostflags, int player, unsigned char *pSet)
+{
+    if (!g_L) RETURN_META_VALUE(MRES_IGNORED, 0);
+
+    lua_getglobal(g_L, "MetaAddToFullPack_Post");
+    if (!lua_isfunction(g_L, -1)) {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    // Args: state*, e_index, ent*, host*, hostflags, player(bool/int), pSet*
+    lua_pushlightuserdata(g_L, state);
+    lua_pushinteger(g_L, e);
+    lua_pushentity(g_L, ent);
+    lua_pushentity(g_L, host);
+    lua_pushinteger(g_L, hostflags);
+    lua_pushinteger(g_L, player);
+    lua_pushlightuserdata(g_L, pSet);
+
+    if (lua_pcall(g_L, 7, 1, 0) != 0) {
+        lua_pop(g_L, 1); // pop error
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    // 如果 Lua 返回 1 或 0，我们可以覆盖引擎的判断
+    if (lua_isnumber(g_L, -1)) {
+        int ret = (int)lua_tointeger(g_L, -1);
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_SUPERCEDE, ret);
+    }
+
+    lua_pop(g_L, 1);
+    RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+
+/* pfnCreateBaseline() */
+void CreateBaseline_Post(int player, int eindex, struct entity_state_s *baseline, struct edict_s *entity, int playermodelindex, vec3_t player_mins, vec3_t player_maxs)
+{
+    if (!g_L) RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaCreateBaseline_Post");
+    if (!lua_isfunction(g_L, -1)) {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    lua_pushinteger(g_L, player);
+    lua_pushinteger(g_L, eindex);
+    lua_pushlightuserdata(g_L, baseline);
+    lua_pushentity(g_L, entity);
+    lua_pushinteger(g_L, playermodelindex);
+    // vec3_t 是 float数组，直接作为指针传过去
+    lua_pushlightuserdata(g_L, player_mins); 
+    lua_pushlightuserdata(g_L, player_maxs);
+
+    if (lua_pcall(g_L, 7, 0, 0) != 0) {
+        lua_pop(g_L, 1);
+    }
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnRegisterEncoders() */
+void RegisterEncoders_Post(void)
+{
+    if (!g_L) RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaRegisterEncoders_Post");
+    if (!lua_isfunction(g_L, -1)) {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    if (lua_pcall(g_L, 0, 0, 0) != 0) {
+        lua_pop(g_L, 1);
+    }
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnGetWeaponData() */
+int GetWeaponData_Post(struct edict_s *player, struct weapon_data_s *info)
+{
+    if (!g_L) RETURN_META_VALUE(MRES_IGNORED, 0);
+
+    lua_getglobal(g_L, "MetaGetWeaponData_Post");
+    if (!lua_isfunction(g_L, -1)) {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    lua_pushentity(g_L, player);
+    lua_pushlightuserdata(g_L, info);
+
+    if (lua_pcall(g_L, 2, 1, 0) != 0) {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    if (lua_isnumber(g_L, -1)) {
+        int ret = (int)lua_tointeger(g_L, -1);
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_SUPERCEDE, ret);
+    }
+
+    lua_pop(g_L, 1);
+    RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+
+/* pfnCmdStart() */
+void CmdStart_Post(const edict_t *player, const struct usercmd_s *cmd, unsigned int random_seed)
+{
+    if (!g_L) RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaCmdStart_Post");
+    if (!lua_isfunction(g_L, -1)) {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    lua_pushlightuserdata(g_L, (void*)player);
+    lua_pushlightuserdata(g_L, (void*)cmd);
+    lua_pushinteger(g_L, random_seed);
+
+    if (lua_pcall(g_L, 3, 0, 0) != 0) {
+        lua_pop(g_L, 1);
+    }
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnCmdEnd() */
+void CmdEnd_Post(const edict_t *player)
+{
+    if (!g_L) RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaCmdEnd_Post");
+    if (!lua_isfunction(g_L, -1)) {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    lua_pushlightuserdata(g_L, (void*)player);
+
+    if (lua_pcall(g_L, 1, 0, 0) != 0) {
+        lua_pop(g_L, 1);
+    }
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnConnectionlessPacket() */
+int ConnectionlessPacket_Post(const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size)
+{
+    if (!g_L) RETURN_META_VALUE(MRES_IGNORED, 0);
+
+    lua_getglobal(g_L, "MetaConnectionlessPacket_Post");
+    if (!lua_isfunction(g_L, -1)) {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    // Args: netadr ptr, args (string), response buffer ptr, size ptr
+    lua_pushlightuserdata(g_L, (void*)net_from);
+    lua_pushstring(g_L, args); // 直接传字符串内容
+    lua_pushlightuserdata(g_L, response_buffer);
+    lua_pushlightuserdata(g_L, response_buffer_size);
+
+    if (lua_pcall(g_L, 4, 1, 0) != 0) {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    if (lua_isnumber(g_L, -1)) {
+        int ret = (int)lua_tointeger(g_L, -1);
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_SUPERCEDE, ret);
+    }
+
+    lua_pop(g_L, 1);
+    RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+
+/* pfnGetHullBounds() */
+int GetHullBounds_Post(int hullnumber, float *mins, float *maxs)
+{
+    if (!g_L) RETURN_META_VALUE(MRES_IGNORED, 0);
+
+    lua_getglobal(g_L, "MetaGetHullBounds_Post");
+    if (!lua_isfunction(g_L, -1)) {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    lua_pushinteger(g_L, hullnumber);
+    lua_pushnumber(g_L, *mins);
+    lua_pushnumber(g_L, *maxs);
+
+    if (lua_pcall(g_L, 3, 1, 0) != 0) {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    // Lua 如果返回 1，表示该 Hull 有效；0 表示无效
+    if (lua_isnumber(g_L, -1)) {
+        int ret = (int)lua_tointeger(g_L, -1);
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_SUPERCEDE, ret);
+    }
+
+    lua_pop(g_L, 1);
+    RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+
+/* pfnCreateInstancedBaselines() */
+void CreateInstancedBaselines_Post(void)
+{
+    if (!g_L)
+        RETURN_META(MRES_IGNORED);
+
+    lua_getglobal(g_L, "MetaCreateInstancedBaselines_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META(MRES_IGNORED);
+    }
+
+    if (lua_pcall(g_L, 0, 0, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+    }
+
+    RETURN_META(MRES_IGNORED);
+}
+
+/* pfnInconsistentFile() */
+int InconsistentFile_Post(const struct edict_s *player, const char *filename, char *disconnect_message)
+{
+    if (!g_L)
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+
+    lua_getglobal(g_L, "MetaInconsistentFile_Post");
+
+    if (!lua_isfunction(g_L, -1))
+    {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    // Push: player (edict_t*)
+    lua_pushlightuserdata(g_L, (void*)player);
+    // Push: filename (string)
+    lua_pushstring(g_L, filename);
+
+    // 调用 Lua: 2 参数, 1 返回值
+    if (lua_pcall(g_L, 2, 1, 0) != 0)
+    {
+        lua_pop(g_L, 1);
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+    }
+
+    // 1. 如果 Lua 返回字符串，说明要断开连接并设置原因
+    if (lua_isstring(g_L, -1))
+    {
+        const char *msg = lua_tostring(g_L, -1);
+        if (disconnect_message && msg)
+        {
+            // 复制消息到输出缓冲区 (最大 256 字符)
+            strncpy(disconnect_message, msg, 255);
+            disconnect_message[255] = '\0';
+        }
+        lua_pop(g_L, 1);
+        // 返回 1 表示强制断开
+        RETURN_META_VALUE(MRES_SUPERCEDE, 1);
+    }
+    // 2. 如果 Lua 返回数字 (例如 1)
+    else if (lua_isnumber(g_L, -1))
+    {
+        int ret = (int)lua_tointeger(g_L, -1);
+        lua_pop(g_L, 1);
+        if (ret != 0) // 只要不是0，就拦截
+        {
+            RETURN_META_VALUE(MRES_SUPERCEDE, ret);
+        }
+    }
+
+    lua_pop(g_L, 1);
+    RETURN_META_VALUE(MRES_IGNORED, 0);
+}
+
+/* pfnAllowLagCompensation() */
+int AllowLagCompensation_Post(void)
+{
+    if (!g_L)
+        RETURN_META_VALUE(MRES_IGNORED, 0);
+
+    lua_getglobal(g_L, "MetaAllowLagCompensation_Post");
 
     if (!lua_isfunction(g_L, -1))
     {

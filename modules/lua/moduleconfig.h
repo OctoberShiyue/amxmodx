@@ -158,56 +158,56 @@
 #define FN_AllowLagCompensation		AllowLagCompensation		/* pfnAllowLagCompensation()	(wd) SDK2 */
 
 // - GetEntityAPI2_Post functions
-// #define FN_GameDLLInit_Post					GameDLLInit_Post
-// #define FN_DispatchSpawn_Post				DispatchSpawn_Post
-// #define FN_DispatchThink_Post				DispatchThink_Post
-// #define FN_DispatchUse_Post					DispatchUse_Post
-// #define FN_DispatchTouch_Post				DispatchTouch_Post
-// #define FN_DispatchBlocked_Post				DispatchBlocked_Post
-// #define FN_DispatchKeyValue_Post				DispatchKeyValue_Post
-// #define FN_DispatchSave_Post					DispatchSave_Post
-// #define FN_DispatchRestore_Post				DispatchRestore_Post
-// #define FN_DispatchObjectCollsionBox_Post	DispatchObjectCollsionBox_Post
-// #define FN_SaveWriteFields_Post				SaveWriteFields_Post
-// #define FN_SaveReadFields_Post				SaveReadFields_Post
-// #define FN_SaveGlobalState_Post				SaveGlobalState_Post
-// #define FN_RestoreGlobalState_Post			RestoreGlobalState_Post
-// #define FN_ResetGlobalState_Post				ResetGlobalState_Post
-// #define FN_ClientConnect_Post				ClientConnect_Post
-// #define FN_ClientDisconnect_Post				ClientDisconnect_Post
-// #define FN_ClientKill_Post					ClientKill_Post
-// #define FN_ClientPutInServer_Post			ClientPutInServer_Post
-// #define FN_ClientCommand_Post				ClientCommand_Post
-// #define FN_ClientUserInfoChanged_Post		ClientUserInfoChanged_Post
-// #define FN_ServerActivate_Post				ServerActivate_Post
-// #define FN_ServerDeactivate_Post				ServerDeactivate_Post
-// #define FN_PlayerPreThink_Post				PlayerPreThink_Post
-// #define FN_PlayerPostThink_Post				PlayerPostThink_Post
-// #define FN_StartFrame_Post					StartFrame_Post
-// #define FN_ParmsNewLevel_Post				ParmsNewLevel_Post
-// #define FN_ParmsChangeLevel_Post				ParmsChangeLevel_Post
-// #define FN_GetGameDescription_Post			GetGameDescription_Post
-// #define FN_PlayerCustomization_Post			PlayerCustomization_Post
-// #define FN_SpectatorConnect_Post				SpectatorConnect_Post
-// #define FN_SpectatorDisconnect_Post			SpectatorDisconnect_Post
-// #define FN_SpectatorThink_Post				SpectatorThink_Post
-// #define FN_Sys_Error_Post					Sys_Error_Post
-// #define FN_PM_Move_Post						PM_Move_Post
-// #define FN_PM_Init_Post						PM_Init_Post
+#define FN_GameDLLInit_Post					GameDLLInit_Post
+#define FN_DispatchSpawn_Post				DispatchSpawn_Post
+#define FN_DispatchThink_Post				DispatchThink_Post
+#define FN_DispatchUse_Post					DispatchUse_Post
+#define FN_DispatchTouch_Post				DispatchTouch_Post
+#define FN_DispatchBlocked_Post				DispatchBlocked_Post
+#define FN_DispatchKeyValue_Post				DispatchKeyValue_Post
+#define FN_DispatchSave_Post					DispatchSave_Post
+#define FN_DispatchRestore_Post				DispatchRestore_Post
+#define FN_DispatchObjectCollsionBox_Post	DispatchObjectCollsionBox_Post
+#define FN_SaveWriteFields_Post				SaveWriteFields_Post
+#define FN_SaveReadFields_Post				SaveReadFields_Post
+#define FN_SaveGlobalState_Post				SaveGlobalState_Post
+#define FN_RestoreGlobalState_Post			RestoreGlobalState_Post
+#define FN_ResetGlobalState_Post				ResetGlobalState_Post
+#define FN_ClientConnect_Post				ClientConnect_Post
+#define FN_ClientDisconnect_Post				ClientDisconnect_Post
+#define FN_ClientKill_Post					ClientKill_Post
+#define FN_ClientPutInServer_Post			ClientPutInServer_Post
+#define FN_ClientCommand_Post				ClientCommand_Post
+#define FN_ClientUserInfoChanged_Post		ClientUserInfoChanged_Post
+#define FN_ServerActivate_Post				ServerActivate_Post
+#define FN_ServerDeactivate_Post				ServerDeactivate_Post
+#define FN_PlayerPreThink_Post				PlayerPreThink_Post
+#define FN_PlayerPostThink_Post				PlayerPostThink_Post
+#define FN_StartFrame_Post					StartFrame_Post
+#define FN_ParmsNewLevel_Post				ParmsNewLevel_Post
+#define FN_ParmsChangeLevel_Post				ParmsChangeLevel_Post
+#define FN_GetGameDescription_Post			GetGameDescription_Post
+#define FN_PlayerCustomization_Post			PlayerCustomization_Post
+#define FN_SpectatorConnect_Post				SpectatorConnect_Post
+#define FN_SpectatorDisconnect_Post			SpectatorDisconnect_Post
+#define FN_SpectatorThink_Post				SpectatorThink_Post
+#define FN_Sys_Error_Post					Sys_Error_Post
+#define FN_PM_Move_Post						PM_Move_Post
+#define FN_PM_Init_Post						PM_Init_Post
 // #define FN_PM_FindTextureType_Post			PM_FindTextureType_Post
-// #define FN_SetupVisibility_Post				SetupVisibility_Post
-// #define FN_UpdateClientData_Post				UpdateClientData_Post
-// #define FN_AddToFullPack_Post				AddToFullPack_Post
-// #define FN_CreateBaseline_Post				CreateBaseline_Post
-// #define FN_RegisterEncoders_Post				RegisterEncoders_Post
-// #define FN_GetWeaponData_Post				GetWeaponData_Post
-// #define FN_CmdStart_Post						CmdStart_Post
-// #define FN_CmdEnd_Post						CmdEnd_Post
-// #define FN_ConnectionlessPacket_Post			ConnectionlessPacket_Post
-// #define FN_GetHullBounds_Post				GetHullBounds_Post
-// #define FN_CreateInstancedBaselines_Post		CreateInstancedBaselines_Post
-// #define FN_InconsistentFile_Post				InconsistentFile_Post
-// #define FN_AllowLagCompensation_Post			AllowLagCompensation_Post
+#define FN_SetupVisibility_Post				SetupVisibility_Post
+#define FN_UpdateClientData_Post				UpdateClientData_Post
+#define FN_AddToFullPack_Post				AddToFullPack_Post
+#define FN_CreateBaseline_Post				CreateBaseline_Post
+#define FN_RegisterEncoders_Post				RegisterEncoders_Post
+#define FN_GetWeaponData_Post				GetWeaponData_Post
+#define FN_CmdStart_Post						CmdStart_Post
+#define FN_CmdEnd_Post						CmdEnd_Post
+#define FN_ConnectionlessPacket_Post			ConnectionlessPacket_Post
+#define FN_GetHullBounds_Post				GetHullBounds_Post
+#define FN_CreateInstancedBaselines_Post		CreateInstancedBaselines_Post
+#define FN_InconsistentFile_Post				InconsistentFile_Post
+#define FN_AllowLagCompensation_Post			AllowLagCompensation_Post
 
 // - GetEngineAPI functions
 // #define FN_PrecacheModel						PrecacheModel
