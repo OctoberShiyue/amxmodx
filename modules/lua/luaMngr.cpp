@@ -175,7 +175,11 @@ static int L_position2vector(lua_State* L)
     float x = lua_tonumber(L, 1);
     float y = lua_tonumber(L, 2);
     float z = lua_tonumber(L, 3);
-    lua_pushlightuserdata(L, Vector(x, y, z));
+    
+    Vector* vec = (Vector*)lua_newuserdata(L, sizeof(Vector));
+    vec->x = x; 
+    vec->y = y; 
+    vec->z = z;
     return 1;
 }
 static int L_vector2position(lua_State* L)
