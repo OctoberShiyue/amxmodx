@@ -17,3 +17,4 @@ extern "C" {
 }
 void StartFrame2();
 void OnPluginsLoaded2();
+void LuaInit(lua_State *L);

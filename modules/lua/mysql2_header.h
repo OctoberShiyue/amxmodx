@@ -18,6 +18,7 @@
 #include "amxxmodule.h"
 #include "ThreadSupport.h"
 #include "ThreadWorker.h"
+#include <amtl/am-string.h>
 
 #define MYSQL2_THREADED
 
@@ -42,13 +43,13 @@ enum HandleType
 
 struct SQL_Connection
 {
-	char *host;
-	char *user;
-	char *pass;
-	char *db;
+	ke::AString host;
+	ke::AString user;
+	ke::AString pass;
+	ke::AString db;
 	int port;
 	unsigned int max_timeout;
-	char *charset;
+	ke::AString charset;
 };
 
 typedef void (*FREEHANDLE)(void *, unsigned int);

@@ -74,6 +74,9 @@ class MysqlThread : public IThread
 public:
 	MysqlThread();
 	~MysqlThread();
+	// 增加：设置 Lua 回调的方法
+    void SetLuaCallback(int cbRef, int dataRef);
+    void SetLuaState(lua_State *L) { m_L = L; }
 public:
 	void SetInfo(const char *host, const char *user, const char *pass, const char *db, int port, unsigned int max_timeout);
 	void SetCharacterSet(const char *charset);
@@ -100,6 +103,9 @@ private:
 	int m_fwd;
 	QueuedResultInfo m_qrInfo;
 	AtomicResult m_atomicResult;
+    int m_luaCallbackRef;   // Lua 回调函数引用
+    int m_luaDataRef;       // Lua 附加数据引用
+    lua_State *m_L;         // 指向 Lua 状态机的指针
 };
 
 #endif //_INCLUDE_MYSQL_THREADING_H
