@@ -86,7 +86,7 @@ static int L_GetEntityVar(lua_State* L)
     // 参数2: 属性名 (const char*)
     const char* key = lua_tostring(L, 2);
 
-    if (!pEnt || pEnt->free || !key) {
+    if (!pEnt || pEnt->free || !key || pEnt->pvPrivateData == nullptr) {
         lua_pushnil(L);
         return 1;
     }
@@ -150,6 +150,47 @@ static int L_random_num(lua_State* L)
     lua_pushinteger(L, RANDOM_LONG(lua_tointeger(L, 1), lua_tointeger(L, 2)));
     return 1;
 }
+static int L_edict2index(lua_State* L)
+{
+    edict_t* pEnt = (edict_t * )lua_touserdata(L, 1);
+    if (!pEnt || pEnt->free || pEnt->pvPrivateData == nullptr) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushinteger(L, ENTINDEX(pEnt));
+    return 1;
+}
+static int L_index2edict(lua_State* L)
+{
+    edict_t* pEnt = INDEXENT(lua_tointeger(L, 1));
+    if (!pEnt || pEnt->free || pEnt->pvPrivateData == nullptr) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushlightuserdata(L, pEnt);
+    return 1;
+}
+static int L_position2vector(lua_State* L)
+{
+    float x = lua_tonumber(L, 1);
+    float y = lua_tonumber(L, 2);
+    float z = lua_tonumber(L, 3);
+    lua_pushlightuserdata(L, Vector(x, y, z));
+    return 1;
+}
+static int L_vector2position(lua_State* L)
+{
+    Vector* vec = (Vector*)lua_touserdata(L, 1);
+    if (!vec) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushnumber(L, vec->x);
+    lua_pushnumber(L, vec->y);
+    lua_pushnumber(L, vec->z);
+    return 3;
+}
+
 static int Lua_CallPawnFunction_Proxy(lua_State *L)
 {
     if (!L)
@@ -223,6 +264,10 @@ void InitLuaAPI(lua_State* L) {
     lua_register(L, "GetEntityVar", L_GetEntityVar);
     lua_register(L, "amxx_get_gametime", L_get_gametime);
     lua_register(L, "amxx_random_num", L_random_num);
+    lua_register(L, "edict2index", L_edict2index);
+    lua_register(L, "index2edict", L_index2edict);
+    lua_register(L, "position2vector", L_position2vector);
+    lua_register(L, "vector2position", L_vector2position);
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   
@@ -724,32 +769,123 @@ void OnAmxxAttach()
     g_EntVarMap.init(128);
 
     // --- Float ---
-    REG_VAR("health",     health,     TYPE_FLOAT);
-    REG_VAR("gravity",    gravity,    TYPE_FLOAT);
-    REG_VAR("friction",   friction,   TYPE_FLOAT);
-    REG_VAR("max_health", max_health, TYPE_FLOAT);
-    REG_VAR("dmg",        dmg,        TYPE_FLOAT);
-    REG_VAR("takedamage", takedamage, TYPE_FLOAT);
+    REG_VAR("impacttime", impacttime,TYPE_FLOAT);
+	REG_VAR("starttime", starttime,TYPE_FLOAT);
+    REG_VAR("idealpitch", idealpitch,TYPE_FLOAT);
+	REG_VAR("pitch_speed", pitch_speed,TYPE_FLOAT);
+	REG_VAR("ideal_yaw", ideal_yaw,TYPE_FLOAT);
+	REG_VAR("yaw_speed", yaw_speed,TYPE_FLOAT);
+	REG_VAR("ltime", ltime,TYPE_FLOAT);
+	REG_VAR("nextthink", nextthink,TYPE_FLOAT);
+	REG_VAR("gravity", gravity,TYPE_FLOAT);
+	REG_VAR("friction", friction,TYPE_FLOAT);
+	REG_VAR("frame", frame,TYPE_FLOAT);
+	REG_VAR("animtime", animtime,TYPE_FLOAT);
+	REG_VAR("framerate", framerate,TYPE_FLOAT);
+	REG_VAR("scale", scale,TYPE_FLOAT)	
+	REG_VAR("renderamt", renderamt,TYPE_FLOAT);
+	REG_VAR("health", health,TYPE_FLOAT);
+	REG_VAR("frags", frags,TYPE_FLOAT);
+	REG_VAR("takedamage", takedamage,TYPE_FLOAT);
+	REG_VAR("max_health", max_health,TYPE_FLOAT);
+	REG_VAR("teleport_time", teleport_time,TYPE_FLOAT);
+	REG_VAR("armortype", armortype,TYPE_FLOAT);
+	REG_VAR("armorvalue", armorvalue,TYPE_FLOAT);
+	REG_VAR("dmg_take", dmg_take,TYPE_FLOAT);
+	REG_VAR("dmg_save", dmg_save,TYPE_FLOAT);
+	REG_VAR("dmg", dmg,TYPE_FLOAT);
+	REG_VAR("dmgtime", dmgtime,TYPE_FLOAT);
+	REG_VAR("speed", speed,TYPE_FLOAT);
+	REG_VAR("air_finished", air_finished,TYPE_FLOAT);
+	REG_VAR("pain_finished", pain_finished,TYPE_FLOAT);
+	REG_VAR("radsuit_finished", radsuit_finished,TYPE_FLOAT);
+	REG_VAR("maxspeed", maxspeed,TYPE_FLOAT);
+	REG_VAR("fov", fov,TYPE_FLOAT);
+	REG_VAR("flFallVelocity", flFallVelocity,TYPE_FLOAT);
+	REG_VAR("fuser1", fuser1,TYPE_FLOAT);
+	REG_VAR("fuser2", fuser2,TYPE_FLOAT);
+	REG_VAR("fuser3", fuser3,TYPE_FLOAT);
+	REG_VAR("fuser4", fuser4,TYPE_FLOAT);
 
     // --- String ---
-    REG_VAR("classname",  classname,  TYPE_STRING);
-    REG_VAR("model",      model,      TYPE_STRING);
-    REG_VAR("netname",    netname,    TYPE_STRING);
-    REG_VAR("targetname", targetname, TYPE_STRING);
+    REG_VAR("classname",classname,TYPE_STRING);
+	REG_VAR("globalname",globalname,TYPE_STRING);
+	REG_VAR("model",model,TYPE_STRING);
+	REG_VAR("target",target,TYPE_STRING);
+	REG_VAR("targetname",targetname,TYPE_STRING);
+	REG_VAR("netname",netname,TYPE_STRING);
+	REG_VAR("message",message,TYPE_STRING);
+	REG_VAR("noise",noise,TYPE_STRING);
+	REG_VAR("noise1",noise1,TYPE_STRING);
+	REG_VAR("noise2",noise2,TYPE_STRING);
+	REG_VAR("noise3",noise3,TYPE_STRING);
+
 
     // --- Int ---
-    REG_VAR("flags",      flags,      TYPE_INT);
-    REG_VAR("movetype",   movetype,   TYPE_INT);
-    REG_VAR("solid",      solid,      TYPE_INT);
-    REG_VAR("team",       team,       TYPE_INT);
-    REG_VAR("button",     button,     TYPE_INT);
-    REG_VAR("deadflag",   deadflag,   TYPE_INT);
+    REG_VAR("fixangle" , fixangle,TYPE_INT);
+    REG_VAR("modelindex" , modelindex,TYPE_INT);
+    REG_VAR("viewmodel" , viewmodel,TYPE_INT);
+    REG_VAR("weaponmodel" , weaponmodel,TYPE_INT);
+    REG_VAR("movetype" , movetype,TYPE_INT);
+    REG_VAR("solid" , solid,TYPE_INT);
+    REG_VAR("skin" , skin,TYPE_INT);
+    REG_VAR("body" , body,TYPE_INT);
+    REG_VAR("effects" , effects,TYPE_INT);
+    REG_VAR("light_level" , light_level,TYPE_INT);
+    REG_VAR("sequence" , sequence,TYPE_INT);
+    REG_VAR("gaitsequence" , gaitsequence,TYPE_INT);
+    REG_VAR("rendermode" , rendermode,TYPE_INT);
+    REG_VAR("renderfx" , renderfx,TYPE_INT);
+    REG_VAR("weapons" , weapons,TYPE_INT);
+    REG_VAR("deadflag" , deadflag,TYPE_INT);
+    REG_VAR("button" , button,TYPE_INT);
+    REG_VAR("impulse" , impulse,TYPE_INT);
+    REG_VAR("spawnflags" , spawnflags,TYPE_INT);
+    REG_VAR("flags" , flags,TYPE_INT);
+    REG_VAR("colormap" , colormap,TYPE_INT);
+    REG_VAR("team" , team,TYPE_INT);
+    REG_VAR("waterlevel" , waterlevel,TYPE_INT);
+    REG_VAR("watertype" , watertype,TYPE_INT);
+    REG_VAR("playerclass" , playerclass,TYPE_INT);
+    REG_VAR("weaponanim" , weaponanim,TYPE_INT);
+    REG_VAR("pushmsec" , pushmsec,TYPE_INT);
+    REG_VAR("bInDuck" , bInDuck,TYPE_INT);
+    REG_VAR("flTimeStepSound" , flTimeStepSound,TYPE_INT);
+    REG_VAR("flSwimTime" , flSwimTime,TYPE_INT);
+    REG_VAR("flDuckTime" , flDuckTime,TYPE_INT);
+    REG_VAR("iStepLeft" , iStepLeft,TYPE_INT);
+    REG_VAR("gamestate" , gamestate,TYPE_INT);
+    REG_VAR("oldbuttons" , oldbuttons,TYPE_INT);
+    REG_VAR("groupinfo" , groupinfo,TYPE_INT);
+    REG_VAR("iuser1" , iuser1,TYPE_INT);
+    REG_VAR("iuser2" , iuser2,TYPE_INT);
+    REG_VAR("iuser3" , iuser3,TYPE_INT);
+    REG_VAR("iuser4" , iuser4,TYPE_INT);
 
     // --- Vector ---
-    REG_VAR("origin",     origin,     TYPE_VECTOR);
-    REG_VAR("angles",     angles,     TYPE_VECTOR);
-    REG_VAR("velocity",   velocity,   TYPE_VECTOR);
-    REG_VAR("v_angle",    v_angle,    TYPE_VECTOR);
+    REG_VAR("origin" , origin,TYPE_VECTOR);
+	REG_VAR("oldorigin" , oldorigin,TYPE_VECTOR);
+	REG_VAR("velocity" , velocity,TYPE_VECTOR);
+	REG_VAR("basevelocity" , basevelocity,TYPE_VECTOR);
+	REG_VAR("clbasevelocity" , clbasevelocity,TYPE_VECTOR);
+	REG_VAR("movedir" , movedir,TYPE_VECTOR);
+	REG_VAR("angles" , angles,TYPE_VECTOR);
+	REG_VAR("avelocity" , avelocity,TYPE_VECTOR);
+	REG_VAR("punchangle" , punchangle,TYPE_VECTOR);
+	REG_VAR("v_angle" , v_angle,TYPE_VECTOR);
+	REG_VAR("endpos" , endpos,TYPE_VECTOR);
+	REG_VAR("startpos" , startpos,TYPE_VECTOR);
+	REG_VAR("absmin" , absmin,TYPE_VECTOR);
+	REG_VAR("absmax" , absmax,TYPE_VECTOR);
+	REG_VAR("mins" , mins,TYPE_VECTOR);
+	REG_VAR("maxs" , maxs,TYPE_VECTOR);
+	REG_VAR("size" , size,TYPE_VECTOR);
+	REG_VAR("rendercolor" , rendercolor,TYPE_VECTOR);
+	REG_VAR("view_ofs" , view_ofs,TYPE_VECTOR);
+	REG_VAR("vuser1" , vuser1,TYPE_VECTOR);
+	REG_VAR("vuser2" , vuser2,TYPE_VECTOR);
+	REG_VAR("vuser3" , vuser3,TYPE_VECTOR);
+	REG_VAR("vuser4" , vuser4,TYPE_VECTOR);
 
     // --- Edict ---
     REG_VAR("owner",      owner,      TYPE_EDICT);
