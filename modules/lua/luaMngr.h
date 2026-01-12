@@ -1,22 +1,13 @@
 
-#include <amxxmodule.h>
-#include <parson.h>
-#include <amtl/am-vector.h>
-#include <amtl/am-autoptr.h>
-#include <amtl/am-uniqueptr.h>
-#include <amtl/am-deque.h>
-#include <amtl/am-string.h>
-#include <amtl/am-hashmap.h>
-#include <sm_stringhashmap.h>
+#ifndef _INCLUDE_AMXMODX_LUA_HEADER_H
+#define _INCLUDE_AMXMODX_LUA_HEADER_H
 
-
-#include <resdk/mod_rehlds_api.h>
-#include <resdk/mod_regamedll_api.h>
+#include <main.h>
 
 extern "C" {
-#include <lua.c>
-#include <lualib.h>
-#include <lauxlib.h>
+#include <lualib/lua.c>
+#include <lualib/lualib.h>
+#include <lualib/lauxlib.h>
 }
 typedef struct tagAMX_HEADER {
   int32_t size          PACKED; /* size of the "file" */
@@ -191,4 +182,6 @@ unsigned short EV_Precache(IRehldsHook_EV_Precache *chain, int type, const char 
 void SV_AddResource(IRehldsHook_SV_AddResource *chain, resourcetype_t type, const char *name, int size, unsigned char flags, int index);
 void SV_ClientPrintf(IRehldsHook_SV_ClientPrintf *chain, const char *fmt);
 bool SV_AllowPhysent(IRehldsHook_SV_AllowPhysent *chain, edict_t *pEdict, edict_t *pPhysent);
-void SV_SendResources(IRehldsHook_SV_SendResources *chain, sizebuf_t *msg);
+// void SV_SendResources(IRehldsHook_SV_SendResources *chain, sizebuf_t *msg);
+
+#endif //_INCLUDE_AMXMODX_LUA_HEADER_H

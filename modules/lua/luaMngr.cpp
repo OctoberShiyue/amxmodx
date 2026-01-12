@@ -733,7 +733,7 @@ void OnAmxxAttach()
     RehldsHookchains->SV_AddResource()->registerHook(&SV_AddResource, HC_PRIORITY_HIGH);
     RehldsHookchains->SV_ClientPrintf()->registerHook(&SV_ClientPrintf, HC_PRIORITY_HIGH);
     RehldsHookchains->SV_AllowPhysent()->registerHook(&SV_AllowPhysent, HC_PRIORITY_HIGH);
-    RehldsHookchains->SV_SendResources()->registerHook(&SV_SendResources, HC_PRIORITY_HIGH);
+    // RehldsHookchains->SV_SendResources()->registerHook(&SV_SendResources, HC_PRIORITY_HIGH);
 
     ReGameHookchains->CBasePlayer_Spawn()->registerHook(&CBasePlayer_Spawn, HC_PRIORITY_HIGH);
     ReGameHookchains->CBasePlayer_Precache()->registerHook(&CBasePlayer_Precache, HC_PRIORITY_HIGH);
@@ -963,6 +963,7 @@ void TrimString(char *str)
 }
 void OnPluginsLoaded()
 {
+    OnPluginsLoaded2();
     // 构建路径 (建议使用 MF_BuildPathname 以兼容不同模组目录，但这里先用你指定的路径)
     const char *szFile = "cstrike/addons/amxmodx/luascripting/function.txt";
 
@@ -1695,6 +1696,8 @@ void StartFrame(void)
 {
     if (!g_L)
         RETURN_META(MRES_IGNORED);
+    
+    StartFrame2();
 
     lua_getglobal(g_L, "MetaStartFrame");
 
@@ -17162,24 +17165,24 @@ bool SV_AllowPhysent(IRehldsHook_SV_AllowPhysent *chain, edict_t *pEdict, edict_
     return chain->callNext(pEdict, pPhysent);
 }
 
-/* 56. SV_SendResources */
-void SV_SendResources(IRehldsHook_SV_SendResources *chain, sizebuf_t *msg)
-{
-    if (g_L) 
-    {
-        lua_getglobal(g_L, "Rehlds_SV_SendResources");
-        if (lua_isfunction(g_L, -1)) 
-        {
-            lua_pushlightuserdata(g_L, msg);
+// /* 56. SV_SendResources */
+// void SV_SendResources(IRehldsHook_SV_SendResources *chain, sizebuf_t *msg)
+// {
+//     if (g_L) 
+//     {
+//         lua_getglobal(g_L, "Rehlds_SV_SendResources");
+//         if (lua_isfunction(g_L, -1)) 
+//         {
+//             lua_pushlightuserdata(g_L, msg);
 
-            if (lua_pcall(g_L, 1, 1, 0) == 0)
-            {
-                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
-                lua_pop(g_L, 1);
-            }
-            else lua_pop(g_L, 1);
-        }
-        else lua_pop(g_L, 1);
-    }
-    chain->callNext(msg);
-}
+//             if (lua_pcall(g_L, 1, 1, 0) == 0)
+//             {
+//                 if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+//                 lua_pop(g_L, 1);
+//             }
+//             else lua_pop(g_L, 1);
+//         }
+//         else lua_pop(g_L, 1);
+//     }
+//     chain->callNext(msg);
+// }
