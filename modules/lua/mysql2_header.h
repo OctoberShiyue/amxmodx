@@ -61,9 +61,6 @@ void FreeHandleTable();
 void ShutdownThreading();
 int SetMysqlAffinity(AMX *amx);
 
-extern AMX_NATIVE_INFO g_BaseSqlNatives[];
-extern AMX_NATIVE_INFO g_ThreadSqlNatives[];
-extern AMX_NATIVE_INFO g_OldCompatNatives[];
 extern MainThreader g_Threader;
 extern ThreadWorker *g_pWorker;
 extern SourceMod::MysqlDriver g_Mysql;

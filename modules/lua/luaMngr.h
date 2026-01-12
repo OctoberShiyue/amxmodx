@@ -4,11 +4,6 @@
 
 #include <main.h>
 
-extern "C" {
-#include <lualib/lua.c>
-#include <lualib/lualib.h>
-#include <lualib/lauxlib.h>
-}
 typedef struct tagAMX_HEADER {
   int32_t size          PACKED; /* size of the "file" */
   uint16_t magic        PACKED; /* signature */

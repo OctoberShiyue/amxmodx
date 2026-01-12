@@ -56,53 +56,53 @@ void ShutdownThreading()
 
 //public QueryHandler(state, Handle:query, error[], errnum, data[], size)
 //native SQL_ThreadQuery(Handle:cn_tuple, const handler[], const query[], const data[]="", dataSize=0);
-static cell AMX_NATIVE_CALL SQL_ThreadQuery(AMX *amx, cell *params)
-{
-	if (!g_pWorker)
-	{
-		MF_LogError(amx, AMX_ERR_NATIVE, "Thread worker was unable to start.");
-		return 0;
-	}
+// static cell AMX_NATIVE_CALL SQL_ThreadQuery(AMX *amx, cell *params)
+// {
+// 	if (!g_pWorker)
+// 	{
+// 		MF_LogError(amx, AMX_ERR_NATIVE, "Thread worker was unable to start.");
+// 		return 0;
+// 	}
 
-	SQL_Connection *cn = (SQL_Connection *)GetHandle(params[1], Handle_Connection);
-	if (!cn)
-	{
-		MF_LogError(amx, AMX_ERR_NATIVE, "Invalid info tuple handle: %d", params[1]);
-		return 0;
-	}
+// 	SQL_Connection *cn = (SQL_Connection *)GetHandle(params[1], Handle_Connection);
+// 	if (!cn)
+// 	{
+// 		MF_LogError(amx, AMX_ERR_NATIVE, "Invalid info tuple handle: %d", params[1]);
+// 		return 0;
+// 	}
 
-	int len;
-	const char *handler = MF_GetAmxString(amx, params[2], 0, &len);
-	int fwd = MF_RegisterSPForwardByName(amx, handler, FP_CELL, FP_CELL, FP_STRING, FP_CELL, FP_ARRAY, FP_CELL, FP_CELL, FP_DONE);
-	if (fwd < 1)
-	{
-		MF_LogError(amx, AMX_ERR_NATIVE, "Function not found: %s", handler);
-		return 0;
-	}
+// 	int len;
+// 	const char *handler = MF_GetAmxString(amx, params[2], 0, &len);
+// 	int fwd = MF_RegisterSPForwardByName(amx, handler, FP_CELL, FP_CELL, FP_STRING, FP_CELL, FP_ARRAY, FP_CELL, FP_CELL, FP_DONE);
+// 	if (fwd < 1)
+// 	{
+// 		MF_LogError(amx, AMX_ERR_NATIVE, "Function not found: %s", handler);
+// 		return 0;
+// 	}
 
-	MysqlThread *kmThread;
-	g_QueueLock->Lock();
-	if (g_FreeThreads.empty())
-	{
-		kmThread = new MysqlThread();
-	} 
-	else 
-	{
-		kmThread = g_FreeThreads.front();
-		g_FreeThreads.pop();
-	}
-	g_QueueLock->Unlock();
+// 	MysqlThread *kmThread;
+// 	g_QueueLock->Lock();
+// 	if (g_FreeThreads.empty())
+// 	{
+// 		kmThread = new MysqlThread();
+// 	} 
+// 	else 
+// 	{
+// 		kmThread = g_FreeThreads.front();
+// 		g_FreeThreads.pop();
+// 	}
+// 	g_QueueLock->Unlock();
 
-	kmThread->SetInfo(cn->host, cn->user, cn->pass, cn->db, cn->port, cn->max_timeout);
-	kmThread->SetForward(fwd);
-	kmThread->SetQuery(MF_GetAmxString(amx, params[3], 1, &len));
-	kmThread->SetCellData(MF_GetAmxAddr(amx, params[4]), (ucell)params[5]);
-	kmThread->SetCharacterSet(cn->charset);
+// 	kmThread->SetInfo(cn->host, cn->user, cn->pass, cn->db, cn->port, cn->max_timeout);
+// 	kmThread->SetForward(fwd);
+// 	kmThread->SetQuery(MF_GetAmxString(amx, params[3], 1, &len));
+// 	kmThread->SetCellData(MF_GetAmxAddr(amx, params[4]), (ucell)params[5]);
+// 	kmThread->SetCharacterSet(cn->charset);
 
-	g_pWorker->MakeThread(kmThread);
+// 	g_pWorker->MakeThread(kmThread);
 
-	return 1;
-}
+// 	return 1;
+// }
 
 MysqlThread::MysqlThread()
 {
@@ -606,9 +606,9 @@ bool AtomicResult::NextResultSet()
 	return false;
 }
 
-AMX_NATIVE_INFO g_ThreadSqlNatives[] =
-{
-	{"SQL_ThreadQuery",			SQL_ThreadQuery},
-	{NULL,						NULL},
-};
+// AMX_NATIVE_INFO g_ThreadSqlNatives[] =
+// {
+// 	{"SQL_ThreadQuery",			SQL_ThreadQuery},
+// 	{NULL,						NULL},
+// };
 
