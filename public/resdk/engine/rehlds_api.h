@@ -207,6 +207,70 @@ typedef IHookChainRegistry<edict_t *, const char *> IRehldsHookRegistry_CreateFa
 typedef IHookChain<bool, netadr_t &, const uint8_t *, int> IRehldsHook_SV_CheckConnectionLessRateLimits;
 typedef IHookChainRegistry<bool, netadr_t &, const uint8_t *, int> IRehldsHookRegistry_SV_CheckConnectionLessRateLimits;
 
+//SV_Frame hook
+typedef IVoidHookChain<> IRehldsHook_SV_Frame;
+typedef IVoidHookChainRegistry<> IRehldsHookRegistry_SV_Frame;
+
+//SV_ShouldSendConsistencyList hook
+typedef IHookChain<bool, IGameClient *, bool> IRehldsHook_SV_ShouldSendConsistencyList;
+typedef IHookChainRegistry<bool, IGameClient *, bool> IRehldsHookRegistry_SV_ShouldSendConsistencyList;
+
+//GetEntityInit hook
+typedef IHookChain<ENTITYINIT, char *> IRehldsHook_GetEntityInit;
+typedef IHookChainRegistry<ENTITYINIT, char *> IRehldsHookRegistry_GetEntityInit;
+
+//SV_EmitPings hook
+typedef IHookChain<void, IGameClient *, sizebuf_t *> IRehldsHook_SV_EmitPings;
+typedef IHookChainRegistry<void, IGameClient *, sizebuf_t *> IRehldsHookRegistry_SV_EmitPings;
+
+//ED_Alloc hook
+typedef IHookChain<edict_t *> IRehldsHook_ED_Alloc;
+typedef IHookChainRegistry<edict_t *> IRehldsHookRegistry_ED_Alloc;
+
+//ED_Free hook
+typedef IVoidHookChain<edict_t *> IRehldsHook_ED_Free;
+typedef IVoidHookChainRegistry<edict_t *> IRehldsHookRegistry_ED_Free;
+
+//Con_Printf hook
+typedef IHookChain<void, const char *> IRehldsHook_Con_Printf;
+typedef IHookChainRegistry<void, const char *> IRehldsHookRegistry_Con_Printf;
+
+//SV_CheckUserInfo hook
+typedef IHookChain<int, netadr_t *, char *, qboolean, int, char *> IRehldsHook_SV_CheckUserInfo;
+typedef IHookChainRegistry<int, netadr_t *, char *, qboolean, int, char *> IRehldsHookRegistry_SV_CheckUserInfo;
+
+//PF_precache_generic_I hook
+typedef IHookChain<int, const char *> IRehldsHook_PF_precache_generic_I;
+typedef IHookChainRegistry<int, const char *> IRehldsHookRegistry_PF_precache_generic_I;
+
+//PF_precache_model_I hook
+typedef IHookChain<int, const char *> IRehldsHook_PF_precache_model_I;
+typedef IHookChainRegistry<int, const char *> IRehldsHookRegistry_PF_precache_model_I;
+
+//PF_precache_sound_I hook
+typedef IHookChain<int, const char *> IRehldsHook_PF_precache_sound_I;
+typedef IHookChainRegistry<int, const char *> IRehldsHookRegistry_PF_precache_sound_I;
+
+//EV_Precache hook
+typedef IHookChain<unsigned short, int, const char *> IRehldsHook_EV_Precache;
+typedef IHookChainRegistry<unsigned short, int, const char *> IRehldsHookRegistry_EV_Precache;
+
+//SV_AddResource hook
+typedef IVoidHookChain<resourcetype_t, const char *, int, unsigned char, int> IRehldsHook_SV_AddResource;
+typedef IVoidHookChainRegistry<resourcetype_t, const char *, int, unsigned char, int> IRehldsHookRegistry_SV_AddResource;
+
+//SV_ClientPrintf hook
+typedef IVoidHookChain<const char *> IRehldsHook_SV_ClientPrintf;
+typedef IVoidHookChainRegistry<const char *> IRehldsHookRegistry_SV_ClientPrintf;
+
+//SV_AllowPhysent hook
+typedef IHookChain<bool, edict_t*, edict_t*> IRehldsHook_SV_AllowPhysent;
+typedef IHookChainRegistry<bool, edict_t*, edict_t*> IRehldsHookRegistry_SV_AllowPhysent;
+
+//SV_SendResources hook
+typedef IVoidHookChain<sizebuf_t *> IRehldsHook_SV_SendResources;
+typedef IVoidHookChainRegistry<sizebuf_t *> IRehldsHookRegistry_SV_SendResources;
+
 class IRehldsHookchains {
 public:
 	virtual ~IRehldsHookchains() { }
@@ -251,6 +315,22 @@ public:
 	virtual IRehldsHookRegistry_SV_EmitSound2* SV_EmitSound2() = 0;
 	virtual IRehldsHookRegistry_CreateFakeClient* CreateFakeClient() = 0;
 	virtual IRehldsHookRegistry_SV_CheckConnectionLessRateLimits* SV_CheckConnectionLessRateLimits() = 0;
+	virtual IRehldsHookRegistry_SV_Frame* SV_Frame() = 0;
+	virtual IRehldsHookRegistry_SV_ShouldSendConsistencyList* SV_ShouldSendConsistencyList() = 0;
+	virtual IRehldsHookRegistry_GetEntityInit* GetEntityInit() = 0;
+	virtual IRehldsHookRegistry_SV_EmitPings* SV_EmitPings() = 0;
+	virtual IRehldsHookRegistry_ED_Alloc* ED_Alloc() = 0;
+	virtual IRehldsHookRegistry_ED_Free* ED_Free() = 0;
+	virtual IRehldsHookRegistry_Con_Printf* Con_Printf() = 0;
+	virtual IRehldsHookRegistry_SV_CheckUserInfo* SV_CheckUserInfo() = 0;
+	virtual IRehldsHookRegistry_PF_precache_generic_I* PF_precache_generic_I() = 0;
+	virtual IRehldsHookRegistry_PF_precache_model_I* PF_precache_model_I() = 0;
+	virtual IRehldsHookRegistry_PF_precache_sound_I* PF_precache_sound_I() = 0;
+	virtual IRehldsHookRegistry_EV_Precache* EV_Precache() = 0;
+	virtual IRehldsHookRegistry_SV_AddResource* SV_AddResource() = 0;
+	virtual IRehldsHookRegistry_SV_ClientPrintf* SV_ClientPrintf() = 0;
+	virtual IRehldsHookRegistry_SV_AllowPhysent* SV_AllowPhysent() = 0;
+	virtual IRehldsHookRegistry_SV_SendResources* SV_SendResources() = 0;
 };
 
 struct RehldsFuncs_t {
@@ -358,6 +438,12 @@ struct RehldsFuncs_t {
 	void(*SZ_Write)(sizebuf_t *buf, const void *data, int length);
 	void(*SZ_Print)(sizebuf_t *buf, const char *data);
 	void(*SZ_Clear)(sizebuf_t *buf);
+	void(*MSG_BeginReading)();
+	double(*GetHostFrameTime)();
+	struct cmd_function_s *(*GetFirstCmdFunctionHandle)();
+
+	// Pause
+	void(*SetServerPause)(bool status);
 };
 
 class IRehldsApi {

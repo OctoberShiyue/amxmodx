@@ -678,6 +678,63 @@ void OnAmxxAttach()
     HasReHlds    = RehldsApi_Init();
 	HasReGameDll = RegamedllApi_Init();
 
+    RehldsHookchains->Steam_NotifyClientConnect()->registerHook(&Steam_NotifyClientConnect, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_ConnectClient()->registerHook(&SV_ConnectClient, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_GetIDString()->registerHook(&SV_GetIDString, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_SendServerinfo()->registerHook(&SV_SendServerinfo, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_CheckProtocol()->registerHook(&SV_CheckProtocol, HC_PRIORITY_HIGH);
+    RehldsHookchains->SVC_GetChallenge_mod()->registerHook(&SVC_GetChallenge_mod, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_CheckKeyInfo()->registerHook(&SV_CheckKeyInfo, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_CheckIPRestrictions()->registerHook(&SV_CheckIPRestrictions, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_FinishCertificateCheck()->registerHook(&SV_FinishCertificateCheck, HC_PRIORITY_HIGH);
+    RehldsHookchains->Steam_NotifyBotConnect()->registerHook(&Steam_NotifyBotConnect, HC_PRIORITY_HIGH);
+    RehldsHookchains->SerializeSteamId()->registerHook(&SerializeSteamId, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_CompareUserID()->registerHook(&SV_CompareUserID, HC_PRIORITY_HIGH);
+    RehldsHookchains->Steam_NotifyClientDisconnect()->registerHook(&Steam_NotifyClientDisconnect, HC_PRIORITY_HIGH);
+    RehldsHookchains->PreprocessPacket()->registerHook(&PreProcessPacket, HC_PRIORITY_HIGH);
+    RehldsHookchains->ValidateCommand()->registerHook(&ValidateCommand, HC_PRIORITY_HIGH);
+    RehldsHookchains->ExecuteServerStringCmd()->registerHook(&ExecuteServerStringCmd, HC_PRIORITY_HIGH);
+    RehldsHookchains->ClientConnected()->registerHook(&ClientConnected, HC_PRIORITY_HIGH);
+    RehldsHookchains->HandleNetCommand()->registerHook(&HandleNetCommand, HC_PRIORITY_HIGH);
+    RehldsHookchains->Mod_LoadBrushModel()->registerHook(&Mod_LoadBrushModel, HC_PRIORITY_HIGH);
+    RehldsHookchains->Mod_LoadStudioModel()->registerHook(&Mod_LoadStudioModel, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_EmitEvents()->registerHook(&SV_EmitEvents, HC_PRIORITY_HIGH);
+    RehldsHookchains->EV_PlayReliableEvent()->registerHook(&EV_PlayReliableEvent, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_StartSound()->registerHook(&SV_StartSound, HC_PRIORITY_HIGH);
+    RehldsHookchains->PF_Remove_I()->registerHook(&PF_Remove_I, HC_PRIORITY_HIGH);
+    RehldsHookchains->PF_BuildSoundMsg_I()->registerHook(&PF_BuildSoundMsg_I, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_WriteFullClientUpdate()->registerHook(&SV_WriteFullClientUpdate, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_CheckConsistencyResponse()->registerHook(&SV_CheckConsistencyResponse, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_DropClient()->registerHook(&SV_DropClient, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_ActivateServer()->registerHook(&SV_ActivateServer, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_WriteVoiceCodec()->registerHook(&SV_WriteVoiceCodec, HC_PRIORITY_HIGH);
+    RehldsHookchains->Steam_GSGetSteamID()->registerHook(&Steam_GSGetSteamID, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_TransferConsistencyInfo()->registerHook(&SV_TransferConsistencyInfo, HC_PRIORITY_HIGH);
+    RehldsHookchains->Steam_GSBUpdateUserData()->registerHook(&Steam_GSBUpdateUserData, HC_PRIORITY_HIGH);
+    RehldsHookchains->Cvar_DirectSet()->registerHook(&Cvar_DirectSet, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_EstablishTimeBase()->registerHook(&SV_EstablishTimeBase, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_Spawn_f()->registerHook(&SV_Spawn_f, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_CreatePacketEntities()->registerHook(&SV_CreatePacketEntities, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_EmitSound2()->registerHook(&SV_EmitSound2, HC_PRIORITY_HIGH);
+    RehldsHookchains->CreateFakeClient()->registerHook(&CreateFakeClient, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_CheckConnectionLessRateLimits()->registerHook(&SV_CheckConnectionLessRateLimits, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_Frame()->registerHook(&SV_Frame, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_ShouldSendConsistencyList()->registerHook(&SV_ShouldSendConsistencyList, HC_PRIORITY_HIGH);
+    RehldsHookchains->GetEntityInit()->registerHook(&GetEntityInit, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_EmitPings()->registerHook(&SV_EmitPings, HC_PRIORITY_HIGH);
+    RehldsHookchains->ED_Alloc()->registerHook(&ED_Alloc, HC_PRIORITY_LOW);
+    RehldsHookchains->ED_Free()->registerHook(&ED_Free, HC_PRIORITY_HIGH);
+    RehldsHookchains->Con_Printf()->registerHook(&Con_Printf, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_CheckUserInfo()->registerHook(&SV_CheckUserInfo, HC_PRIORITY_HIGH);
+    RehldsHookchains->PF_precache_generic_I()->registerHook(&PF_precache_generic_I, HC_PRIORITY_HIGH);
+    RehldsHookchains->PF_precache_model_I()->registerHook(&PF_precache_model_I, HC_PRIORITY_HIGH);
+    RehldsHookchains->PF_precache_sound_I()->registerHook(&PF_precache_sound_I, HC_PRIORITY_HIGH);
+    RehldsHookchains->EV_Precache()->registerHook(&EV_Precache, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_AddResource()->registerHook(&SV_AddResource, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_ClientPrintf()->registerHook(&SV_ClientPrintf, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_AllowPhysent()->registerHook(&SV_AllowPhysent, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_SendResources()->registerHook(&SV_SendResources, HC_PRIORITY_HIGH);
+
     ReGameHookchains->CBasePlayer_Spawn()->registerHook(&CBasePlayer_Spawn, HC_PRIORITY_HIGH);
     ReGameHookchains->CBasePlayer_Precache()->registerHook(&CBasePlayer_Precache, HC_PRIORITY_HIGH);
     ReGameHookchains->CBasePlayer_ObjectCaps()->registerHook(&CBasePlayer_ObjectCaps, HC_PRIORITY_HIGH);
@@ -15336,4 +15393,1793 @@ bool IsPenetrableEntity(IReGameHook_IsPenetrableEntity *chain, Vector &vecSrc, V
         else lua_pop(g_L, 1);
     }
     return chain->callNext(vecSrc, vecDest, pevInflictor, pEnt);
+}
+/* 1. Steam_NotifyClientConnect */
+qboolean Steam_NotifyClientConnect(IRehldsHook_Steam_NotifyClientConnect *chain, IGameClient *cl, const void *pvSteam2Key, unsigned int ucbSteam2Key)
+{
+    unsigned int _ucb = ucbSteam2Key;
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_Steam_NotifyClientConnect");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+            lua_pushlightuserdata(g_L, (void*)pvSteam2Key);
+            lua_pushinteger(g_L, _ucb);
+
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && (lua_isboolean(g_L, -1) || lua_isnumber(g_L, -1))) {
+                    qboolean ret = (qboolean)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 3) {
+                    if (lua_isnumber(g_L, -1)) _ucb = (unsigned int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 3);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(cl, pvSteam2Key, _ucb);
+}
+
+/* 2. SV_ConnectClient */
+void SV_ConnectClient(IRehldsHook_SV_ConnectClient *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_ConnectClient");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* 3. SV_GetIDString */
+char* SV_GetIDString(IRehldsHook_SV_GetIDString *chain, USERID_t *id)
+{
+    static char szStaticRet[256];
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_GetIDString");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, id);
+
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isstring(g_L, -1)) {
+                    strncpy(szStaticRet, lua_tostring(g_L, -1), 255);
+                    szStaticRet[255] = 0;
+                    lua_pop(g_L, 1);
+                    return szStaticRet;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(id);
+}
+
+/* 4. SV_SendServerinfo */
+void SV_SendServerinfo(IRehldsHook_SV_SendServerinfo *chain, sizebuf_t *msg, IGameClient *cl)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_SendServerinfo");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, msg);
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(msg, cl);
+}
+
+/* 5. SV_CheckProtocol */
+int SV_CheckProtocol(IRehldsHook_SV_CheckProtocol *chain, netadr_t *adr, int protocol)
+{
+    int _proto = protocol;
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_CheckProtocol");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, adr);
+            lua_pushinteger(g_L, _proto);
+
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isnumber(g_L, -1)) {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 2) {
+                    if (lua_isnumber(g_L, -1)) _proto = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(adr, _proto);
+}
+
+/* 6. SVC_GetChallenge_mod */
+void SVC_GetChallenge_mod(IRehldsHook_SVC_GetChallenge_mod *chain, char *buffer, int clientChallenge)
+{
+    int _chal = clientChallenge;
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SVC_GetChallenge_mod");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushstring(g_L, buffer);
+            lua_pushinteger(g_L, _chal);
+
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 2) {
+                    if (lua_isstring(g_L, -2)) strcpy(buffer, lua_tostring(g_L, -2));
+                    if (lua_isnumber(g_L, -1)) _chal = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(buffer, _chal);
+}
+
+/* 7. SV_CheckKeyInfo */
+int SV_CheckKeyInfo(IRehldsHook_SV_CheckKeyInfo *chain, netadr_t *adr, char *protinfo, uint16 *port, int *player_idx, char *authinfo, char *server_cdkey)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_CheckKeyInfo");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, adr);
+            lua_pushstring(g_L, protinfo);
+            lua_pushlightuserdata(g_L, port);
+            lua_pushlightuserdata(g_L, player_idx);
+            lua_pushstring(g_L, authinfo);
+            lua_pushstring(g_L, server_cdkey);
+
+            if (lua_pcall(g_L, 6, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isnumber(g_L, -1)) {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 6) {
+                    if (lua_isstring(g_L, -5)) strcpy(protinfo, lua_tostring(g_L, -5));
+                    if (lua_isstring(g_L, -2)) strcpy(authinfo, lua_tostring(g_L, -2));
+                    if (lua_isstring(g_L, -1)) strcpy(server_cdkey, lua_tostring(g_L, -1));
+                    lua_pop(g_L, 6);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(adr, protinfo, port, player_idx, authinfo, server_cdkey);
+}
+
+/* 8. SV_CheckIPRestrictions */
+int SV_CheckIPRestrictions(IRehldsHook_SV_CheckIPRestrictions *chain, netadr_t *adr, int protocol)
+{
+    int _proto = protocol;
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_CheckIPRestrictions");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, adr);
+            lua_pushinteger(g_L, _proto);
+
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isnumber(g_L, -1)) {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 2) {
+                    if (lua_isnumber(g_L, -1)) _proto = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(adr, _proto);
+}
+
+/* 9. SV_FinishCertificateCheck */
+int SV_FinishCertificateCheck(IRehldsHook_SV_FinishCertificateCheck *chain, netadr_t *adr, int protocol, char *authinfo, char *server_cdkey)
+{
+    int _proto = protocol;
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_FinishCertificateCheck");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, adr);
+            lua_pushinteger(g_L, _proto);
+            lua_pushstring(g_L, authinfo);
+            lua_pushstring(g_L, server_cdkey);
+
+            if (lua_pcall(g_L, 4, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isnumber(g_L, -1)) {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 4) {
+                    if (lua_isnumber(g_L, -3)) _proto = (int)lua_tointeger(g_L, -3);
+                    if (lua_isstring(g_L, -2)) strcpy(authinfo, lua_tostring(g_L, -2));
+                    if (lua_isstring(g_L, -1)) strcpy(server_cdkey, lua_tostring(g_L, -1));
+                    lua_pop(g_L, 4);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(adr, _proto, authinfo, server_cdkey);
+}
+
+/* 10. Steam_NotifyBotConnect */
+qboolean Steam_NotifyBotConnect(IRehldsHook_Steam_NotifyBotConnect *chain, IGameClient *cl)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_Steam_NotifyBotConnect");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) || lua_isnumber(g_L, -1)) {
+                    qboolean ret = (qboolean)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(cl);
+}
+
+/* 11. SerializeSteamId */
+void SerializeSteamId(IRehldsHook_SerializeSteamId *chain, USERID_t *id1, USERID_t *id2)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SerializeSteamId");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, id1);
+            lua_pushlightuserdata(g_L, id2);
+
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(id1, id2);
+}
+
+/* 12. SV_CompareUserID */
+qboolean SV_CompareUserID(IRehldsHook_SV_CompareUserID *chain, USERID_t *id1, USERID_t *id2)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_CompareUserID");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, id1);
+            lua_pushlightuserdata(g_L, id2);
+
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) || lua_isnumber(g_L, -1)) {
+                    qboolean ret = (qboolean)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(id1, id2);
+}
+
+/* 13. Steam_NotifyClientDisconnect */
+void Steam_NotifyClientDisconnect(IRehldsHook_Steam_NotifyClientDisconnect *chain, IGameClient *cl)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_Steam_NotifyClientDisconnect");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(cl);
+}
+
+/* 14. PreProcessPacket */
+bool PreProcessPacket(IRehldsHook_PreprocessPacket *chain, uint8 *data, unsigned int len, const netadr_t &adr)
+{
+    unsigned int _len = len;
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_PreProcessPacket");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, data);
+            lua_pushinteger(g_L, _len);
+            lua_pushlightuserdata(g_L, (void*)&adr);
+
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1)) {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 3) {
+                    if (lua_isnumber(g_L, -2)) _len = (unsigned int)lua_tointeger(g_L, -2);
+                    lua_pop(g_L, 3);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(data, _len, adr);
+}
+
+/* 15. ValidateCommand */
+bool ValidateCommand(IRehldsHook_ValidateCommand *chain, const char *cmd, cmd_source_t source, IGameClient *cl)
+{
+    const char* _cmd = cmd;
+    cmd_source_t _src = source;
+    static char szCmdBuf[512];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_ValidateCommand");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushstring(g_L, _cmd);
+            lua_pushinteger(g_L, (int)_src);
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1)) {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 3) {
+                    if (lua_isstring(g_L, -3)) {
+                        strncpy(szCmdBuf, lua_tostring(g_L, -3), 511);
+                        szCmdBuf[511] = 0;
+                        _cmd = szCmdBuf;
+                    }
+                    if (lua_isnumber(g_L, -2)) _src = (cmd_source_t)lua_tointeger(g_L, -2);
+                    lua_pop(g_L, 3);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(_cmd, _src, cl);
+}
+
+/* 16. ExecuteServerStringCmd */
+void ExecuteServerStringCmd(IRehldsHook_ExecuteServerStringCmd *chain, const char *cmd, cmd_source_t source, IGameClient *cl)
+{
+    const char* _cmd = cmd;
+    cmd_source_t _src = source;
+    static char szCmdBuf[512];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_ExecuteServerStringCmd");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushstring(g_L, _cmd);
+            lua_pushinteger(g_L, (int)_src);
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 3) {
+                    if (lua_isstring(g_L, -3)) {
+                        strncpy(szCmdBuf, lua_tostring(g_L, -3), 511);
+                        szCmdBuf[511] = 0;
+                        _cmd = szCmdBuf;
+                    }
+                    if (lua_isnumber(g_L, -2)) _src = (cmd_source_t)lua_tointeger(g_L, -2);
+                    lua_pop(g_L, 3);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(_cmd, _src, cl);
+}
+
+/* 17. ClientConnected */
+void ClientConnected(IRehldsHook_ClientConnected *chain, IGameClient *cl)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_ClientConnected");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(cl);
+}
+
+/* 18. HandleNetCommand */
+void HandleNetCommand(IRehldsHook_HandleNetCommand *chain, IGameClient *cl, int8 cmd)
+{
+    int _cmd = (int)cmd;
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_HandleNetCommand");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+            lua_pushinteger(g_L, _cmd);
+
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 2) {
+                    if (lua_isnumber(g_L, -1)) _cmd = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(cl, (int8)_cmd);
+}
+
+/* 19. Mod_LoadBrushModel */
+void Mod_LoadBrushModel(IRehldsHook_Mod_LoadBrushModel *chain, model_t *mod, void *buffer)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_Mod_LoadBrushModel");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, mod);
+            lua_pushlightuserdata(g_L, buffer);
+
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(mod, buffer);
+}
+
+/* 20. Mod_LoadStudioModel */
+void Mod_LoadStudioModel(IRehldsHook_Mod_LoadStudioModel *chain, model_t *mod, void *buffer)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_Mod_LoadStudioModel");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, mod);
+            lua_pushlightuserdata(g_L, buffer);
+
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(mod, buffer);
+}
+
+/* 21. SV_EmitEvents */
+void SV_EmitEvents(IRehldsHook_SV_EmitEvents *chain, IGameClient *cl, struct packet_entities_s *pack, sizebuf_t *msg)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_EmitEvents");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+            lua_pushlightuserdata(g_L, pack);
+            lua_pushlightuserdata(g_L, msg);
+
+            if (lua_pcall(g_L, 3, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(cl, pack, msg);
+}
+
+/* 22. EV_PlayReliableEvent */
+void EV_PlayReliableEvent(IRehldsHook_EV_PlayReliableEvent *chain, IGameClient *cl, int entindex, unsigned short eventindex, float delay, struct event_args_s *pargs)
+{
+    int _entindex = entindex;
+    unsigned short _eventindex = eventindex;
+    float _delay = delay;
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_EV_PlayReliableEvent");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+            lua_pushinteger(g_L, _entindex);
+            lua_pushinteger(g_L, _eventindex);
+            lua_pushnumber(g_L, _delay);
+            lua_pushlightuserdata(g_L, pargs);
+
+            if (lua_pcall(g_L, 5, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 3) {
+                    if (lua_isnumber(g_L, -3)) _entindex = (int)lua_tointeger(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _eventindex = (unsigned short)lua_tointeger(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _delay = (float)lua_tonumber(g_L, -1);
+                    lua_pop(g_L, 3);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(cl, _entindex, _eventindex, _delay, pargs);
+}
+
+/* 23. SV_StartSound */
+void SV_StartSound(IRehldsHook_SV_StartSound *chain, int recipients, edict_t *entity, int channel, const char *sample, int volume, float attenuation, int flags, int pitch)
+{
+    int _recipients = recipients;
+    int _channel = channel;
+    const char* _sample = sample;
+    int _volume = volume;
+    float _attenuation = attenuation;
+    int _flags = flags;
+    int _pitch = pitch;
+    static char szSampleBuf[128];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_StartSound");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushinteger(g_L, _recipients);
+            lua_pushentity(g_L, entity);
+            lua_pushinteger(g_L, _channel);
+            lua_pushstring(g_L, _sample);
+            lua_pushinteger(g_L, _volume);
+            lua_pushnumber(g_L, _attenuation);
+            lua_pushinteger(g_L, _flags);
+            lua_pushinteger(g_L, _pitch);
+
+            if (lua_pcall(g_L, 8, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 7) {
+                    if (lua_isnumber(g_L, -7)) _recipients = (int)lua_tointeger(g_L, -7);
+                    if (lua_isnumber(g_L, -6)) _channel = (int)lua_tointeger(g_L, -6);
+                    if (lua_isstring(g_L, -5)) { strncpy(szSampleBuf, lua_tostring(g_L, -5), 127); szSampleBuf[127]=0; _sample = szSampleBuf; }
+                    if (lua_isnumber(g_L, -4)) _volume = (int)lua_tointeger(g_L, -4);
+                    if (lua_isnumber(g_L, -3)) _attenuation = (float)lua_tonumber(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _flags = (int)lua_tointeger(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _pitch = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 7);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(_recipients, entity, _channel, _sample, _volume, _attenuation, _flags, _pitch);
+}
+
+/* 24. PF_Remove_I */
+void PF_Remove_I(IRehldsHook_PF_Remove_I *chain, edict_t *edict)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_PF_Remove_I");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushentity(g_L, edict);
+
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(edict);
+}
+
+/* 25. PF_BuildSoundMsg_I */
+void PF_BuildSoundMsg_I(IRehldsHook_PF_BuildSoundMsg_I *chain, edict_t *entity, int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch, int msg_dest, int msg_type, const float *pOrigin, edict_t *ed)
+{
+    int _channel = channel;
+    const char* _sample = sample;
+    float _volume = volume;
+    float _attenuation = attenuation;
+    int _fFlags = fFlags;
+    int _pitch = pitch;
+    int _msg_dest = msg_dest;
+    int _msg_type = msg_type;
+    static char szSampleBuf[128];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_PF_BuildSoundMsg_I");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushentity(g_L, entity);
+            lua_pushinteger(g_L, _channel);
+            lua_pushstring(g_L, _sample);
+            lua_pushnumber(g_L, _volume);
+            lua_pushnumber(g_L, _attenuation);
+            lua_pushinteger(g_L, _fFlags);
+            lua_pushinteger(g_L, _pitch);
+            lua_pushinteger(g_L, _msg_dest);
+            lua_pushinteger(g_L, _msg_type);
+            lua_pushlightuserdata(g_L, (void*)pOrigin);
+            lua_pushentity(g_L, ed);
+
+            if (lua_pcall(g_L, 11, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 8) {
+                    if (lua_isnumber(g_L, -8)) _channel = (int)lua_tointeger(g_L, -8);
+                    if (lua_isstring(g_L, -7)) { strncpy(szSampleBuf, lua_tostring(g_L, -7), 127); szSampleBuf[127]=0; _sample = szSampleBuf; }
+                    if (lua_isnumber(g_L, -6)) _volume = (float)lua_tonumber(g_L, -6);
+                    if (lua_isnumber(g_L, -5)) _attenuation = (float)lua_tonumber(g_L, -5);
+                    if (lua_isnumber(g_L, -4)) _fFlags = (int)lua_tointeger(g_L, -4);
+                    if (lua_isnumber(g_L, -3)) _pitch = (int)lua_tointeger(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _msg_dest = (int)lua_tointeger(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _msg_type = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 8);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(entity, _channel, _sample, _volume, _attenuation, _fFlags, _pitch, _msg_dest, _msg_type, pOrigin, ed);
+}
+
+/* 26. SV_WriteFullClientUpdate */
+void SV_WriteFullClientUpdate(IRehldsHook_SV_WriteFullClientUpdate *chain, IGameClient *cl, char *buf, size_t len, sizebuf_t *sb, IGameClient *receiver)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_WriteFullClientUpdate");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pCl = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pCl);
+            lua_pushlightuserdata(g_L, buf);
+            lua_pushinteger(g_L, len);
+            lua_pushlightuserdata(g_L, sb);
+            edict_t* pRcvr = (receiver) ? receiver->GetEdict() : NULL;
+            lua_pushentity(g_L, pRcvr);
+
+            if (lua_pcall(g_L, 5, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(cl, buf, len, sb, receiver);
+}
+
+/* 27. SV_CheckConsistencyResponse */
+bool SV_CheckConsistencyResponse(IRehldsHook_SV_CheckConsistencyResponse *chain, IGameClient *cl, resource_t *res, uint32 check)
+{
+    uint32 _check = check;
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_CheckConsistencyResponse");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+            lua_pushlightuserdata(g_L, res);
+            lua_pushinteger(g_L, _check);
+
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1)) {
+                        bool ret = (bool)lua_toboolean(g_L, -1);
+                        lua_pop(g_L, 1);
+                        return ret;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else if (nRet == 2) {
+                    if (lua_isnumber(g_L, -1)) _check = (uint32)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(cl, res, _check);
+}
+
+/* 28. SV_DropClient */
+void SV_DropClient(IRehldsHook_SV_DropClient *chain, IGameClient *cl, bool crash, const char *fmt)
+{
+    bool _crash = crash;
+    const char* _fmt = fmt;
+    static char szFmtBuf[256];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_DropClient");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+            lua_pushboolean(g_L, _crash);
+            lua_pushstring(g_L, _fmt);
+
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 2) {
+                    if (lua_isboolean(g_L, -2)) _crash = (bool)lua_toboolean(g_L, -2);
+                    if (lua_isstring(g_L, -1)) { strncpy(szFmtBuf, lua_tostring(g_L, -1), 255); szFmtBuf[255]=0; _fmt = szFmtBuf; }
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(cl, _crash, _fmt);
+}
+
+/* 29. SV_ActivateServer */
+void SV_ActivateServer(IRehldsHook_SV_ActivateServer *chain, int maxclients)
+{
+    int _max = maxclients;
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_ActivateServer");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushinteger(g_L, _max);
+
+            if (lua_pcall(g_L, 1, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                    if (lua_isnumber(g_L, -1)) _max = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(_max);
+}
+
+/* 30. SV_WriteVoiceCodec */
+void SV_WriteVoiceCodec(IRehldsHook_SV_WriteVoiceCodec *chain, sizebuf_t *sb)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_WriteVoiceCodec");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, sb);
+
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(sb);
+}
+
+/* 31. Steam_GSGetSteamID */
+uint64 Steam_GSGetSteamID(IRehldsHook_Steam_GSGetSteamID *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_Steam_GSGetSteamID");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isstring(g_L, -1)) {
+                    // Lua 5.1 不支持 64 位整数，通常以字符串传输。需自行实现 strtoull 或类似转换。
+                    // 这里为了兼容性，假设不修改或返回原值。若需修改需引入 64 位转换库。
+                    // uint64 ret = _strtoui64(lua_tostring(g_L, -1), NULL, 10);
+                    // lua_pop(g_L, 1);
+                    // return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext();
+}
+
+/* 32. SV_TransferConsistencyInfo */
+int SV_TransferConsistencyInfo(IRehldsHook_SV_TransferConsistencyInfo *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_TransferConsistencyInfo");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -1)) {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext();
+}
+
+/* 33. Steam_GSBUpdateUserData */
+bool Steam_GSBUpdateUserData(IRehldsHook_Steam_GSBUpdateUserData *chain, uint64 steamID, const char *pchPlayerName, uint32 uScore)
+{
+    const char* _name = pchPlayerName;
+    uint32 _score = uScore;
+    static char szNameBuf[128];
+    static char szSteamID[32]; // For passing uint64 to Lua as string
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_Steam_GSBUpdateUserData");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            sprintf(szSteamID, "%llu", steamID);
+            lua_pushstring(g_L, szSteamID);
+            lua_pushstring(g_L, _name);
+            lua_pushinteger(g_L, _score);
+
+            if (lua_pcall(g_L, 3, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1)) {
+                        bool ret = (bool)lua_toboolean(g_L, -1);
+                        lua_pop(g_L, 1);
+                        return ret;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else if (nRet == 2) {
+                    // Update name, score. SteamID ignored.
+                    if (lua_isstring(g_L, -2)) { strncpy(szNameBuf, lua_tostring(g_L, -2), 127); szNameBuf[127]=0; _name = szNameBuf; }
+                    if (lua_isnumber(g_L, -1)) _score = (uint32)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(steamID, _name, _score);
+}
+
+/* 34. Cvar_DirectSet */
+void Cvar_DirectSet(IRehldsHook_Cvar_DirectSet *chain, struct cvar_s *var, const char *value)
+{
+    const char* _val = value;
+    static char szValBuf[256];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_Cvar_DirectSet");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, var);
+            lua_pushstring(g_L, _val);
+
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 1 && lua_isstring(g_L, -1)) {
+                    strncpy(szValBuf, lua_tostring(g_L, -1), 255); szValBuf[255]=0; _val = szValBuf;
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(var, _val);
+}
+
+/* 35. SV_EstablishTimeBase */
+void SV_EstablishTimeBase(IRehldsHook_SV_EstablishTimeBase *chain, IGameClient *cl, struct usercmd_s *cmd, int funcs, int movevar, int vec)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_EstablishTimeBase");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+            lua_pushlightuserdata(g_L, cmd);
+            lua_pushinteger(g_L, funcs);
+            lua_pushinteger(g_L, movevar);
+            lua_pushinteger(g_L, vec);
+
+            if (lua_pcall(g_L, 5, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(cl, cmd, funcs, movevar, vec);
+}
+
+/* 36. SV_Spawn_f */
+void SV_Spawn_f(IRehldsHook_SV_Spawn_f *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_Spawn_f");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* 37. SV_CreatePacketEntities */
+int SV_CreatePacketEntities(IRehldsHook_SV_CreatePacketEntities *chain, enum sv_delta_s delta, IGameClient *cl, struct packet_entities_s *pack, struct sizebuf_s *msg)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_CreatePacketEntities");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushinteger(g_L, (int)delta);
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+            lua_pushlightuserdata(g_L, pack);
+            lua_pushlightuserdata(g_L, msg);
+
+            if (lua_pcall(g_L, 4, 1, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -1)) {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(delta, cl, pack, msg);
+}
+
+/* 38. SV_EmitSound2 */
+bool SV_EmitSound2(IRehldsHook_SV_EmitSound2 *chain, edict_t *entity, IGameClient *receiver, int channel, const char *sample, float volume, float attenuation, int flags, int pitch, int emitFlags, const float *pOrigin)
+{
+    int _channel = channel;
+    const char* _sample = sample;
+    float _volume = volume;
+    float _attenuation = attenuation;
+    int _flags = flags;
+    int _pitch = pitch;
+    int _emitFlags = emitFlags;
+    static char szSampleBuf[128];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_EmitSound2");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushentity(g_L, entity);
+            edict_t* pRcvr = (receiver) ? receiver->GetEdict() : NULL;
+            lua_pushentity(g_L, pRcvr);
+            lua_pushinteger(g_L, _channel);
+            lua_pushstring(g_L, _sample);
+            lua_pushnumber(g_L, _volume);
+            lua_pushnumber(g_L, _attenuation);
+            lua_pushinteger(g_L, _flags);
+            lua_pushinteger(g_L, _pitch);
+            lua_pushinteger(g_L, _emitFlags);
+            lua_pushlightuserdata(g_L, (void*)pOrigin);
+
+            if (lua_pcall(g_L, 10, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1)) {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 7) {
+                    if (lua_isnumber(g_L, -7)) _channel = (int)lua_tointeger(g_L, -7);
+                    if (lua_isstring(g_L, -6)) { strncpy(szSampleBuf, lua_tostring(g_L, -6), 127); szSampleBuf[127]=0; _sample = szSampleBuf; }
+                    if (lua_isnumber(g_L, -5)) _volume = (float)lua_tonumber(g_L, -5);
+                    if (lua_isnumber(g_L, -4)) _attenuation = (float)lua_tonumber(g_L, -4);
+                    if (lua_isnumber(g_L, -3)) _flags = (int)lua_tointeger(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _pitch = (int)lua_tointeger(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _emitFlags = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 7);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(entity, receiver, _channel, _sample, _volume, _attenuation, _flags, _pitch, _emitFlags, pOrigin);
+}
+
+/* 39. CreateFakeClient */
+edict_t *CreateFakeClient(IRehldsHook_CreateFakeClient *chain, const char *netname)
+{
+    const char* _netname = netname;
+    static char szNameBuf[128];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_CreateFakeClient");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushstring(g_L, _netname);
+
+            if (lua_pcall(g_L, 1, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(szNameBuf, lua_tostring(g_L, -1), 127); szNameBuf[127]=0; _netname = szNameBuf;
+                    } else if (lua_isuserdata(g_L, -1) || lua_isnil(g_L, -1)) {
+                        // Return Entity or Nil to supercede
+                        lua_pop(g_L, 1);
+                        return NULL; // Assuming conversion is handled if needed
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(_netname);
+}
+
+/* 40. SV_CheckConnectionLessRateLimits */
+bool SV_CheckConnectionLessRateLimits(IRehldsHook_SV_CheckConnectionLessRateLimits *chain, netadr_t &adr, const uint8_t *data, int len)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_CheckConnectionLessRateLimits");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, (void*)&adr);
+            lua_pushlightuserdata(g_L, (void*)data);
+            lua_pushinteger(g_L, len);
+
+            if (lua_pcall(g_L, 3, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1)) {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(adr, data, len);
+}
+/* 41. SV_Frame */
+void SV_Frame(IRehldsHook_SV_Frame *chain)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_Frame");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            if (lua_pcall(g_L, 0, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext();
+}
+
+/* 42. SV_ShouldSendConsistencyList */
+bool SV_ShouldSendConsistencyList(IRehldsHook_SV_ShouldSendConsistencyList *chain, IGameClient *cl, bool bSend)
+{
+    bool _bSend = bSend;
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_ShouldSendConsistencyList");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+            lua_pushboolean(g_L, _bSend);
+
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1)) {
+                        bool ret = (bool)lua_toboolean(g_L, -1);
+                        lua_pop(g_L, 1);
+                        return ret;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else if (nRet == 2) {
+                    if (lua_isboolean(g_L, -1)) _bSend = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(cl, _bSend);
+}
+
+/* 43. GetEntityInit */
+ENTITYINIT GetEntityInit(IRehldsHook_GetEntityInit *chain, char *pszClassName)
+{
+    // ENTITYINIT 是函数指针 typedef void (*ENTITYINIT)( entvars_t *pev );
+    // Lua 无法直接返回 C++ 函数指针，因此仅支持修改 ClassName 参数
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_GetEntityInit");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushstring(g_L, pszClassName);
+
+            if (lua_pcall(g_L, 1, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(pszClassName, lua_tostring(g_L, -1), 63); // 假设缓冲区足够
+                    }
+                    // 如果返回 nil，可以考虑 return NULL (supercede)，但 ENTITYINIT 返回 NULL 可能会导致引擎崩溃或默认处理
+                    else if (lua_isnil(g_L, -1)) {
+                        lua_pop(g_L, 1);
+                        return NULL; 
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pszClassName);
+}
+
+/* 44. SV_EmitPings */
+void SV_EmitPings(IRehldsHook_SV_EmitPings *chain, IGameClient *cl, sizebuf_t *msg)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_EmitPings");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            edict_t* pEnt = (cl) ? cl->GetEdict() : NULL;
+            lua_pushentity(g_L, pEnt);
+            lua_pushlightuserdata(g_L, msg);
+
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(cl, msg);
+}
+
+/* 45. ED_Alloc */
+edict_t *ED_Alloc(IRehldsHook_ED_Alloc *chain)
+{
+    edict_t *ed = chain->callNext();
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_ED_Alloc");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushentity(g_L, ed);
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return ed; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return ed;
+}
+
+/* 46. ED_Free */
+void ED_Free(IRehldsHook_ED_Free *chain, edict_t *ed)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_ED_Free");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushentity(g_L, ed);
+
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(ed);
+}
+
+/* 47. Con_Printf */
+void Con_Printf(IRehldsHook_Con_Printf *chain, const char *fmt)
+{
+    const char* _fmt = fmt;
+    static char szFmtBuf[1024];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_Con_Printf");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushstring(g_L, _fmt);
+
+            if (lua_pcall(g_L, 1, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                        lua_pop(g_L, 1);
+                        return;
+                    }
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(szFmtBuf, lua_tostring(g_L, -1), 1023); szFmtBuf[1023]=0;
+                        _fmt = szFmtBuf;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(_fmt);
+}
+
+/* 48. SV_CheckUserInfo */
+int SV_CheckUserInfo(IRehldsHook_SV_CheckUserInfo *chain, netadr_t *adr, char *infobuffer, qboolean nodedup, int duplicateIndex, char *szSteamID)
+{
+    qboolean _nodedup = nodedup;
+    int _dupIdx = duplicateIndex;
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_CheckUserInfo");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, adr);
+            lua_pushstring(g_L, infobuffer);
+            lua_pushinteger(g_L, _nodedup);
+            lua_pushinteger(g_L, _dupIdx);
+            lua_pushstring(g_L, szSteamID);
+
+            if (lua_pcall(g_L, 5, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isnumber(g_L, -1)) {
+                    int ret = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 4) {
+                    // Update args: infobuffer, nodedup, duplicateIndex, steamid
+                    if (lua_isstring(g_L, -4)) strncpy(infobuffer, lua_tostring(g_L, -4), 255);
+                    if (lua_isnumber(g_L, -3)) _nodedup = (qboolean)lua_tointeger(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _dupIdx = (int)lua_tointeger(g_L, -2);
+                    if (lua_isstring(g_L, -1)) strncpy(szSteamID, lua_tostring(g_L, -1), 63);
+                    lua_pop(g_L, 4);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(adr, infobuffer, _nodedup, _dupIdx, szSteamID);
+}
+
+/* 49. PF_precache_generic_I */
+int PF_precache_generic_I(IRehldsHook_PF_precache_generic_I *chain, const char *s)
+{
+    const char* _s = s;
+    static char szBuf[128];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_PF_precache_generic_I");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushstring(g_L, _s);
+
+            if (lua_pcall(g_L, 1, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isnumber(g_L, -1)) {
+                        int ret = (int)lua_tointeger(g_L, -1);
+                        lua_pop(g_L, 1);
+                        return ret;
+                    }
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(szBuf, lua_tostring(g_L, -1), 127); szBuf[127]=0; _s = szBuf;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(_s);
+}
+
+/* 50. PF_precache_model_I */
+int PF_precache_model_I(IRehldsHook_PF_precache_model_I *chain, const char *s)
+{
+    const char* _s = s;
+    static char szBuf[128];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_PF_precache_model_I");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushstring(g_L, _s);
+
+            if (lua_pcall(g_L, 1, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isnumber(g_L, -1)) {
+                        int ret = (int)lua_tointeger(g_L, -1);
+                        lua_pop(g_L, 1);
+                        return ret;
+                    }
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(szBuf, lua_tostring(g_L, -1), 127); szBuf[127]=0; _s = szBuf;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(_s);
+}
+
+/* 51. PF_precache_sound_I */
+int PF_precache_sound_I(IRehldsHook_PF_precache_sound_I *chain, const char *s)
+{
+    const char* _s = s;
+    static char szBuf[128];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_PF_precache_sound_I");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushstring(g_L, _s);
+
+            if (lua_pcall(g_L, 1, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isnumber(g_L, -1)) {
+                        int ret = (int)lua_tointeger(g_L, -1);
+                        lua_pop(g_L, 1);
+                        return ret;
+                    }
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(szBuf, lua_tostring(g_L, -1), 127); szBuf[127]=0; _s = szBuf;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(_s);
+}
+
+/* 52. EV_Precache */
+unsigned short EV_Precache(IRehldsHook_EV_Precache *chain, int type, const char *psz)
+{
+    int _type = type;
+    const char* _psz = psz;
+    static char szBuf[128];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_EV_Precache");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushinteger(g_L, _type);
+            lua_pushstring(g_L, _psz);
+
+            if (lua_pcall(g_L, 2, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isnumber(g_L, -1)) {
+                    unsigned short ret = (unsigned short)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                else if (nRet == 2) {
+                    if (lua_isnumber(g_L, -2)) _type = (int)lua_tointeger(g_L, -2);
+                    if (lua_isstring(g_L, -1)) { strncpy(szBuf, lua_tostring(g_L, -1), 127); szBuf[127]=0; _psz = szBuf; }
+                    lua_pop(g_L, 2);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(_type, _psz);
+}
+
+/* 53. SV_AddResource */
+void SV_AddResource(IRehldsHook_SV_AddResource *chain, resourcetype_t type, const char *name, int size, unsigned char flags, int index)
+{
+    int _type = (int)type;
+    const char* _name = name;
+    int _size = size;
+    int _flags = (int)flags;
+    int _index = index;
+    static char szNameBuf[128];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_AddResource");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushinteger(g_L, _type);
+            lua_pushstring(g_L, _name);
+            lua_pushinteger(g_L, _size);
+            lua_pushinteger(g_L, _flags);
+            lua_pushinteger(g_L, _index);
+
+            if (lua_pcall(g_L, 5, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1 && lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                    lua_pop(g_L, 1);
+                    return;
+                }
+                else if (nRet == 5) {
+                    if (lua_isnumber(g_L, -5)) _type = (int)lua_tointeger(g_L, -5);
+                    if (lua_isstring(g_L, -4)) { strncpy(szNameBuf, lua_tostring(g_L, -4), 127); szNameBuf[127]=0; _name = szNameBuf; }
+                    if (lua_isnumber(g_L, -3)) _size = (int)lua_tointeger(g_L, -3);
+                    if (lua_isnumber(g_L, -2)) _flags = (int)lua_tointeger(g_L, -2);
+                    if (lua_isnumber(g_L, -1)) _index = (int)lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 5);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext((resourcetype_t)_type, _name, _size, (unsigned char)_flags, _index);
+}
+
+/* 54. SV_ClientPrintf */
+void SV_ClientPrintf(IRehldsHook_SV_ClientPrintf *chain, const char *fmt)
+{
+    const char* _fmt = fmt;
+    static char szBuf[1024];
+
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_ClientPrintf");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushstring(g_L, _fmt);
+
+            if (lua_pcall(g_L, 1, LUA_MULTRET, 0) == 0)
+            {
+                int nRet = lua_gettop(g_L);
+                if (nRet == 1) {
+                    if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) {
+                        lua_pop(g_L, 1);
+                        return;
+                    }
+                    if (lua_isstring(g_L, -1)) {
+                        strncpy(szBuf, lua_tostring(g_L, -1), 1023); szBuf[1023]=0; _fmt = szBuf;
+                    }
+                    lua_pop(g_L, 1);
+                }
+                else lua_pop(g_L, nRet);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(_fmt);
+}
+
+/* 55. SV_AllowPhysent */
+bool SV_AllowPhysent(IRehldsHook_SV_AllowPhysent *chain, edict_t *pEdict, edict_t *pPhysent)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_AllowPhysent");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushentity(g_L, pEdict);
+            lua_pushentity(g_L, pPhysent);
+
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1)) {
+                    bool ret = (bool)lua_toboolean(g_L, -1);
+                    lua_pop(g_L, 1);
+                    return ret;
+                }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    return chain->callNext(pEdict, pPhysent);
+}
+
+/* 56. SV_SendResources */
+void SV_SendResources(IRehldsHook_SV_SendResources *chain, sizebuf_t *msg)
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Rehlds_SV_SendResources");
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushlightuserdata(g_L, msg);
+
+            if (lua_pcall(g_L, 1, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
+                lua_pop(g_L, 1);
+            }
+            else lua_pop(g_L, 1);
+        }
+        else lua_pop(g_L, 1);
+    }
+    chain->callNext(msg);
 }
