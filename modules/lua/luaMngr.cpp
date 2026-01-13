@@ -194,7 +194,6 @@ static int L_vector2position(lua_State* L)
     lua_pushnumber(L, vec->z);
     return 3;
 }
-
 static int Lua_CallPawnFunction_Proxy(lua_State *L)
 {
     if (!L)
@@ -635,6 +634,10 @@ static cell AMX_NATIVE_CALL n_lua_pcall(AMX *amx, cell *params)
     }
     return lua_pcall((lua_State *)params[1], params[2], params[3], params[4]);
 }
+static cell AMX_NATIVE_CALL n_lua_getL(AMX *amx, cell *params)
+{
+    return reinterpret_cast<cell>(g_L);
+}
 
 // ---------------------------------------------------------
 // 注册 Native 列表
@@ -672,6 +675,7 @@ AMX_NATIVE_INFO LuaNatives[] = {
     {"lua_getref", Native_LuaGetRef},
     {"lua_unref", Native_LuaUnref},
     {"lua_ref", Native_LuaRef},
+    {"lua_getL", n_lua_getL},
     {NULL, NULL}};
 
 void OnAmxxAttach()
