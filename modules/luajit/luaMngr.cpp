@@ -61,85 +61,6 @@ struct StringPolicy {
     }
 };
 
-// 3. 定义全局 HashMap
-// 参数: <Key类型, Value类型, Policy类型>
-static ke::HashMap<ke::AString, EntityVarEntry, StringPolicy> g_EntVarMap;
-
-// 辅助宏：修正了添加逻辑 (findForAdd + add)
-#define REG_VAR(key_str, member_name, var_type) \
-    { \
-        /* 1. 先查找插入位置 */ \
-        auto i = g_EntVarMap.findForAdd(key_str); \
-        /* 2. 如果没存在，则添加 */ \
-        if (!i.found()) { \
-            EntityVarEntry e; \
-            e.offset = offsetof(entvars_t, member_name); \
-            e.type = var_type; \
-            g_EntVarMap.add(i, key_str, e); \
-        } \
-    }
-// 5. Lua 接口实现
-static int L_GetEntityVar(lua_State* L)
-{
-    // 参数1: edict指针
-    edict_t* pEnt = INDEXENT((int)lua_tointeger(L, 1));
-    // 参数2: 属性名 (const char*)
-    const char* key = lua_tostring(L, 2);
-
-    if (!pEnt || pEnt->free || !key || pEnt->pvPrivateData == nullptr) {
-        lua_pushnil(L);
-        return 1;
-    }
-
-    // ★ 极速查找 ★
-    // 这里传入 const char*，StringPolicy 会自动处理，不需要构造 AString
-    auto result = g_EntVarMap.find(key);
-
-    if (!result.found()) {
-        lua_pushnil(L); 
-        return 1;
-    }
-
-    // 获取 Value (result->value 是 EntityVarEntry)
-    const EntityVarEntry& entry = result->value;
-    
-    // 计算内存地址
-    void* pAddr = (char*)&(pEnt->v) + entry.offset;
-
-    switch (entry.type) 
-    {
-        case TYPE_FLOAT:
-            lua_pushnumber(L, *(float*)pAddr);
-            return 1;
-
-        case TYPE_INT:
-            lua_pushinteger(L, *(int*)pAddr);
-            return 1;
-
-        case TYPE_STRING:
-            lua_pushstring(L, STRING(*(string_t*)pAddr));
-            return 1;
-
-        case TYPE_VECTOR:
-        {
-            float* vec = (float*)pAddr;
-            lua_pushnumber(L, vec[0]);
-            lua_pushnumber(L, vec[1]);
-            lua_pushnumber(L, vec[2]);
-            return 3;
-        }
-
-        case TYPE_EDICT:
-        {
-            edict_t* e = *(edict_t**)pAddr;
-            if (e) lua_pushlightuserdata(L, e);
-            else lua_pushnil(L);
-            return 1;
-        }
-    }
-
-    return 0;
-}
 static int L_get_gametime(lua_State* L)
 {
     lua_pushnumber(L, gpGlobals->time);
@@ -150,50 +71,7 @@ static int L_random_num(lua_State* L)
     lua_pushinteger(L, RANDOM_LONG(lua_tointeger(L, 1), lua_tointeger(L, 2)));
     return 1;
 }
-static int L_edict2index(lua_State* L)
-{
-    edict_t* pEnt = (edict_t * )lua_touserdata(L, 1);
-    if (!pEnt || pEnt->free || pEnt->pvPrivateData == nullptr) {
-        lua_pushnil(L);
-        return 1;
-    }
-    lua_pushinteger(L, ENTINDEX(pEnt));
-    return 1;
-}
-static int L_index2edict(lua_State* L)
-{
-    edict_t* pEnt = INDEXENT(lua_tointeger(L, 1));
-    if (!pEnt || pEnt->free || pEnt->pvPrivateData == nullptr) {
-        lua_pushnil(L);
-        return 1;
-    }
-    lua_pushlightuserdata(L, pEnt);
-    return 1;
-}
-static int L_position2vector(lua_State* L)
-{
-    float x = lua_tonumber(L, 1);
-    float y = lua_tonumber(L, 2);
-    float z = lua_tonumber(L, 3);
-    
-    Vector* vec = (Vector*)lua_newuserdata(L, sizeof(Vector));
-    vec->x = x; 
-    vec->y = y; 
-    vec->z = z;
-    return 1;
-}
-static int L_vector2position(lua_State* L)
-{
-    Vector* vec = (Vector*)lua_touserdata(L, 1);
-    if (!vec) {
-        lua_pushnil(L);
-        return 1;
-    }
-    lua_pushnumber(L, vec->x);
-    lua_pushnumber(L, vec->y);
-    lua_pushnumber(L, vec->z);
-    return 3;
-}
+
 static int Lua_CallPawnFunction_Proxy(lua_State *L)
 {
     if (!L)
@@ -264,13 +142,8 @@ cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 // Native 实现: 生命周期
 // ---------------------------------------------------------
 void InitLuaAPI(lua_State* L) {
-    lua_register(L, "GetEntityVar", L_GetEntityVar);
     lua_register(L, "amxx_get_gametime", L_get_gametime);
     lua_register(L, "amxx_random_num", L_random_num);
-    lua_register(L, "edict2index", L_edict2index);
-    lua_register(L, "index2edict", L_index2edict);
-    lua_register(L, "position2vector", L_position2vector);
-    lua_register(L, "vector2position", L_vector2position);
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   
@@ -493,8 +366,7 @@ static cell AMX_NATIVE_CALL n_lua_getglobal(AMX *amx, cell *params)
         MF_Log("n_lua_getglobal: Invalid Lua state.");
         return 0;
     }
-    lua_getglobal((lua_State *)params[1], MF_GetAmxString(amx, params[2], 0, NULL));
-    return lua_type((lua_State *)params[1], -1);
+    return lua_getglobal((lua_State *)params[1], MF_GetAmxString(amx, params[2], 0, NULL));
 }
 
 static cell AMX_NATIVE_CALL n_lua_setglobal(AMX *amx, cell *params)
@@ -515,8 +387,7 @@ static cell AMX_NATIVE_CALL n_lua_getfield(AMX *amx, cell *params)
         MF_Log("n_lua_getfield: Invalid Lua state.");
         return 0;
     }
-    lua_getfield((lua_State *)params[1], params[2], MF_GetAmxString(amx, params[3], 0, NULL));
-    return lua_type((lua_State *)params[1], -1);
+    return lua_getfield((lua_State *)params[1], params[2], MF_GetAmxString(amx, params[3], 0, NULL));
 }
 
 static cell AMX_NATIVE_CALL n_lua_setfield(AMX *amx, cell *params)
@@ -559,8 +430,7 @@ static cell AMX_NATIVE_CALL n_lua_gettable(AMX *amx, cell *params)
         MF_Log("n_lua_gettable: Invalid Lua state.");
         return 0;
     }
-    lua_gettable((lua_State *)params[1], params[2]);
-    return lua_type((lua_State *)params[1], -1);
+    return lua_gettable((lua_State *)params[1], params[2]);
 }
 
 static cell AMX_NATIVE_CALL n_lua_rawlen(AMX *amx, cell *params)
@@ -570,7 +440,7 @@ static cell AMX_NATIVE_CALL n_lua_rawlen(AMX *amx, cell *params)
         MF_Log("n_lua_rawlen: Invalid Lua state.");
         return 0;
     }
-    return (cell)lua_objlen((lua_State *)params[1], params[2]);
+    return (cell)lua_rawlen((lua_State *)params[1], params[2]);
 }
 
 cell AMX_NATIVE_CALL Native_LuaRef(AMX *amx, cell *params)
@@ -832,133 +702,7 @@ void OnAmxxAttach()
     // ReGameHookchains->CBasePlayer_RemoveSpawnProtection()->registerHook(&CBasePlayer_RemoveSpawnProtection, HC_PRIORITY_HIGH);
     // ReGameHookchains->CBasePlayer_SetSpawnProtection()->registerHook(&CBasePlayer_SetSpawnProtection, HC_PRIORITY_HIGH);
     // ReGameHookchains->IsPenetrableEntity()->registerHook(&IsPenetrableEntity, HC_PRIORITY_HIGH);
-    // MF_AddNatives(LuaNatives);
-    // g_EntVarMap.clear();
-    // // 初始化容量 (2的幂次方，比如 64, 128)
-    // g_EntVarMap.init(128);
-
-    // // --- Float ---
-    // REG_VAR("impacttime", impacttime,TYPE_FLOAT);
-	// REG_VAR("starttime", starttime,TYPE_FLOAT);
-    // REG_VAR("idealpitch", idealpitch,TYPE_FLOAT);
-	// REG_VAR("pitch_speed", pitch_speed,TYPE_FLOAT);
-	// REG_VAR("ideal_yaw", ideal_yaw,TYPE_FLOAT);
-	// REG_VAR("yaw_speed", yaw_speed,TYPE_FLOAT);
-	// REG_VAR("ltime", ltime,TYPE_FLOAT);
-	// REG_VAR("nextthink", nextthink,TYPE_FLOAT);
-	// REG_VAR("gravity", gravity,TYPE_FLOAT);
-	// REG_VAR("friction", friction,TYPE_FLOAT);
-	// REG_VAR("frame", frame,TYPE_FLOAT);
-	// REG_VAR("animtime", animtime,TYPE_FLOAT);
-	// REG_VAR("framerate", framerate,TYPE_FLOAT);
-	// REG_VAR("scale", scale,TYPE_FLOAT)	
-	// REG_VAR("renderamt", renderamt,TYPE_FLOAT);
-	// REG_VAR("health", health,TYPE_FLOAT);
-	// REG_VAR("frags", frags,TYPE_FLOAT);
-	// REG_VAR("takedamage", takedamage,TYPE_FLOAT);
-	// REG_VAR("max_health", max_health,TYPE_FLOAT);
-	// REG_VAR("teleport_time", teleport_time,TYPE_FLOAT);
-	// REG_VAR("armortype", armortype,TYPE_FLOAT);
-	// REG_VAR("armorvalue", armorvalue,TYPE_FLOAT);
-	// REG_VAR("dmg_take", dmg_take,TYPE_FLOAT);
-	// REG_VAR("dmg_save", dmg_save,TYPE_FLOAT);
-	// REG_VAR("dmg", dmg,TYPE_FLOAT);
-	// REG_VAR("dmgtime", dmgtime,TYPE_FLOAT);
-	// REG_VAR("speed", speed,TYPE_FLOAT);
-	// REG_VAR("air_finished", air_finished,TYPE_FLOAT);
-	// REG_VAR("pain_finished", pain_finished,TYPE_FLOAT);
-	// REG_VAR("radsuit_finished", radsuit_finished,TYPE_FLOAT);
-	// REG_VAR("maxspeed", maxspeed,TYPE_FLOAT);
-	// REG_VAR("fov", fov,TYPE_FLOAT);
-	// REG_VAR("flFallVelocity", flFallVelocity,TYPE_FLOAT);
-	// REG_VAR("fuser1", fuser1,TYPE_FLOAT);
-	// REG_VAR("fuser2", fuser2,TYPE_FLOAT);
-	// REG_VAR("fuser3", fuser3,TYPE_FLOAT);
-	// REG_VAR("fuser4", fuser4,TYPE_FLOAT);
-
-    // // --- String ---
-    // REG_VAR("classname",classname,TYPE_STRING);
-	// REG_VAR("globalname",globalname,TYPE_STRING);
-	// REG_VAR("model",model,TYPE_STRING);
-	// REG_VAR("target",target,TYPE_STRING);
-	// REG_VAR("targetname",targetname,TYPE_STRING);
-	// REG_VAR("netname",netname,TYPE_STRING);
-	// REG_VAR("message",message,TYPE_STRING);
-	// REG_VAR("noise",noise,TYPE_STRING);
-	// REG_VAR("noise1",noise1,TYPE_STRING);
-	// REG_VAR("noise2",noise2,TYPE_STRING);
-	// REG_VAR("noise3",noise3,TYPE_STRING);
-
-
-    // // --- Int ---
-    // REG_VAR("fixangle" , fixangle,TYPE_INT);
-    // REG_VAR("modelindex" , modelindex,TYPE_INT);
-    // REG_VAR("viewmodel" , viewmodel,TYPE_INT);
-    // REG_VAR("weaponmodel" , weaponmodel,TYPE_INT);
-    // REG_VAR("movetype" , movetype,TYPE_INT);
-    // REG_VAR("solid" , solid,TYPE_INT);
-    // REG_VAR("skin" , skin,TYPE_INT);
-    // REG_VAR("body" , body,TYPE_INT);
-    // REG_VAR("effects" , effects,TYPE_INT);
-    // REG_VAR("light_level" , light_level,TYPE_INT);
-    // REG_VAR("sequence" , sequence,TYPE_INT);
-    // REG_VAR("gaitsequence" , gaitsequence,TYPE_INT);
-    // REG_VAR("rendermode" , rendermode,TYPE_INT);
-    // REG_VAR("renderfx" , renderfx,TYPE_INT);
-    // REG_VAR("weapons" , weapons,TYPE_INT);
-    // REG_VAR("deadflag" , deadflag,TYPE_INT);
-    // REG_VAR("button" , button,TYPE_INT);
-    // REG_VAR("impulse" , impulse,TYPE_INT);
-    // REG_VAR("spawnflags" , spawnflags,TYPE_INT);
-    // REG_VAR("flags" , flags,TYPE_INT);
-    // REG_VAR("colormap" , colormap,TYPE_INT);
-    // REG_VAR("team" , team,TYPE_INT);
-    // REG_VAR("waterlevel" , waterlevel,TYPE_INT);
-    // REG_VAR("watertype" , watertype,TYPE_INT);
-    // REG_VAR("playerclass" , playerclass,TYPE_INT);
-    // REG_VAR("weaponanim" , weaponanim,TYPE_INT);
-    // REG_VAR("pushmsec" , pushmsec,TYPE_INT);
-    // REG_VAR("bInDuck" , bInDuck,TYPE_INT);
-    // REG_VAR("flTimeStepSound" , flTimeStepSound,TYPE_INT);
-    // REG_VAR("flSwimTime" , flSwimTime,TYPE_INT);
-    // REG_VAR("flDuckTime" , flDuckTime,TYPE_INT);
-    // REG_VAR("iStepLeft" , iStepLeft,TYPE_INT);
-    // REG_VAR("gamestate" , gamestate,TYPE_INT);
-    // REG_VAR("oldbuttons" , oldbuttons,TYPE_INT);
-    // REG_VAR("groupinfo" , groupinfo,TYPE_INT);
-    // REG_VAR("iuser1" , iuser1,TYPE_INT);
-    // REG_VAR("iuser2" , iuser2,TYPE_INT);
-    // REG_VAR("iuser3" , iuser3,TYPE_INT);
-    // REG_VAR("iuser4" , iuser4,TYPE_INT);
-
-    // // --- Vector ---
-    // REG_VAR("origin" , origin,TYPE_VECTOR);
-	// REG_VAR("oldorigin" , oldorigin,TYPE_VECTOR);
-	// REG_VAR("velocity" , velocity,TYPE_VECTOR);
-	// REG_VAR("basevelocity" , basevelocity,TYPE_VECTOR);
-	// REG_VAR("clbasevelocity" , clbasevelocity,TYPE_VECTOR);
-	// REG_VAR("movedir" , movedir,TYPE_VECTOR);
-	// REG_VAR("angles" , angles,TYPE_VECTOR);
-	// REG_VAR("avelocity" , avelocity,TYPE_VECTOR);
-	// REG_VAR("punchangle" , punchangle,TYPE_VECTOR);
-	// REG_VAR("v_angle" , v_angle,TYPE_VECTOR);
-	// REG_VAR("endpos" , endpos,TYPE_VECTOR);
-	// REG_VAR("startpos" , startpos,TYPE_VECTOR);
-	// REG_VAR("absmin" , absmin,TYPE_VECTOR);
-	// REG_VAR("absmax" , absmax,TYPE_VECTOR);
-	// REG_VAR("mins" , mins,TYPE_VECTOR);
-	// REG_VAR("maxs" , maxs,TYPE_VECTOR);
-	// REG_VAR("size" , size,TYPE_VECTOR);
-	// REG_VAR("rendercolor" , rendercolor,TYPE_VECTOR);
-	// REG_VAR("view_ofs" , view_ofs,TYPE_VECTOR);
-	// REG_VAR("vuser1" , vuser1,TYPE_VECTOR);
-	// REG_VAR("vuser2" , vuser2,TYPE_VECTOR);
-	// REG_VAR("vuser3" , vuser3,TYPE_VECTOR);
-	// REG_VAR("vuser4" , vuser4,TYPE_VECTOR);
-
-    // // --- Edict ---
-    // REG_VAR("owner",      owner,      TYPE_EDICT);
-    // REG_VAR("aiment",     aiment,     TYPE_EDICT);
+    MF_AddNatives(LuaNatives);
 
 }
 void TrimString(char *str)
@@ -1015,7 +759,7 @@ void OnPluginsLoaded()
 //----------------------------------
 //----------------------------------
 //----------------------------------
-// /* pfnGameInit() */
+/* pfnGameInit() */
 // void GameDLLInit(void)
 // {
 //     if (!g_L)
@@ -17173,17 +16917,17 @@ void ED_Free(IRehldsHook_ED_Free *chain, edict_t *ed)
 //     return chain->callNext(pEdict, pPhysent);
 // }
 
-// // /* 56. SV_SendResources */
-// // void SV_SendResources(IRehldsHook_SV_SendResources *chain, sizebuf_t *msg)
-// // {
-// //     if (g_L) 
-// //     {
-// //         lua_getglobal(g_L, "Rehlds_SV_SendResources");
-// //         if (lua_isfunction(g_L, -1)) 
-// //         {
-// //             lua_pushlightuserdata(g_L, msg);
+// /* 56. SV_SendResources */
+// void SV_SendResources(IRehldsHook_SV_SendResources *chain, sizebuf_t *msg)
+// {
+//     if (g_L) 
+//     {
+//         lua_getglobal(g_L, "Rehlds_SV_SendResources");
+//         if (lua_isfunction(g_L, -1)) 
+//         {
+//             lua_pushlightuserdata(g_L, msg);
 
-// //             if (lua_pcall(g_L, 1, 1, 0) == 0)
+//             if (lua_pcall(g_L, 1, 1, 0) == 0)
 //             {
 //                 if (lua_isboolean(g_L, -1) && lua_toboolean(g_L, -1)) { lua_pop(g_L, 1); return; }
 //                 lua_pop(g_L, 1);
