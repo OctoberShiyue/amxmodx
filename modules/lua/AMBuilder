@@ -13,6 +13,7 @@ binary.compiler.cxxincludes += [
   os.path.join(AMXX.mysql_path, 'include'),
   os.path.join(builder.currentSourcePath, 'mysql'),
   os.path.join(builder.currentSourcePath, 'thread'),
+  os.path.join(builder.currentSourcePath, 'lualib', 'src'),
 ]
 
 binary.sources = []
@@ -27,40 +28,7 @@ binary.sources = [
   '../../public/resdk/mod_rehlds_api.cpp',
   '../../public/resdk/mod_regamedll_api.cpp',
   'luaMngr.cpp',
-  'lualib/lopcodes.c',
-  'lualib/lapi.c',
-  'lualib/loslib.c',
-  'lualib/lstate.c',
-  'lualib/lparser.c',
-  'lualib/lmathlib.c',
-  'lualib/llex.c',
-  'lualib/lmem.c',
-  'lualib/lobject.c',
-  'lualib/loadlib.c',
-  'lualib/lstring.c',
-  'lualib/lundump.c',
-  'lualib/luac.c',
-  'lualib/lutf8lib.c',
-  'lualib/lzio.c',
-  'lualib/lvm.c',
-  'lualib/ltable.c',
-  'lualib/lstrlib.c',
-  'lualib/ltablib.c',
-  'lualib/lua.c',
-  'lualib/ltm.c',
-  'lualib/lfunc.c',
-  'lualib/lcode.c',
-  'lualib/lgc.c',
-  'lualib/ldump.c',
-  'lualib/ldo.c',
-  'lualib/lbaselib.c',
-  'lualib/ldebug.c',
-  'lualib/lcorolib.c',
-  'lualib/liolib.c',
-  'lualib/lctype.c',
-  'lualib/ldblib.c',
-  'lualib/lauxlib.c',
-  'lualib/linit.c',
+  'lualib/ljamalg.c',
 ]
 
 binary.sources += [
@@ -80,6 +48,7 @@ if builder.target_platform == 'linux' or builder.target_platform == 'mac':
     os.path.join(AMXX.mysql_path, 'lib', 'libmysqlclient_r.a'),
     '-lpthread',
     '-lm',
+    os.path.join(builder.currentSourcePath, 'lualib', 'lj_vm.o')
   ]
   if builder.target_platform == 'linux':
     binary.compiler.linkflags += [
@@ -90,7 +59,8 @@ elif builder.target_platform == 'windows':
     os.path.join(AMXX.mysql_path, 'lib', 'mysqlclient.lib'),
     'ws2_32.lib',
     '/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8,@1',
-    '/SECTION:.data,RW'
+    '/SECTION:.data,RW',
+    os.path.join(builder.currentSourcePath, 'lualib', 'lj_vm.obj')
   ]
   if binary.compiler.vendor == 'msvc' and binary.compiler.version >= 1900:
      binary.sources += [

@@ -366,7 +366,8 @@ static cell AMX_NATIVE_CALL n_lua_getglobal(AMX *amx, cell *params)
         MF_Log("n_lua_getglobal: Invalid Lua state.");
         return 0;
     }
-    return lua_getglobal((lua_State *)params[1], MF_GetAmxString(amx, params[2], 0, NULL));
+    lua_getglobal((lua_State *)params[1], MF_GetAmxString(amx, params[2], 0, NULL));
+    return lua_type((lua_State *)params[1], -1);
 }
 
 static cell AMX_NATIVE_CALL n_lua_setglobal(AMX *amx, cell *params)
@@ -387,7 +388,8 @@ static cell AMX_NATIVE_CALL n_lua_getfield(AMX *amx, cell *params)
         MF_Log("n_lua_getfield: Invalid Lua state.");
         return 0;
     }
-    return lua_getfield((lua_State *)params[1], params[2], MF_GetAmxString(amx, params[3], 0, NULL));
+    lua_getfield((lua_State *)params[1], params[2], MF_GetAmxString(amx, params[3], 0, NULL));
+    return lua_type((lua_State *)params[1], -1);
 }
 
 static cell AMX_NATIVE_CALL n_lua_setfield(AMX *amx, cell *params)
@@ -430,7 +432,8 @@ static cell AMX_NATIVE_CALL n_lua_gettable(AMX *amx, cell *params)
         MF_Log("n_lua_gettable: Invalid Lua state.");
         return 0;
     }
-    return lua_gettable((lua_State *)params[1], params[2]);
+    lua_gettable((lua_State *)params[1], params[2]);
+    return lua_type((lua_State *)params[1], -1);
 }
 
 static cell AMX_NATIVE_CALL n_lua_rawlen(AMX *amx, cell *params)
@@ -440,7 +443,7 @@ static cell AMX_NATIVE_CALL n_lua_rawlen(AMX *amx, cell *params)
         MF_Log("n_lua_rawlen: Invalid Lua state.");
         return 0;
     }
-    return (cell)lua_rawlen((lua_State *)params[1], params[2]);
+    return (cell)lua_objlen((lua_State *)params[1], params[2]);
 }
 
 cell AMX_NATIVE_CALL Native_LuaRef(AMX *amx, cell *params)
