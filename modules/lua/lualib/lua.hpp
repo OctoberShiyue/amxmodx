@@ -1,9 +1,8 @@
-// lua.hpp
-// Lua header files for C++
-// <<extern "C">> not supplied automatically because Lua also compiles as C++
+// C++ wrapper for LuaJIT header files.
 
 extern "C" {
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
+#include "lualib/lua.h"
+#include "lualib/lauxlib.h"
+#include "lualib/lualib.h"
+#include "lualib/luajit.h"
 }
