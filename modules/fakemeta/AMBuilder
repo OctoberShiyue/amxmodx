@@ -7,6 +7,10 @@ binary.compiler.defines += [
   'HAVE_STDINT_H',
 ]
 
+binary.compiler.cxxincludes += [
+  os.path.join(builder.currentSourcePath, 'lualib', 'src'),
+]
+
 binary.sources = [
   '../../public/sdk/amxxmodule.cpp',
   '../../public/memtools/MemoryUtils.cpp',
@@ -23,13 +27,24 @@ binary.sources = [
   'glb.cpp',
   'fm_tr2.cpp',
   'misc.cpp',
+  'lualib/ljamalg.c',
 ]
 
-if builder.target_platform == 'windows':
+if builder.target_platform == 'linux' or builder.target_platform == 'mac':
+  binary.compiler.defines += ['stricmp=strcasecmp']
+  binary.compiler.linkflags += [
+  os.path.join(builder.currentSourcePath, 'lualib', 'lj_vm.o')
+  ]
+  if builder.target_platform == 'linux':
+    binary.compiler.linkflags += [
+      '-lrt'
+    ]
+elif builder.target_platform == 'windows':
     binary.sources += ['version.rc']
     binary.compiler.linkflags += [
       '/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8,@1',
       '/SECTION:.data,RW',
+      os.path.join(builder.currentSourcePath, 'lualib', 'lj_vm.obj')
     ]
 
 AMXX.modules += [builder.Add(binary)]

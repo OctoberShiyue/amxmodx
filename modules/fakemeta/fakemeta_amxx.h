@@ -27,6 +27,8 @@
 #include <amtl/am-vector.h>
 #include <IGameConfigs.h>
 #include <HLTypeConversion.h>
+#include "lualib/lua.hpp"
+
 
 #ifdef DONT_TOUCH_THIS_AGAIN_BAIL
 #define CHECK_ENTITY(x) \

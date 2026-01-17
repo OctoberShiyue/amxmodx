@@ -474,11 +474,312 @@ static cell AMX_NATIVE_CALL amx_pev_serial(AMX* amx, cell* params)
 
 	return ent->serialnumber;
 }
+
+// 定义 Lua Native 函数
+static int lua_pev(lua_State *L)
+{
+    // 参数 1: 实体 ID (int)
+    int index = luaL_checkinteger(L, 1);
+    
+    // 检查实体有效性 (使用 AMXX SDK 宏或你自己的封装)
+    // CHECK_ENTITY(index); 
+    if (index < 1 || index > gpGlobals->maxClients + 2048) { // 简单检查示例
+        lua_pushnil(L);
+        return 1;
+    }
+    
+    edict_t *pEdict = INDEXENT(index);
+    if (!pEdict || pEdict->free) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    // 参数 2: pev 类型常量 (int)
+    int iSwitch = luaL_checkinteger(L, 2);
+
+    // 范围检查
+    if (iSwitch <= pev_string_start || iSwitch >= pev_absolute_end)
+    {
+        luaL_error(L, "Undefined pev index: %d", iSwitch);
+        return 0;
+    }
+
+    // 获取偏移量 (假设你已经有了 g_offset_table)
+    // 注意：你需要确保 g_offset_table 在当前作用域可见，或者通过某种方式传入
+    extern int g_offset_table[]; 
+    int offs = g_offset_table[iSwitch];
+
+    if (offs == -1)
+    {
+        luaL_error(L, "Invalid pev field offset for index: %d", iSwitch);
+        return 0;
+    }
+
+    entvars_t *v = &(pEdict->v);
+
+    // --- 开始根据类型处理并压栈 ---
+
+    // 1. Integer 类型
+    if (iSwitch > pev_int_start && iSwitch < pev_int_end)
+    {
+        int val = *(int *)EDICT_OFFS(v, offs);
+        lua_pushinteger(L, val);
+        return 1;
+    } 
+    // 2. Float 类型
+    else if (iSwitch > pev_float_start && iSwitch < pev_float_end) 
+    {
+        float val = *(float *)EDICT_OFFS(v, offs);
+        lua_pushnumber(L, (lua_Number)val);
+        return 1;
+    } 
+    // 3. Vector 类型 (返回 3 个值: x, y, z)
+    else if (iSwitch > pev_vecarray_start && iSwitch < pev_vecarray_end) 
+    {
+        Vector *vec = (Vector *)EDICT_OFFS(v, offs);
+        lua_pushnumber(L, vec->x);
+        lua_pushnumber(L, vec->y);
+        lua_pushnumber(L, vec->z);
+        return 3; // 返回 3 个返回值
+    } 
+    // 4. Byte Array (Controller / Blending)
+    else if (iSwitch > pev_bytearray_start && iSwitch < pev_bytearray_end) 
+    {
+        if (iSwitch == controller)
+        {
+            lua_pushinteger(L, v->controller[0]);
+            lua_pushinteger(L, v->controller[1]);
+            lua_pushinteger(L, v->controller[2]);
+            lua_pushinteger(L, v->controller[3]);
+            return 4; // controller 返回 4 个 byte
+        } 
+        else 
+        {
+            lua_pushinteger(L, v->blending[0]);
+            lua_pushinteger(L, v->blending[1]);
+            return 2; // blending 返回 2 个 byte
+        }
+    } 
+    // 5. Single Byte
+    else if (iSwitch > pev_byte_start && iSwitch < pev_byte_end) 
+    {
+        byte val = *(byte *)EDICT_OFFS(v, offs);
+        lua_pushinteger(L, (int)val);
+        return 1;
+    } 
+    // 6. String 类型
+    else if ( (iSwitch > pev_string_start && iSwitch < pev_string_end) || 
+              (iSwitch > pev_string2_begin && iSwitch < pev_string2_end) ) 
+    {
+        string_t s = *(string_t *)EDICT_OFFS(v, offs);
+        const char *str = STRING(s);
+        lua_pushstring(L, str ? str : "");
+        return 1;
+    } 
+    // 7. Edict (Entity) 类型 - 返回 ID (int)
+    else if ( (iSwitch > pev_edict_start && iSwitch < pev_edict_end) || 
+              (iSwitch > pev_edict2_start && iSwitch < pev_absolute_end) ) 
+    {
+        edict_t *e = *(edict_t **)EDICT_OFFS(v, offs);
+        int entId = ENTINDEX(e);
+        lua_pushinteger(L, entId);
+        return 1;
+    }
+
+    // 如果运行到这里，说明类型未知
+    return 0;
+}
+
+static int lua_set_pev(lua_State *L)
+{
+    // 参数 1: Entity Index
+    int index = luaL_checkinteger(L, 1);
+    
+    // 简单检查 (或者使用你自己的 CheckEntity 逻辑)
+    if (index < 1 || index > gpGlobals->maxClients + 2048) {
+        return luaL_error(L, "Invalid entity index %d", index);
+    }
+    
+    edict_t *pEdict = INDEXENT(index);
+    if (!pEdict || pEdict->free) {
+        return luaL_error(L, "Entity not valid or freed");
+    }
+
+    // 参数 2: PEV Type
+    int iSwitch = luaL_checkinteger(L, 2);
+
+    // 范围检查
+    if (iSwitch <= pev_string_start || iSwitch >= pev_absolute_end)
+    {
+        return luaL_error(L, "Undefined pev index: %d", iSwitch);
+    }
+
+    // 获取偏移量 (需要确保 g_offset_table 可访问)
+    extern int g_offset_table[];
+    int offs = g_offset_table[iSwitch];
+
+    if (offs == -1)
+    {
+        return luaL_error(L, "Invalid pev field offset for index: %d", iSwitch);
+    }
+
+    entvars_t *v = &(pEdict->v);
+
+    // --- 根据类型设置数值 ---
+
+    // 1. Integer / Edict / Byte 类型
+    if ((iSwitch > pev_int_start && iSwitch < pev_int_end) ||
+        (iSwitch > pev_edict_start && iSwitch < pev_edict_end) ||
+        (iSwitch > pev_edict2_start && iSwitch < pev_absolute_end))
+    {
+        int val = (int)luaL_checkinteger(L, 3);
+        
+        // 如果是 Edict 类型，需要转换 Index -> Edict*
+        if ( (iSwitch > pev_edict_start && iSwitch < pev_edict_end) || 
+             (iSwitch > pev_edict2_start && iSwitch < pev_absolute_end) )
+        {
+            edict_t *e = INDEXENT(val); // 将传入的 ID 转为 edict 指针
+            *(edict_t **)EDICT_OFFS(v, offs) = e;
+        }
+        else
+        {
+            *(int *)EDICT_OFFS(v, offs) = val;
+        }
+        return 0; // 无返回值
+    }
+    // 2. Float 类型
+    else if (iSwitch > pev_float_start && iSwitch < pev_float_end)
+    {
+        float val = (float)luaL_checknumber(L, 3);
+        *(float *)EDICT_OFFS(v, offs) = val;
+        return 0;
+    }
+    // 3. String 类型 (自动 ALLOC_STRING)
+    else if ((iSwitch > pev_string_start && iSwitch < pev_string_end) || 
+             (iSwitch > pev_string2_begin && iSwitch < pev_string2_end))
+    {
+        const char *str = luaL_checkstring(L, 3);
+        // 调用引擎分配字符串
+        string_t s = ALLOC_STRING(str);
+        *(string_t *)EDICT_OFFS(v, offs) = s;
+        return 0;
+    }
+    // 4. Vector 类型 (传入 3 个 float)
+    else if (iSwitch > pev_vecarray_start && iSwitch < pev_vecarray_end)
+    {
+        // 期望 set_pev(id, pev_origin, x, y, z)
+        float x = (float)luaL_optnumber(L, 3, 0.0);
+        float y = (float)luaL_optnumber(L, 4, 0.0);
+        float z = (float)luaL_optnumber(L, 5, 0.0);
+
+        Vector *vec = (Vector *)EDICT_OFFS(v, offs);
+        vec->x = x;
+        vec->y = y;
+        vec->z = z;
+        return 0;
+    }
+    // 5. Byte 类型 (Single)
+    else if (iSwitch > pev_byte_start && iSwitch < pev_byte_end)
+    {
+        int val = (int)luaL_checkinteger(L, 3);
+        *(byte *)EDICT_OFFS(v, offs) = (byte)val;
+        return 0;
+    }
+    // 6. Byte Array (Controller / Blending)
+    else if (iSwitch > pev_bytearray_start && iSwitch < pev_bytearray_end)
+    {
+        // 期望 set_pev(id, pev_controller, c0, c1, c2, c3)
+        if (iSwitch == controller)
+        {
+            v->controller[0] = (byte)luaL_optinteger(L, 3, 0);
+            v->controller[1] = (byte)luaL_optinteger(L, 4, 0);
+            v->controller[2] = (byte)luaL_optinteger(L, 5, 0);
+            v->controller[3] = (byte)luaL_optinteger(L, 6, 0);
+        }
+        else // blending
+        {
+            v->blending[0] = (byte)luaL_optinteger(L, 3, 0);
+            v->blending[1] = (byte)luaL_optinteger(L, 4, 0);
+        }
+        return 0;
+    }
+
+    return 0;
+}
+
+// ---------------------------------------------------------
+// 2. pev_valid(entity)
+// ---------------------------------------------------------
+static int lua_pev_valid(lua_State *L)
+{
+    int index = luaL_checkinteger(L, 1);
+    
+    // 这里的检查稍微宽松一点，因为我们要返回状态而不是报错
+    if (index < 1 || index > gpGlobals->maxClients + 2048) {
+        lua_pushnil(L);
+        return 1;
+    }
+	edict_t *e = INDEXENT(index);
+
+	if (FNullEnt(e) || !e || e->free)
+	{
+		lua_pushnil(L);
+        return 1;
+	}
+	if (e->pvPrivateData)
+		lua_pushinteger(L, 2);
+		return 1;
+
+	lua_pushinteger(L, 1);
+	return 1;
+}
+
+// ---------------------------------------------------------
+// 3. pev_serial(entity)
+// ---------------------------------------------------------
+static int lua_pev_serial(lua_State *L)
+{
+    int index = luaL_checkinteger(L, 1);
+
+    if (index < 1 || index > gpGlobals->maxClients + 2048) {
+         // 在 Lua 中返回 nil 表示无效
+        lua_pushnil(L);
+        return 1;
+    }
+    
+    edict_t *e = INDEXENT(index);
+    if (!e || e->free) {
+        lua_pushnil(L); // 实体无效没有 serial
+        return 1;
+    }
+
+    lua_pushinteger(L, e->serialnumber);
+    return 1;
+}
+
+void RegisterLuaMembers(lua_State* L) {
+	lua_register(L, "amxx2_pev", lua_pev);
+	lua_register(L, "amxx2_set_pev", lua_set_pev);
+	lua_register(L, "amxx2_pev_valid", lua_pev_valid);
+	lua_register(L, "amxx2_pev_serial", lua_pev_serial);
+}
+
+cell AMX_NATIVE_CALL lua_fakemeta_func_init(AMX* amx, cell* params)
+{
+	lua_State* L = (lua_State*)params[1];
+	RegisterLuaMembers(L);
+	return TRUE;
+}
+
+
 AMX_NATIVE_INFO pev_natives[] = {
 	{ "pev",			amx_pev },
 	{ "set_pev",		amx_set_pev },
 	{ "set_pev_string",	amx_set_pev_string },
 	{ "pev_valid",		amx_pev_valid },
 	{ "pev_serial",		amx_pev_serial },
+
+	{ "lua_fakemeta_func_init", lua_fakemeta_func_init },
+
 	{NULL,				NULL},
 };
