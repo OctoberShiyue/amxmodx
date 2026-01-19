@@ -727,8 +727,10 @@ static int lua_pev_valid(lua_State *L)
         return 1;
 	}
 	if (e->pvPrivateData)
+	{
 		lua_pushinteger(L, 2);
 		return 1;
+	}
 
 	lua_pushinteger(L, 1);
 	return 1;
