@@ -1,5 +1,6 @@
 #include <amxxmodule.h>
 #include <parson.h>
+#include "JsonMngr.h"
 #include <amtl/am-vector.h>
 #include <amtl/am-autoptr.h>
 #include <amtl/am-uniqueptr.h>
@@ -14,3 +15,5 @@
 void StartFrame2();
 void OnPluginsLoaded2();
 void LuaInit(lua_State *L);
+
+extern "C" int luaopen_json(lua_State *L);

@@ -13,7 +13,8 @@ binary.compiler.cxxincludes += [
   os.path.join(AMXX.mysql_path, 'include'),
   os.path.join(builder.currentSourcePath, 'mysql'),
   os.path.join(builder.currentSourcePath, 'thread'),
-  os.path.join(builder.currentSourcePath, 'lualib', 'src'),
+  os.path.join(builder.currentSourcePath, 'lualib'),
+  os.path.join(builder.currentSourcePath, 'json'),
 ]
 
 binary.sources = []
@@ -29,6 +30,8 @@ binary.sources = [
   '../../public/resdk/mod_regamedll_api.cpp',
   'luaMngr.cpp',
   'lualib/ljamalg.c',
+  'json/JsonMngr.cpp',
+  'json/JsonNatives.cpp',
 ]
 
 binary.sources += [
