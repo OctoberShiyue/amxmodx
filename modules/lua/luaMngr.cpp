@@ -152,7 +152,7 @@ static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
     InitLuaAPI(L);
     LuaInit(L);
     g_L = L;
-    luaopen_json(L);
+    // luaopen_json(L);
     return reinterpret_cast<cell>(L);
 }
 
