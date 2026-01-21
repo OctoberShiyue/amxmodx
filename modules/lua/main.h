@@ -11,6 +11,7 @@
 #include <resdk/mod_rehlds_api.h>
 #include <resdk/mod_regamedll_api.h>
 #include "lualib/lua.hpp"
+#include "cbase.h"
 
 void StartFrame2();
 void OnPluginsLoaded2();
