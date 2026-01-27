@@ -100,7 +100,7 @@
 // Meta query
 //#define FN_META_QUERY OnMetaQuery
 // Meta attach
-// #define FN_META_ATTACH OnMetaAttach
+#define FN_META_ATTACH OnMetaAttach
 // Meta dettach
 //#define FN_META_DETACH OnMetaDetach
 
@@ -142,7 +142,7 @@
 // #define FN_Sys_Error					Sys_Error					/* pfnSys_Error()				Notify game .dll that engine is going to shut down.  Allows mod authors to set a breakpoint.  SDK2 */
 // #define FN_PM_Move					PM_Move						/* pfnPM_Move()				(wd) SDK2 */
 // #define FN_PM_Init					PM_Init						/* pfnPM_Init()				Server version of player movement initialization; (wd) SDK2 */
-// // #define FN_PM_FindTextureType		PM_FindTextureType			/* pfnPM_FindTextureType()		(wd) SDK2 */
+// #define FN_PM_FindTextureType		PM_FindTextureType			/* pfnPM_FindTextureType()		(wd) SDK2 */
 // #define FN_SetupVisibility			SetupVisibility				/* pfnSetupVisibility()		Set up PVS and PAS for networking for this client; (wd) SDK2 */
 // #define FN_UpdateClientData			UpdateClientData			/* pfnUpdateClientData()		Set up data sent only to specific client; (wd) SDK2 */
 // #define FN_AddToFullPack				AddToFullPack				/* pfnAddToFullPack()			(wd) SDK2 */
@@ -157,7 +157,7 @@
 // #define FN_InconsistentFile			InconsistentFile			/* pfnInconsistentFile()		(wd) SDK2 */
 // #define FN_AllowLagCompensation		AllowLagCompensation		/* pfnAllowLagCompensation()	(wd) SDK2 */
 
-// // - GetEntityAPI2_Post functions
+// - GetEntityAPI2_Post functions
 // #define FN_GameDLLInit_Post					GameDLLInit_Post
 // #define FN_DispatchSpawn_Post				DispatchSpawn_Post
 // #define FN_DispatchThink_Post				DispatchThink_Post
@@ -194,7 +194,7 @@
 // #define FN_Sys_Error_Post					Sys_Error_Post
 // #define FN_PM_Move_Post						PM_Move_Post
 // #define FN_PM_Init_Post						PM_Init_Post
-// // #define FN_PM_FindTextureType_Post			PM_FindTextureType_Post
+// #define FN_PM_FindTextureType_Post			PM_FindTextureType_Post
 // #define FN_SetupVisibility_Post				SetupVisibility_Post
 // #define FN_UpdateClientData_Post				UpdateClientData_Post
 // #define FN_AddToFullPack_Post				AddToFullPack_Post
@@ -209,7 +209,7 @@
 // #define FN_InconsistentFile_Post				InconsistentFile_Post
 // #define FN_AllowLagCompensation_Post			AllowLagCompensation_Post
 
-// // - GetEngineAPI functions
+// - GetEngineAPI functions
 // #define FN_PrecacheModel						PrecacheModel
 // #define FN_PrecacheSound						PrecacheSound
 // #define FN_SetModel							SetModel
@@ -249,9 +249,9 @@
 // #define FN_TraceTexture						TraceTexture
 // #define FN_TraceSphere						TraceSphere
 // #define FN_GetAimVector						GetAimVector
-// // #define FN_ServerCommand						ServerCommand
+// #define FN_ServerCommand						ServerCommand
 // #define FN_ServerExecute						ServerExecute
-// // #define FN_engClientCommand					engClientCommand
+// #define FN_engClientCommand					engClientCommand
 // #define FN_ParticleEffect					ParticleEffect
 // #define FN_LightStyle						LightStyle
 // #define FN_DecalIndex						DecalIndex
@@ -271,8 +271,8 @@
 // #define FN_CVarGetString						CVarGetString
 // #define FN_CVarSetFloat						CVarSetFloat
 // #define FN_CVarSetString						CVarSetString
-// // #define FN_AlertMessage						AlertMessage
-// // #define FN_EngineFprintf						EngineFprintf
+// #define FN_AlertMessage						AlertMessage
+// #define FN_EngineFprintf						EngineFprintf
 // #define FN_PvAllocEntPrivateData				PvAllocEntPrivateData
 // #define FN_PvEntPrivateData					PvEntPrivateData
 // #define FN_FreeEntPrivateData				FreeEntPrivateData
@@ -339,7 +339,7 @@
 // #define FN_CheckVisibility					CheckVisibility
 // #define FN_DeltaSetField						DeltaSetField
 // #define FN_DeltaUnsetField					DeltaUnsetField
-// // #define FN_DeltaAddEncoder					DeltaAddEncoder
+// #define FN_DeltaAddEncoder					DeltaAddEncoder
 // #define FN_GetCurrentPlayer					GetCurrentPlayer
 // #define FN_CanSkipPlayer						CanSkipPlayer
 // #define FN_DeltaFindField					DeltaFindField
@@ -347,15 +347,15 @@
 // #define FN_DeltaUnsetFieldByIndex			DeltaUnsetFieldByIndex
 // #define FN_SetGroupMask						SetGroupMask
 // #define FN_engCreateInstancedBaseline		engCreateInstancedBaseline
-// // #define FN_Cvar_DirectSet					Cvar_DirectSet
-// // #define FN_ForceUnmodified					ForceUnmodified
+// #define FN_Cvar_DirectSet					Cvar_DirectSet
+// #define FN_ForceUnmodified					ForceUnmodified
 // #define FN_GetPlayerStats					GetPlayerStats
-// // #define FN_AddServerCommand					AddServerCommand
+// #define FN_AddServerCommand					AddServerCommand
 // #define FN_Voice_GetClientListening			Voice_GetClientListening
 // #define FN_Voice_SetClientListening			Voice_SetClientListening
 // #define FN_GetPlayerAuthId					GetPlayerAuthId
 
-// // - GetEngineAPI_Post functions
+// - GetEngineAPI_Post functions
 // #define FN_PrecacheModel_Post				PrecacheModel_Post
 // #define FN_PrecacheSound_Post				PrecacheSound_Post
 // #define FN_SetModel_Post						SetModel_Post
@@ -395,9 +395,9 @@
 // #define FN_TraceTexture_Post					TraceTexture_Post
 // #define FN_TraceSphere_Post					TraceSphere_Post
 // #define FN_GetAimVector_Post					GetAimVector_Post
-// // #define FN_ServerCommand_Post				ServerCommand_Post
+// #define FN_ServerCommand_Post				ServerCommand_Post
 // #define FN_ServerExecute_Post				ServerExecute_Post
-// // #define FN_engClientCommand_Post				engClientCommand_Post
+// #define FN_engClientCommand_Post				engClientCommand_Post
 // #define FN_ParticleEffect_Post				ParticleEffect_Post
 // #define FN_LightStyle_Post					LightStyle_Post
 // #define FN_DecalIndex_Post					DecalIndex_Post
@@ -417,8 +417,8 @@
 // #define FN_CVarGetString_Post				CVarGetString_Post
 // #define FN_CVarSetFloat_Post					CVarSetFloat_Post
 // #define FN_CVarSetString_Post				CVarSetString_Post
-// // #define FN_AlertMessage_Post					AlertMessage_Post
-// // #define FN_EngineFprintf_Post				EngineFprintf_Post
+// #define FN_AlertMessage_Post					AlertMessage_Post
+// #define FN_EngineFprintf_Post				EngineFprintf_Post
 // #define FN_PvAllocEntPrivateData_Post		PvAllocEntPrivateData_Post
 // #define FN_PvEntPrivateData_Post				PvEntPrivateData_Post
 // #define FN_FreeEntPrivateData_Post			FreeEntPrivateData_Post
@@ -485,7 +485,7 @@
 // #define FN_CheckVisibility_Post				CheckVisibility_Post
 // #define FN_DeltaSetField_Post				DeltaSetField_Post
 // #define FN_DeltaUnsetField_Post				DeltaUnsetField_Post
-// // #define FN_DeltaAddEncoder_Post				DeltaAddEncoder_Post
+// #define FN_DeltaAddEncoder_Post				DeltaAddEncoder_Post
 // #define FN_GetCurrentPlayer_Post				GetCurrentPlayer_Post
 // #define FN_CanSkipPlayer_Post				CanSkipPlayer_Post
 // #define FN_DeltaFindField_Post				DeltaFindField_Post
@@ -493,10 +493,10 @@
 // #define FN_DeltaUnsetFieldByIndex_Post		DeltaUnsetFieldByIndex_Post
 // #define FN_SetGroupMask_Post					SetGroupMask_Post
 // #define FN_engCreateInstancedBaseline_Post	engCreateInstancedBaseline_Post
-// // #define FN_Cvar_DirectSet_Post				Cvar_DirectSet_Post
-// // #define FN_ForceUnmodified_Post				ForceUnmodified_Post
+// #define FN_Cvar_DirectSet_Post				Cvar_DirectSet_Post
+// #define FN_ForceUnmodified_Post				ForceUnmodified_Post
 // #define FN_GetPlayerStats_Post				GetPlayerStats_Post
-// // #define FN_AddServerCommand_Post				AddServerCommand_Post
+// #define FN_AddServerCommand_Post				AddServerCommand_Post
 // #define FN_Voice_GetClientListening_Post		Voice_GetClientListening_Post
 // #define FN_Voice_SetClientListening_Post		Voice_SetClientListening_Post
 // #define FN_GetPlayerAuthId_Post				GetPlayerAuthId_Post
