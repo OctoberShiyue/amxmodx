@@ -11,6 +11,8 @@
 #define _INCLUDE_SOURCEMOD_THREADWORKER_H
 
 #include "BaseWorker.h"
+#include "minidump.h"
+
 
 #define DEFAULT_THINK_TIME_MS	25
 

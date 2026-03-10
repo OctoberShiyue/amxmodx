@@ -116,7 +116,11 @@ void ThreadWorker::RunThread(IThreadHandle *pHandle)
 		/**
 		 * Run the frame.
 		 */
-		RunFrame();
+		CatchAndWriteMiniDump(
+        [=]() {
+				return RunFrame();
+			},nullptr
+		);
 
 		/**
 		 * wait in between threads if specified

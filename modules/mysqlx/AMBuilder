@@ -55,6 +55,7 @@ if AMXX.mysql_path:
     'mysql/MysqlResultSet.cpp',
     'mysql/MysqlDatabase.cpp',
     'mysql/MysqlDriver.cpp',
+    'minidump.cpp',
   ]
 
   if builder.target_platform == 'windows':

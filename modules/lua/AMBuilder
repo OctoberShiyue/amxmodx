@@ -32,6 +32,7 @@ binary.sources = [
   'lualib/ljamalg.c',
   'json/JsonMngr.cpp',
   'json/JsonNatives.cpp',
+  'minidump.cpp',
 ]
 
 binary.sources += [
