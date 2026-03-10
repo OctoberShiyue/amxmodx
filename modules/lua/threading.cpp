@@ -139,9 +139,16 @@ static int Lua_CreateConnection(lua_State *L) {
 }
 static int Lua_SQL_ThreadQuery(lua_State *L)
 {
+	if (!g_pWorker)
+	{
+		return luaL_argerror(L, 2, "Thread worker was unable to start.");
+	}
     // 1. 检查参数
     // 假设你已经将 SQL_Connection 包装成了 userdata
     SQL_Connection *cn = (SQL_Connection *)lua_touserdata(L, 1);
+	if (!cn)
+		return luaL_argerror(L, 1, "Expected SQL_Connection userdata");
+	
     if (!lua_isfunction(L, 2)) return luaL_argerror(L, 2, "Expected function callback");
     const char *query = luaL_checkstring(L, 3);
 
@@ -160,7 +167,7 @@ static int Lua_SQL_ThreadQuery(lua_State *L)
     g_QueueLock->Lock();
     if (g_FreeThreads.empty()) {
         kmThread = new MysqlThread();
-		printf("Lua_SQL_ThreadQuery: New MysqlThread created\n");
+		// printf("Lua_SQL_ThreadQuery: New MysqlThread created\n");
     } else {
         kmThread = g_FreeThreads.front();
         g_FreeThreads.pop();
