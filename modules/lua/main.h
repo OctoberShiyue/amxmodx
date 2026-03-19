@@ -11,7 +11,9 @@
 #include <resdk/mod_rehlds_api.h>
 #include <resdk/mod_regamedll_api.h>
 #include "lualib/lua.hpp"
-#include "cbase.h"
+#define CURL_STATICLIB  // 必须在 include 之前
+#include "curl/curl.h"
+#include <string>
 
 void StartFrame2();
 void OnPluginsLoaded2();

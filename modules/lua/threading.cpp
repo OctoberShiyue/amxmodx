@@ -24,6 +24,8 @@ extern DLL_FUNCTIONS *g_pFunctionTable;
 IMutex *g_QueueLock = NULL;
 CStack<MysqlThread *> g_ThreadQueue;
 CStack<MysqlThread *> g_FreeThreads;
+CStack<HttpThread *> g_HttpThreadQueue;
+CStack<HttpThread *> g_HttpFreeThreads;
 float g_lasttime = 0.0f;
 
 void ShutdownThreading()
@@ -47,6 +49,16 @@ void ShutdownThreading()
 	{
 		delete g_FreeThreads.front();
 		g_FreeThreads.pop();
+	}
+	while (!g_HttpThreadQueue.empty())
+	{
+		delete g_HttpThreadQueue.front();
+		g_HttpThreadQueue.pop();
+	}
+	while (!g_HttpFreeThreads.empty())
+	{
+		delete g_HttpFreeThreads.front();
+		g_HttpFreeThreads.pop();
 	}
 	g_QueueLock->Unlock();
 	g_QueueLock->DestroyThis();
@@ -198,6 +210,60 @@ static int Lua_Connection_GC(lua_State *L) {
     return 0;
 }
 
+static int Lua_http_post(lua_State *L)
+{
+    // 1. 确保后台线程池已启动
+    if (!g_pWorker)
+    {
+        return luaL_error(L, "Thread worker was unable to start.");
+    }
+
+    // 2. 获取 Lua 传来的参数
+    const char *url = luaL_checkstring(L, 1);    // 参数 1: 请求 URL
+    const char *body = luaL_checkstring(L, 2);   // 参数 2: POST 请求体 (如 JSON 字符串)
+
+    if (!lua_isfunction(L, 3)) {                 // 参数 3: 回调函数
+        return luaL_argerror(L, 3, "Expected function callback");
+    }
+
+    // 3. 在注册表中引用回调函数，防止被 Lua 垃圾回收
+    lua_pushvalue(L, 3);
+    int cbRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    // 4. 处理可选的附加数据 (userdata/table/string等)
+    int dataRef = -1;
+    if (lua_gettop(L) >= 4) {
+        lua_pushvalue(L, 4);
+        dataRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
+    // 5. 从对象池获取或创建 HttpThread 实例
+    HttpThread *httpThread = NULL;
+    g_QueueLock->Lock();
+    if (g_HttpFreeThreads.empty()) {
+        httpThread = new HttpThread();
+    } else {
+        httpThread = g_HttpFreeThreads.front();
+        g_HttpFreeThreads.pop();
+    }
+    g_QueueLock->Unlock();
+
+    // 6. 配置请求参数 (设为 POST 方法，并传入 body)
+    httpThread->SetRequest(url, strlen(body)==0 ? "GET" : "POST", body);
+    
+    // 7. 配置 Lua 状态机与回调引用
+    httpThread->SetLuaState(L);
+    httpThread->SetLuaCallback(cbRef, dataRef);
+
+    // 8. 提交给后台线程执行
+    g_pWorker->MakeThread(httpThread);
+
+    // 返回 true 给 Lua，表示请求已成功加入队列
+    lua_pushboolean(L, 1);
+
+    return 1;
+}
+
 // 2. 注册元表
 void RegisterConnection(lua_State *L) {
     luaL_newmetatable(L, "SQL_Connection");
@@ -213,6 +279,8 @@ void LuaInit(lua_State *L)
 	RegisterConnection(L);
 	lua_register(L, "mysql_connect", Lua_CreateConnection);
 	lua_register(L, "mysql_query", Lua_SQL_ThreadQuery);
+
+	lua_register(L, "http_post", Lua_http_post);
 }
 
 MysqlThread::MysqlThread()
@@ -512,6 +580,25 @@ void StartFrame2()
 			} while (!g_ThreadQueue.empty());
 		}
 
+		remaining = g_HttpThreadQueue.size();
+
+		if (remaining)
+		{
+			HttpThread *httpThread;
+			do 
+			{
+				httpThread = g_HttpThreadQueue.front();
+				g_HttpThreadQueue.pop();
+				g_QueueLock->Unlock();
+
+				httpThread->Execute();
+				httpThread->Invalidate();
+
+				g_QueueLock->Lock();
+				g_HttpFreeThreads.push(httpThread);
+			} while (!g_HttpThreadQueue.empty());
+		}
+
 		g_QueueLock->Unlock();
 	}
 
@@ -771,3 +858,143 @@ bool AtomicResult::NextResultSet()
 // 	{NULL,						NULL},
 // };
 
+
+
+// ---------------------------------------------------------
+// HttpThread 实现
+// ---------------------------------------------------------
+
+HttpThread::HttpThread()
+{
+    m_luaCallbackRef = -1;
+    m_luaDataRef = -1;
+    m_L = NULL;
+    m_statusCode = 0;
+    m_success = false;
+}
+
+HttpThread::~HttpThread()
+{
+    Invalidate();
+}
+
+void HttpThread::SetLuaCallback(int cbRef, int dataRef)
+{
+    m_luaCallbackRef = cbRef;
+    m_luaDataRef = dataRef;
+}
+
+void HttpThread::SetRequest(const char *url, const char *method, const char *body)
+{
+    m_url = url ? url : "";
+    m_method = method ? method : "GET";
+    m_body = body ? body : "";
+}
+static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+    size_t total_size = size * nmemb;
+    std::string* str = static_cast<std::string*>(userp);
+    str->append(static_cast<char*>(contents), total_size);
+    return total_size;
+}
+void HttpThread::RunThread(IThreadHandle *pHandle)
+{
+    // 初始化结果状态
+    m_success = false;
+    m_statusCode = 0;
+    m_response = "";
+    m_error = "";
+
+   	 // libcurl 示例伪代码：
+    CURL *curl = curl_easy_init();
+    if (curl) {
+		std::string responseBuffer;
+        curl_easy_setopt(curl, CURLOPT_URL, m_url.chars());
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, m_method.chars());
+        if (m_body.length() > 0) {
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, m_body.chars());
+        }
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBuffer);
+        
+        // 绑定写回调，将结果写入 m_response ...
+        
+        CURLcode res = curl_easy_perform(curl);
+        if (res == CURLE_OK) {
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &m_statusCode);
+            m_success = (m_statusCode >= 200 && m_statusCode < 300);
+			m_response=responseBuffer.c_str();
+        } else {
+            m_error = curl_easy_strerror(res);
+        }
+        curl_easy_cleanup(curl);
+    } else {
+        m_error = "Failed to initialize HTTP client.";
+    }
+}
+
+void HttpThread::Invalidate()
+{
+    // 释放 Lua 注册表引用，防止内存泄漏
+    if (m_L) {
+        if (m_luaCallbackRef != -1) {
+            luaL_unref(m_L, LUA_REGISTRYINDEX, m_luaCallbackRef);
+            m_luaCallbackRef = -1;
+        }
+        if (m_luaDataRef != -1) {
+            luaL_unref(m_L, LUA_REGISTRYINDEX, m_luaDataRef);
+            m_luaDataRef = -1;
+        }
+    }
+}
+
+// 注意：你需要像 MysqlThread 一样，为 HttpThread 声明全局队列
+// 
+// 
+
+void HttpThread::OnTerminate(IThreadHandle *pHandle, bool cancel)
+{
+    if (cancel)
+    {
+        Invalidate();
+        g_QueueLock->Lock();
+        g_HttpFreeThreads.push(this);
+        g_QueueLock->Unlock();
+    } 
+    else 
+    {
+        g_QueueLock->Lock();
+        g_HttpThreadQueue.push(this);
+        g_QueueLock->Unlock();
+    }
+}
+
+void HttpThread::Execute()
+{
+    if (m_luaCallbackRef == -1 || !m_L) 
+        return;
+
+    // 1. 获取 Lua 回调函数
+    lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_luaCallbackRef);
+
+    // 2. 压入参数 (success, status_code, response_body, error_msg, userdata)
+    lua_pushboolean(m_L, m_success);
+    lua_pushinteger(m_L, m_statusCode);
+    lua_pushstring(m_L, m_response.chars());
+    lua_pushstring(m_L, m_error.chars());
+
+    if (m_luaDataRef != -1) {
+        lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_luaDataRef);
+    } else {
+        lua_pushnil(m_L);
+    }
+
+    // 3. 执行回调 (5 个参数, 0 个返回值)
+    if (lua_pcall(m_L, 5, 0, 0) != LUA_OK) {
+        const char* err = lua_tostring(m_L, -1);
+        printf("Lua HTTP Callback Error: %s\n", err);
+        lua_pop(m_L, 1);
+    }
+
+    // 4. 清理引用
+    Invalidate();
+}

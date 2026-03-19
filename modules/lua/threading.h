@@ -69,6 +69,44 @@ private:
 	bool m_IsFree;
 };
 
+class HttpThread : public IThread
+{
+public:
+    HttpThread();
+    virtual ~HttpThread();
+
+    // Lua 相关
+    void SetLuaCallback(int cbRef, int dataRef);
+    void SetLuaState(lua_State *L) { m_L = L; }
+
+    // HTTP 请求设置
+    void SetRequest(const char *url, const char *method = "GET", const char *body = "");
+
+    // 线程必须实现的接口
+    virtual void RunThread(IThreadHandle *pHandle);
+    virtual void OnTerminate(IThreadHandle *pHandle, bool cancel);
+
+    // 主线程调用与清理
+    void Execute();
+    void Invalidate();
+
+private:
+    int m_luaCallbackRef;   // Lua 回调函数引用
+    int m_luaDataRef;       // Lua 附加数据引用
+    lua_State *m_L;         // 指向 Lua 状态机的指针
+
+    // 请求数据 (使用 ke::AString 保证跨线程安全)
+    ke::AString m_url;
+    ke::AString m_method;
+    ke::AString m_body;
+
+    // 响应数据
+    ke::AString m_response;
+    ke::AString m_error;
+    long m_statusCode;
+    bool m_success;
+};
+
 class MysqlThread : public IThread
 {
 public:

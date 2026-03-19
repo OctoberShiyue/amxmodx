@@ -15,6 +15,7 @@ binary.compiler.cxxincludes += [
   os.path.join(builder.currentSourcePath, 'thread'),
   os.path.join(builder.currentSourcePath, 'lualib'),
   os.path.join(builder.currentSourcePath, 'json'),
+  os.path.join(builder.currentSourcePath, 'curl', 'include'),
 ]
 
 binary.sources = []
@@ -52,6 +53,7 @@ if builder.target_platform == 'linux' or builder.target_platform == 'mac':
     os.path.join(AMXX.mysql_path, 'lib', 'libmysqlclient_r.a'),
     '-lpthread',
     '-lm',
+    '-lcurl',
     os.path.join(builder.currentSourcePath, 'lualib', 'lj_vm.o')
   ]
   if builder.target_platform == 'linux':
@@ -62,6 +64,11 @@ elif builder.target_platform == 'windows':
   binary.compiler.linkflags += [
     os.path.join(AMXX.mysql_path, 'lib', 'mysqlclient.lib'),
     'ws2_32.lib',
+    'crypt32.lib', 
+    'wldap32.lib', 
+    'normaliz.lib',
+    'iphlpapi.lib',
+    os.path.join(builder.currentSourcePath, 'curl', 'libcurl.lib'),
     '/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8,@1',
     '/SECTION:.data,RW',
     os.path.join(builder.currentSourcePath, 'lualib', 'lj_vm.obj')
