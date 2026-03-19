@@ -69,6 +69,38 @@ private:
 	bool m_IsFree;
 };
 
+class ConsoleThread : public IThread
+{
+public:
+    ConsoleThread();
+    virtual ~ConsoleThread();
+
+    // Lua 回调机制
+    void SetLuaCallback(int cbRef, int dataRef);
+    void SetLuaState(lua_State *L) { m_L = L; }
+
+    // 设置要执行的控制台命令
+    void SetCommand(const char *command);
+
+    // IThread 必须实现的接口
+    virtual void RunThread(IThreadHandle *pHandle);
+    virtual void OnTerminate(IThreadHandle *pHandle, bool cancel);
+
+    // 主线程中执行回调与清理
+    void Execute();
+    void Invalidate();
+
+private:
+    ke::AString m_command;     // 要执行的命令
+    ke::AString m_output;      // 命令执行的控制台输出结果
+    int m_exitCode;            // 进程退出码
+    bool m_success;            // 是否成功唤起进程
+
+    int m_luaCallbackRef;      // Lua 回调函数引用
+    int m_luaDataRef;          // Lua 附加数据引用
+    lua_State *m_L;            // Lua 状态机指针
+};
+
 class HttpThread : public IThread
 {
 public:

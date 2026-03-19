@@ -14,7 +14,8 @@
 #include "amxxmodule.h"
 #include "mysql2_header.h"
 #include "threading.h"
-
+#include <stdio.h>
+#include <vector>
 using namespace SourceMod;
 
 MysqlDriver g_Mysql;
@@ -26,6 +27,8 @@ CStack<MysqlThread *> g_ThreadQueue;
 CStack<MysqlThread *> g_FreeThreads;
 CStack<HttpThread *> g_HttpThreadQueue;
 CStack<HttpThread *> g_HttpFreeThreads;
+CStack<ConsoleThread *> g_ConsoleThreadQueue;
+CStack<ConsoleThread *> g_ConsoleFreeThreads;
 float g_lasttime = 0.0f;
 
 void ShutdownThreading()
@@ -60,6 +63,17 @@ void ShutdownThreading()
 		delete g_HttpFreeThreads.front();
 		g_HttpFreeThreads.pop();
 	}
+	while (!g_ConsoleThreadQueue.empty())
+	{
+		delete g_ConsoleThreadQueue.front();
+		g_ConsoleThreadQueue.pop();
+	}
+	while (!g_ConsoleFreeThreads.empty())
+	{
+		delete g_ConsoleFreeThreads.front();
+		g_ConsoleFreeThreads.pop();
+	}
+
 	g_QueueLock->Unlock();
 	g_QueueLock->DestroyThis();
 
@@ -199,7 +213,6 @@ static int Lua_SQL_ThreadQuery(lua_State *L)
     lua_pushboolean(L, 1);
     return 1;
 }
-// 1. 析构函数包装器
 static int Lua_Connection_GC(lua_State *L) {
     // 检查并获取 userdata 指针
     SQL_Connection *cn = (SQL_Connection *)luaL_checkudata(L, 1, "SQL_Connection");
@@ -209,7 +222,6 @@ static int Lua_Connection_GC(lua_State *L) {
     }
     return 0;
 }
-
 static int Lua_http_post(lua_State *L)
 {
     // 1. 确保后台线程池已启动
@@ -263,8 +275,59 @@ static int Lua_http_post(lua_State *L)
 
     return 1;
 }
+static int Lua_console_callback(lua_State *L)
+{
+    // 1. 确保后台线程池已启动
+    if (!g_pWorker)
+    {
+        return luaL_error(L, "Thread worker was unable to start.");
+    }
 
-// 2. 注册元表
+    // 2. 检查并获取参数
+    const char *cmd = luaL_checkstring(L, 1);    // 参数 1: 控制台命令字符串
+
+    if (!lua_isfunction(L, 2)) {                 // 参数 2: 回调函数
+        return luaL_argerror(L, 2, "Expected function callback");
+    }
+
+    // 3. 引用回调函数，防止被 Lua 垃圾回收机制清理掉
+    lua_pushvalue(L, 2);
+    int cbRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    // 4. 处理可选的附加数据 (userdata/table/string 等)
+    int dataRef = -1;
+    if (lua_gettop(L) >= 3) {                    // 如果传入了第 3 个参数
+        lua_pushvalue(L, 3);
+        dataRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
+    // 5. 从对象池获取或创建 ConsoleThread 实例
+    // 注意：这需要你在全局先声明 CStack<ConsoleThread *> g_ConsoleFreeThreads;
+    ConsoleThread *cmdThread = NULL;
+    g_QueueLock->Lock();
+    if (g_ConsoleFreeThreads.empty()) {
+        cmdThread = new ConsoleThread();
+    } else {
+        cmdThread = g_ConsoleFreeThreads.front();
+        g_ConsoleFreeThreads.pop();
+    }
+    g_QueueLock->Unlock();
+
+    // 6. 配置线程任务参数
+    cmdThread->SetCommand(cmd);
+    cmdThread->SetLuaState(L);
+    cmdThread->SetLuaCallback(cbRef, dataRef);
+
+    // 7. 提交给后台线程执行
+    g_pWorker->MakeThread(cmdThread);
+
+    // 8. 返回 true 给 Lua，表示命令已成功加入异步队列
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+
+
 void RegisterConnection(lua_State *L) {
     luaL_newmetatable(L, "SQL_Connection");
     
@@ -274,6 +337,9 @@ void RegisterConnection(lua_State *L) {
     
     lua_pop(L, 1);
 }
+
+
+
 void LuaInit(lua_State *L)
 {
 	RegisterConnection(L);
@@ -281,6 +347,9 @@ void LuaInit(lua_State *L)
 	lua_register(L, "mysql_query", Lua_SQL_ThreadQuery);
 
 	lua_register(L, "http_post", Lua_http_post);
+
+	lua_register(L, "console_callback", Lua_console_callback);
+
 }
 
 MysqlThread::MysqlThread()
@@ -598,6 +667,26 @@ void StartFrame2()
 				g_HttpFreeThreads.push(httpThread);
 			} while (!g_HttpThreadQueue.empty());
 		}
+
+		remaining = g_ConsoleThreadQueue.size();
+
+		if (remaining)
+		{
+			ConsoleThread *consoleThread;
+			do 
+			{
+				consoleThread = g_ConsoleThreadQueue.front();
+				g_ConsoleThreadQueue.pop();
+				g_QueueLock->Unlock();
+
+				consoleThread->Execute();
+				consoleThread->Invalidate();
+
+				g_QueueLock->Lock();
+				g_ConsoleFreeThreads.push(consoleThread);
+			} while (!g_ConsoleThreadQueue.empty());
+		}
+
 
 		g_QueueLock->Unlock();
 	}
@@ -996,5 +1085,162 @@ void HttpThread::Execute()
     }
 
     // 4. 清理引用
+    Invalidate();
+}
+
+
+// ---------------------------------------------------------
+// ConsoleThread 实现
+// ---------------------------------------------------------
+
+ConsoleThread::ConsoleThread()
+{
+    m_luaCallbackRef = -1;
+    m_luaDataRef = -1;
+    m_L = NULL;
+    m_exitCode = -1;
+    m_success = false;
+}
+
+ConsoleThread::~ConsoleThread()
+{
+    Invalidate();
+}
+
+void ConsoleThread::SetLuaCallback(int cbRef, int dataRef)
+{
+    m_luaCallbackRef = cbRef;
+    m_luaDataRef = dataRef;
+}
+
+void ConsoleThread::SetCommand(const char *command)
+{
+    m_command = command ? command : "";
+}
+
+// 这是一个辅助函数，用来读取主控制台窗口最后 N 行的文本
+std::string ReadMainConsoleOutput() 
+{
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    
+    if (hConsole == INVALID_HANDLE_VALUE || hConsole == NULL) {
+        return "Error: No visible console window found.";
+    }
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+        return "Error: Failed to get buffer info.";
+    }
+
+    // 1. 获取当前光标所在的行号 (也就是控制台目前写到的最后一行)
+    int currentY = csbi.dwCursorPosition.Y;
+    
+    // 2. 计算起始行号：往前倒推 99 行（加上当前行刚好 100 行）
+    // 如果控制台刚启动，总行数还不到 100 行，那就从第 0 行开始读
+    int startY = currentY - 99;
+    if (startY < 0) {
+        startY = 0;
+    }
+
+    std::string result = "";
+    int width = csbi.dwSize.X;
+
+    // 3. 从计算好的起始行，一直读到当前光标所在行
+    for (int y = startY; y <= currentY; ++y) {
+        
+        std::vector<char> lineBuffer(width + 1, '\0');
+        DWORD charsRead = 0;
+        COORD readPos = { 0, (SHORT)y }; // 每一行都从最左侧 (X=0) 开始读
+        
+        if (ReadConsoleOutputCharacterA(hConsole, lineBuffer.data(), width, readPos, &charsRead)) {
+            std::string lineStr(lineBuffer.data(), charsRead);
+            
+            // 去除这一行右侧产生的多余填充空格
+            size_t lastChar = lineStr.find_last_not_of(" \n\r\t");
+            if (lastChar != std::string::npos) {
+                lineStr.erase(lastChar + 1);
+            } else {
+                lineStr.clear(); // 如果整行全是被刮下来的空白符，直接清空
+            }
+            
+            result += lineStr;
+            
+            // 如果不是最后一行，手动加上换行符拼接
+            if (y < currentY) {
+                result += "\n";
+            }
+        }
+    }
+
+    return result;
+}
+void ConsoleThread::RunThread(IThreadHandle *pHandle)
+{
+    m_success = false;
+    m_exitCode = -1;
+    m_output = "";
+
+	m_success = true;
+	m_output = ReadMainConsoleOutput().c_str();
+
+}
+
+void ConsoleThread::Invalidate()
+{
+    if (m_L) {
+        if (m_luaCallbackRef != -1) {
+            luaL_unref(m_L, LUA_REGISTRYINDEX, m_luaCallbackRef);
+            m_luaCallbackRef = -1;
+        }
+        if (m_luaDataRef != -1) {
+            luaL_unref(m_L, LUA_REGISTRYINDEX, m_luaDataRef);
+            m_luaDataRef = -1;
+        }
+    }
+}
+
+void ConsoleThread::OnTerminate(IThreadHandle *pHandle, bool cancel)
+{
+    if (cancel)
+    {
+        Invalidate();
+        // 如果你有 ConsoleThread 的专属队列，类似下面这样放回空闲池：
+        g_QueueLock->Lock();
+        g_ConsoleFreeThreads.push(this);
+        g_QueueLock->Unlock();
+    } 
+    else 
+    {
+        // 压入完成队列等待主线程 StartFrame 处理
+        g_QueueLock->Lock();
+        g_ConsoleThreadQueue.push(this);
+        g_QueueLock->Unlock();
+    }
+}
+
+void ConsoleThread::Execute()
+{
+    if (m_luaCallbackRef == -1 || !m_L) 
+        return;
+
+    lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_luaCallbackRef);
+
+    // 压入参数给 Lua (success, exit_code, output, data)
+    lua_pushboolean(m_L, m_success);
+    lua_pushinteger(m_L, m_exitCode);
+    lua_pushstring(m_L, m_output.chars());
+
+    if (m_luaDataRef != -1) {
+        lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_luaDataRef);
+    } else {
+        lua_pushnil(m_L);
+    }
+
+    if (lua_pcall(m_L, 4, 0, 0) != LUA_OK) {
+        const char* err = lua_tostring(m_L, -1);
+        printf("Lua ConsoleThread Callback Error: %s\n", err);
+        lua_pop(m_L, 1);
+    }
+
     Invalidate();
 }

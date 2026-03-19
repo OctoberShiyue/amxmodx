@@ -607,6 +607,8 @@ void OnPluginsLoaded()
     }
 
     fclose(fp);
+
+   
 }
 
 /* pfnStartFrame() */
