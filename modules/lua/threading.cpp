@@ -733,7 +733,7 @@ void OnPluginsUnloading()
 		do 
 		{
 			httpThread = g_HttpThreadQueue.front();
-			g_ThreadQueue.pop();
+			g_HttpThreadQueue.pop();
 			g_QueueLock->Unlock();
 			httpThread->SetLuaState(nullptr);
 			httpThread->Execute();
@@ -751,7 +751,7 @@ void OnPluginsUnloading()
 		do 
 		{
 			consoleThread = g_ConsoleThreadQueue.front();
-			g_ThreadQueue.pop();
+			g_ConsoleThreadQueue.pop();
 			g_QueueLock->Unlock();
 			consoleThread->SetLuaState(nullptr);
 			consoleThread->Execute();
