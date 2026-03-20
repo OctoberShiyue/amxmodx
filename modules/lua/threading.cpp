@@ -725,6 +725,43 @@ void OnPluginsUnloading()
 		} while (!g_ThreadQueue.empty());
 	}
 
+    remaining = g_HttpThreadQueue.size();
+
+	if (remaining)
+	{
+		HttpThread *httpThread;
+		do 
+		{
+			httpThread = g_HttpThreadQueue.front();
+			g_ThreadQueue.pop();
+			g_QueueLock->Unlock();
+			httpThread->SetLuaState(nullptr);
+			httpThread->Execute();
+			httpThread->Invalidate();
+			g_HttpFreeThreads.push(httpThread);
+			g_QueueLock->Lock();
+		} while (!g_HttpThreadQueue.empty());
+	}
+
+	remaining = g_ConsoleThreadQueue.size();
+
+	if (remaining)
+	{
+		ConsoleThread *consoleThread;
+		do 
+		{
+			consoleThread = g_ConsoleThreadQueue.front();
+			g_ThreadQueue.pop();
+			g_QueueLock->Unlock();
+			consoleThread->SetLuaState(nullptr);
+			consoleThread->Execute();
+			consoleThread->Invalidate();
+			g_ConsoleFreeThreads.push(consoleThread);
+			g_QueueLock->Lock();
+		} while (!g_ConsoleThreadQueue.empty());
+	}
+
+
 	g_QueueLock->Unlock();
 }
 
@@ -1132,41 +1169,60 @@ std::string ReadMainConsoleOutput()
         return "Error: Failed to get buffer info.";
     }
 
-    // 1. 获取当前光标所在的行号 (也就是控制台目前写到的最后一行)
-    int currentY = csbi.dwCursorPosition.Y;
+    int width = csbi.dwSize.X;
+    int height = csbi.dwSize.Y; // 整个控制台缓冲区的最大行数（包含历史记录）
+
+    std::vector<char> lineBuffer(width + 1, '\0');
+    DWORD charsRead = 0;
     
-    // 2. 计算起始行号：往前倒推 99 行（加上当前行刚好 100 行）
-    // 如果控制台刚启动，总行数还不到 100 行，那就从第 0 行开始读
-    int startY = currentY - 99;
+    // 1. 寻找真正的“文本最后一行” (Actual Bottom)
+    // 策略：从缓冲区的绝对最底部往上扫描，找到第一行包含非空格字符的行
+    int actualBottomY = 0;
+    for (int y = height - 1; y >= 0; --y) {
+        COORD readPos = { 0, (SHORT)y };
+        if (ReadConsoleOutputCharacterA(hConsole, lineBuffer.data(), width, readPos, &charsRead)) {
+            bool hasText = false;
+            // 检查这一行是否全是空格或空字符
+            for (DWORD i = 0; i < charsRead; ++i) {
+                if (lineBuffer[i] != ' ' && lineBuffer[i] != '\0') {
+                    hasText = true;
+                    break;
+                }
+            }
+            if (hasText) {
+                actualBottomY = y; // 找到了真正的文本结尾
+                break;
+            }
+        }
+    }
+
+    // 2. 计算起始读取位置（往前倒推 99 行，凑齐 100 行）
+    int startY = actualBottomY - 99;
     if (startY < 0) {
-        startY = 0;
+        startY = 0; // 防止越界
     }
 
     std::string result = "";
-    int width = csbi.dwSize.X;
 
-    // 3. 从计算好的起始行，一直读到当前光标所在行
-    for (int y = startY; y <= currentY; ++y) {
-        
-        std::vector<char> lineBuffer(width + 1, '\0');
-        DWORD charsRead = 0;
-        COORD readPos = { 0, (SHORT)y }; // 每一行都从最左侧 (X=0) 开始读
+    // 3. 从算好的起始行，一直读取到真正的最后一行
+    for (int y = startY; y <= actualBottomY; ++y) {
+        COORD readPos = { 0, (SHORT)y };
         
         if (ReadConsoleOutputCharacterA(hConsole, lineBuffer.data(), width, readPos, &charsRead)) {
             std::string lineStr(lineBuffer.data(), charsRead);
             
-            // 去除这一行右侧产生的多余填充空格
+            // 去除行尾的填充空格和换行符
             size_t lastChar = lineStr.find_last_not_of(" \n\r\t");
             if (lastChar != std::string::npos) {
                 lineStr.erase(lastChar + 1);
             } else {
-                lineStr.clear(); // 如果整行全是被刮下来的空白符，直接清空
+                lineStr.clear(); // 全是空格的空行
             }
             
             result += lineStr;
             
-            // 如果不是最后一行，手动加上换行符拼接
-            if (y < currentY) {
+            // 加上换行符拼接（最后一行不加）
+            if (y < actualBottomY) {
                 result += "\n";
             }
         }
