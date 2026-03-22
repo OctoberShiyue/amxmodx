@@ -61,6 +61,27 @@ struct StringPolicy {
     }
 };
 
+bool is_ent_valid(int iEnt)
+{
+	if (iEnt < 1 || iEnt > gpGlobals->maxEntities) 
+		return false;
+
+	if (iEnt <= gpGlobals->maxClients)
+	{
+		if (!MF_IsPlayerIngame(iEnt))
+		{
+			return false;
+		}
+	} else {
+		if (FNullEnt(INDEXENT(iEnt)))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 static int L_get_gametime(lua_State* L)
 {
     lua_pushnumber(L, gpGlobals->time);
@@ -71,7 +92,97 @@ static int L_random_num(lua_State* L)
     lua_pushinteger(L, RANDOM_LONG(lua_tointeger(L, 1), lua_tointeger(L, 2)));
     return 1;
 }
+static int L_is_nullent(lua_State* L)
+{
+    lua_pushboolean(L, !is_ent_valid(lua_tointeger(L, 1)));
+    return 1;
+}
+// 查找指定半径内的玩家，并通过回调函数返回
+static int L_entity_players_range(lua_State *L)
+{
+    int entCenter = (int)luaL_checkinteger(L, 1);
+    float radius  = (float)luaL_checknumber(L, 2);
 
+    if (!lua_isfunction(L, 3)) 
+    {
+        return luaL_error(L, "Argument 3 must be a callback function");
+    }
+
+    edict_t *pCenter = INDEXENT(entCenter);
+    if ( !is_ent_valid(entCenter) || !pCenter)
+    {
+        return 0;
+    }
+
+    for (int i = 1; i <= gpGlobals->maxClients; ++i)
+    {
+        edict_t *pOther = INDEXENT(i);
+
+        if (!is_ent_valid(i) || !pOther || pOther->free) 
+        {
+            continue;
+        }
+        float dist = (pCenter->v.origin - pOther->v.origin).Length();
+        if (dist <= radius)
+        {
+            lua_pushvalue(L, 3); 
+            lua_pushinteger(L, i);
+            lua_pushnumber(L, dist);
+            if (lua_pcall(L, 2, 0, 0) != LUA_OK)
+            {
+                printf("[Lua Error] in entity_players_range: %s\n", lua_tostring(L, -1));
+                lua_pop(L, 1); 
+            }
+        }
+    }
+
+    return 0; 
+}
+// 查找指定半径内的所有实体，并通过回调函数返回
+static int L_entity_all_range(lua_State *L)
+{
+    int entCenter = (int)luaL_checkinteger(L, 1);
+    float radius  = (float)luaL_checknumber(L, 2);
+
+    if (!lua_isfunction(L, 3)) 
+    {
+        return luaL_error(L, "Argument 3 must be a callback function");
+    }
+
+    edict_t *pCenter = INDEXENT(entCenter);
+    if (!is_ent_valid(entCenter) || !pCenter)
+    {
+        return 0; 
+    }
+
+    for (int i = 1; i < gpGlobals->maxEntities; ++i)
+    {
+        edict_t *pOther = INDEXENT(i);
+
+        if (!is_ent_valid(i) || !pOther || pOther->free) 
+        {
+            continue;
+        }
+
+        float dist = (pCenter->v.origin - pOther->v.origin).Length();
+
+        if (dist <= radius)
+        {
+            lua_pushvalue(L, 3); 
+            
+            lua_pushinteger(L, i);
+            lua_pushnumber(L, dist);
+
+            if (lua_pcall(L, 2, 0, 0) != LUA_OK)
+            {
+                printf("[Lua Error] in entity_all_range: %s\n", lua_tostring(L, -1));
+                lua_pop(L, 1); 
+            }
+        }
+    }
+
+    return 0; 
+}
 static int Lua_CallPawnFunction_Proxy(lua_State *L)
 {
     if (!L)
@@ -144,6 +255,9 @@ cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 void InitLuaAPI(lua_State* L) {
     lua_register(L, "amxx_get_gametime", L_get_gametime);
     lua_register(L, "amxx_random_num", L_random_num);
+    lua_register(L, "amxx2_is_nullent", L_is_nullent);
+    lua_register(L, "amxx2_entity_players_range", L_entity_players_range);
+    lua_register(L, "amxx2_entity_all_range", L_entity_all_range);
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   
