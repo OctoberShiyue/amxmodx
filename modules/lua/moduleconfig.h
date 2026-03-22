@@ -110,7 +110,7 @@
 // #define FN_DispatchSpawn				DispatchSpawn				/* pfnSpawn() */
 // #define FN_DispatchThink				DispatchThink				/* pfnThink() */
 // #define FN_DispatchUse				DispatchUse					/* pfnUse() */
-// #define FN_DispatchTouch				DispatchTouch				/* pfnTouch() */
+#define FN_DispatchTouch				DispatchTouch				/* pfnTouch() */
 // #define FN_DispatchBlocked			DispatchBlocked				/* pfnBlocked() */
 // #define FN_DispatchKeyValue			DispatchKeyValue			/* pfnKeyValue() */
 // #define FN_DispatchSave				DispatchSave				/* pfnSave() */
@@ -149,8 +149,8 @@
 // #define FN_CreateBaseline			CreateBaseline				/* pfnCreateBaseline()			Tweak entity baseline for network encoding allows setup of player baselines too.; (wd) SDK2 */
 // #define FN_RegisterEncoders			RegisterEncoders			/* pfnRegisterEncoders()		Callbacks for network encoding; (wd) SDK2 */
 // #define FN_GetWeaponData				GetWeaponData				/* pfnGetWeaponData()			(wd) SDK2 */
-// #define FN_CmdStart					CmdStart					/* pfnCmdStart()				(wd) SDK2 */
-// #define FN_CmdEnd					CmdEnd						/* pfnCmdEnd()					(wd) SDK2 */
+#define FN_CmdStart					CmdStart					/* pfnCmdStart()				(wd) SDK2 */
+#define FN_CmdEnd					CmdEnd						/* pfnCmdEnd()					(wd) SDK2 */
 // #define FN_ConnectionlessPacket		ConnectionlessPacket		/* pfnConnectionlessPacket()	(wd) SDK2 */
 // #define FN_GetHullBounds				GetHullBounds				/* pfnGetHullBounds()			(wd) SDK2 */
 // #define FN_CreateInstancedBaselines	CreateInstancedBaselines	/* pfnCreateInstancedBaselines()	(wd) SDK2 */
@@ -162,7 +162,7 @@
 // #define FN_DispatchSpawn_Post				DispatchSpawn_Post
 // #define FN_DispatchThink_Post				DispatchThink_Post
 // #define FN_DispatchUse_Post					DispatchUse_Post
-// #define FN_DispatchTouch_Post				DispatchTouch_Post
+#define FN_DispatchTouch_Post				DispatchTouch_Post
 // #define FN_DispatchBlocked_Post				DispatchBlocked_Post
 // #define FN_DispatchKeyValue_Post				DispatchKeyValue_Post
 // #define FN_DispatchSave_Post					DispatchSave_Post
@@ -201,8 +201,8 @@
 // #define FN_CreateBaseline_Post				CreateBaseline_Post
 // #define FN_RegisterEncoders_Post				RegisterEncoders_Post
 // #define FN_GetWeaponData_Post				GetWeaponData_Post
-// #define FN_CmdStart_Post						CmdStart_Post
-// #define FN_CmdEnd_Post						CmdEnd_Post
+#define FN_CmdStart_Post						CmdStart_Post
+#define FN_CmdEnd_Post						CmdEnd_Post
 // #define FN_ConnectionlessPacket_Post			ConnectionlessPacket_Post
 // #define FN_GetHullBounds_Post				GetHullBounds_Post
 // #define FN_CreateInstancedBaselines_Post		CreateInstancedBaselines_Post

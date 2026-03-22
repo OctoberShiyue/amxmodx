@@ -678,3 +678,151 @@ void ED_Free(IRehldsHook_ED_Free *chain, edict_t *ed)
     }
     chain->callNext(ed);
 }
+
+
+void DispatchTouch(edict_t *pentTouched, edict_t *pentOther) 
+{
+    if (g_L) 
+    {
+        lua_getglobal(g_L, "Meta_DispatchTouch"); 
+        if (lua_isfunction(g_L, -1)) 
+        {
+            lua_pushentity(g_L, pentTouched);
+            lua_pushentity(g_L, pentOther);
+            if (lua_pcall(g_L, 2, 1, 0) == 0)
+            {
+                if (lua_isnumber(g_L, -1)) 
+                {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1); 
+                    
+                    RETURN_META((META_RES)meta_res);
+                }
+                lua_pop(g_L, 1);
+            }
+            else 
+            {
+                lua_pop(g_L, 1);
+            }
+        }
+        else 
+        {
+            lua_pop(g_L, 1);
+        }
+    }
+    RETURN_META(MRES_IGNORED);
+}
+void DispatchTouch_Post(edict_t *pentTouched, edict_t *pentOther) {
+    if (g_L) {
+        lua_getglobal(g_L, "Meta_DispatchTouch_Post");
+        if (lua_isfunction(g_L, -1)) {
+            lua_pushentity(g_L, pentTouched);
+            lua_pushentity(g_L, pentOther);
+            if (lua_pcall(g_L, 2, 1, 0) == 0) {
+                if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    RETURN_META((META_RES)meta_res);
+                }
+                lua_pop(g_L, 1);
+            } else {
+                lua_pop(g_L, 1);
+            }
+        } else {
+            lua_pop(g_L, 1);
+        }
+    }
+    RETURN_META(MRES_IGNORED);
+}
+
+void CmdStart(const edict_t *player, const struct usercmd_s *_cmd, unsigned int random_seed) {
+    if (g_L) {
+        lua_getglobal(g_L, "Meta_CmdStart");
+        if (lua_isfunction(g_L, -1)) {
+            lua_pushentity(g_L, (edict_t*)player);
+            lua_pushinteger(g_L, _cmd->buttons);
+            lua_pushinteger(g_L, random_seed);
+            if (lua_pcall(g_L, 3, 1, 0) == 0) {
+                if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    RETURN_META((META_RES)meta_res);
+                }
+                lua_pop(g_L, 1);
+            } else {
+                lua_pop(g_L, 1);
+            }
+        } else {
+            lua_pop(g_L, 1);
+        }
+    }
+    RETURN_META(MRES_IGNORED);
+}
+
+void CmdStart_Post(const edict_t *player, const struct usercmd_s *cmd, unsigned int random_seed) {
+    if (g_L) {
+        lua_getglobal(g_L, "Meta_CmdStart_Post");
+        if (lua_isfunction(g_L, -1)) {
+            lua_pushentity(g_L, (edict_t*)player);
+            lua_pushinteger(g_L, cmd->buttons);
+            lua_pushinteger(g_L, random_seed);
+            if (lua_pcall(g_L, 3, 1, 0) == 0) {
+                if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    RETURN_META((META_RES)meta_res);
+                }
+                lua_pop(g_L, 1);
+            } else {
+                lua_pop(g_L, 1);
+            }
+        } else {
+            lua_pop(g_L, 1);
+        }
+    }
+    RETURN_META(MRES_IGNORED);
+}
+
+void CmdEnd(const edict_t *player) {
+    if (g_L) {
+        lua_getglobal(g_L, "Meta_CmdEnd");
+        if (lua_isfunction(g_L, -1)) {
+            lua_pushentity(g_L, (edict_t*)player);
+            if (lua_pcall(g_L, 1, 1, 0) == 0) {
+                if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    RETURN_META((META_RES)meta_res);
+                }
+                lua_pop(g_L, 1);
+            } else {
+                lua_pop(g_L, 1);
+            }
+        } else {
+            lua_pop(g_L, 1);
+        }
+    }
+    RETURN_META(MRES_IGNORED);
+}
+
+void CmdEnd_Post(const edict_t *player) {
+    if (g_L) {
+        lua_getglobal(g_L, "Meta_CmdEnd_Post");
+        if (lua_isfunction(g_L, -1)) {
+            lua_pushentity(g_L, (edict_t*)player);
+            if (lua_pcall(g_L, 1, 1, 0) == 0) {
+                if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    RETURN_META((META_RES)meta_res);
+                }
+                lua_pop(g_L, 1);
+            } else {
+                lua_pop(g_L, 1);
+            }
+        } else {
+            lua_pop(g_L, 1);
+        }
+    }
+    RETURN_META(MRES_IGNORED);
+}
