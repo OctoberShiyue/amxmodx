@@ -3,7 +3,6 @@
 bool HasReHlds;
 bool HasReGameDll;
 
-// 命名空间 ke 是 AMTL 的默认命名空间
 
 lua_State *g_L = nullptr;
 // float g_fCurrentTime;
@@ -798,6 +797,555 @@ static int L_trace_hull(lua_State *L)
     return 1;
 }
 
+// ---------------------------------------------------------
+// Entity State get/set 函数
+// ---------------------------------------------------------
+static int L_get_es(lua_State *L)
+{
+    int esHandle = (int)luaL_checkinteger(L, 1);
+    int member = (int)luaL_checkinteger(L, 2);
+
+    entity_state_t *es = reinterpret_cast<entity_state_t *>(esHandle);
+
+    switch(member)
+    {
+    case ES_EntityType:
+        lua_pushinteger(L, es->entityType);
+        return 1;
+    case ES_Number:
+        lua_pushinteger(L, es->number);
+        return 1;
+    case ES_MsgTime:
+        lua_pushnumber(L, es->msg_time);
+        return 1;
+    case ES_MessageNum:
+        lua_pushinteger(L, es->messagenum);
+        return 1;
+    case ES_Origin:
+        lua_newtable(L);
+        lua_pushnumber(L, es->origin.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->origin.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->origin.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_Angles:
+        lua_newtable(L);
+        lua_pushnumber(L, es->angles.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->angles.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->angles.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_ModelIndex:
+        lua_pushinteger(L, es->modelindex);
+        return 1;
+    case ES_Sequence:
+        lua_pushinteger(L, es->sequence);
+        return 1;
+    case ES_Frame:
+        lua_pushnumber(L, es->frame);
+        return 1;
+    case ES_ColorMap:
+        lua_pushinteger(L, es->colormap);
+        return 1;
+    case ES_Skin:
+        lua_pushinteger(L, es->skin);
+        return 1;
+    case ES_Solid:
+        lua_pushinteger(L, es->solid);
+        return 1;
+    case ES_Effects:
+        lua_pushinteger(L, es->effects);
+        return 1;
+    case ES_Scale:
+        lua_pushnumber(L, es->scale);
+        return 1;
+    case ES_eFlags:
+        lua_pushinteger(L, es->eflags);
+        return 1;
+    case ES_RenderMode:
+        lua_pushinteger(L, es->rendermode);
+        return 1;
+    case ES_RenderAmt:
+        lua_pushinteger(L, es->renderamt);
+        return 1;
+    case ES_RenderColor:
+        lua_newtable(L);
+        lua_pushinteger(L, es->rendercolor.r);
+        lua_rawseti(L, -2, 1);
+        lua_pushinteger(L, es->rendercolor.g);
+        lua_rawseti(L, -2, 2);
+        lua_pushinteger(L, es->rendercolor.b);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_RenderFx:
+        lua_pushinteger(L, es->renderfx);
+        return 1;
+    case ES_MoveType:
+        lua_pushinteger(L, es->movetype);
+        return 1;
+    case ES_AnimTime:
+        lua_pushnumber(L, es->animtime);
+        return 1;
+    case ES_FrameRate:
+        lua_pushnumber(L, es->framerate);
+        return 1;
+    case ES_Body:
+        lua_pushinteger(L, es->body);
+        return 1;
+    case ES_Controller:
+        lua_newtable(L);
+        for (int i = 0; i < 4; i++) {
+            lua_pushinteger(L, es->controller[i]);
+            lua_rawseti(L, -2, i + 1);
+        }
+        return 1;
+    case ES_Blending:
+        lua_newtable(L);
+        for (int i = 0; i < 4; i++) {
+            lua_pushnumber(L, es->blending[i]);
+            lua_rawseti(L, -2, i + 1);
+        }
+        return 1;
+    case ES_Velocity:
+        lua_newtable(L);
+        lua_pushnumber(L, es->velocity.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->velocity.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->velocity.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_Mins:
+        lua_newtable(L);
+        lua_pushnumber(L, es->mins.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->mins.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->mins.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_Maxs:
+        lua_newtable(L);
+        lua_pushnumber(L, es->maxs.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->maxs.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->maxs.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_AimEnt:
+        lua_pushinteger(L, es->aiment);
+        return 1;
+    case ES_Owner:
+        lua_pushinteger(L, es->owner);
+        return 1;
+    case ES_Friction:
+        lua_pushnumber(L, es->friction);
+        return 1;
+    case ES_Gravity:
+        lua_pushnumber(L, es->gravity);
+        return 1;
+    case ES_Team:
+        lua_pushinteger(L, es->team);
+        return 1;
+    case ES_PlayerClass:
+        lua_pushinteger(L, es->playerclass);
+        return 1;
+    case ES_Health:
+        lua_pushinteger(L, es->health);
+        return 1;
+    case ES_Spectator:
+        lua_pushinteger(L, es->spectator);
+        return 1;
+    case ES_WeaponModel:
+        lua_pushinteger(L, es->weaponmodel);
+        return 1;
+    case ES_GaitSequence:
+        lua_pushinteger(L, es->gaitsequence);
+        return 1;
+    case ES_BaseVelocity:
+        lua_newtable(L);
+        lua_pushnumber(L, es->basevelocity.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->basevelocity.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->basevelocity.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_UseHull:
+        lua_pushinteger(L, es->usehull);
+        return 1;
+    case ES_OldButtons:
+        lua_pushinteger(L, es->oldbuttons);
+        return 1;
+    case ES_OnGround:
+        lua_pushinteger(L, es->onground);
+        return 1;
+    case ES_iStepLeft:
+        lua_pushinteger(L, es->iStepLeft);
+        return 1;
+    case ES_flFallVelocity:
+        lua_pushnumber(L, es->flFallVelocity);
+        return 1;
+    case ES_FOV:
+        lua_pushinteger(L, es->fov);
+        return 1;
+    case ES_WeaponAnim:
+        lua_pushinteger(L, es->weaponanim);
+        return 1;
+    case ES_StartPos:
+        lua_newtable(L);
+        lua_pushnumber(L, es->startpos.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->startpos.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->startpos.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_EndPos:
+        lua_newtable(L);
+        lua_pushnumber(L, es->endpos.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->endpos.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->endpos.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_ImpactTime:
+        lua_pushnumber(L, es->impacttime);
+        return 1;
+    case ES_StartTime:
+        lua_pushnumber(L, es->starttime);
+        return 1;
+    case ES_iUser1:
+        lua_pushinteger(L, es->iuser1);
+        return 1;
+    case ES_iUser2:
+        lua_pushinteger(L, es->iuser2);
+        return 1;
+    case ES_iUser3:
+        lua_pushinteger(L, es->iuser3);
+        return 1;
+    case ES_iUser4:
+        lua_pushinteger(L, es->iuser4);
+        return 1;
+    case ES_fUser1:
+        lua_pushnumber(L, es->fuser1);
+        return 1;
+    case ES_fUser2:
+        lua_pushnumber(L, es->fuser2);
+        return 1;
+    case ES_fUser3:
+        lua_pushnumber(L, es->fuser3);
+        return 1;
+    case ES_fUser4:
+        lua_pushnumber(L, es->fuser4);
+        return 1;
+    case ES_vUser1:
+        lua_newtable(L);
+        lua_pushnumber(L, es->vuser1.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->vuser1.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->vuser1.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_vUser2:
+        lua_newtable(L);
+        lua_pushnumber(L, es->vuser2.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->vuser2.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->vuser2.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_vUser3:
+        lua_newtable(L);
+        lua_pushnumber(L, es->vuser3.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->vuser3.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->vuser3.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    case ES_vUser4:
+        lua_newtable(L);
+        lua_pushnumber(L, es->vuser4.x);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, es->vuser4.y);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, es->vuser4.z);
+        lua_rawseti(L, -2, 3);
+        return 1;
+    default:
+        luaL_error(L, "Unknown EntityState member: %d", member);
+        return 0;
+    }
+}
+
+
+static int L_set_es(lua_State *L)
+{
+    int esHandle = (int)luaL_checkinteger(L, 1);
+    int member = (int)luaL_checkinteger(L, 2);
+
+    entity_state_t *es = reinterpret_cast<entity_state_t *>(esHandle);
+
+    if (lua_isnumber(L, 3))
+    {
+        lua_Number num = lua_tonumber(L, 3);
+        int intValue = (int)num;
+        float floatValue = (float)num;
+        
+        switch(member)
+        {
+        case ES_EntityType:
+            es->entityType = intValue;
+            return 1;
+        case ES_Number:
+            es->number = intValue;
+            return 1;
+        case ES_MsgTime:
+            es->msg_time = floatValue;
+            return 1;
+        case ES_MessageNum:
+            es->messagenum = intValue;
+            return 1;
+        case ES_ModelIndex:
+            es->modelindex = intValue;
+            return 1;
+        case ES_Sequence:
+            es->sequence = intValue;
+            return 1;
+        case ES_Frame:
+            es->frame = floatValue;
+            return 1;
+        case ES_ColorMap:
+            es->colormap = intValue;
+            return 1;
+        case ES_Skin:
+            es->skin = intValue;
+            return 1;
+        case ES_Solid:
+            es->solid = intValue;
+            return 1;
+        case ES_Effects:
+            es->effects = intValue;
+            return 1;
+        case ES_Scale:
+            es->scale = floatValue;
+            return 1;
+        case ES_eFlags:
+            es->eflags = intValue;
+            return 1;
+        case ES_RenderMode:
+            es->rendermode = intValue;
+            return 1;
+        case ES_RenderAmt:
+            es->renderamt = intValue;
+            return 1;
+        case ES_RenderFx:
+            es->renderfx = intValue;
+            return 1;
+        case ES_MoveType:
+            es->movetype = intValue;
+            return 1;
+        case ES_AnimTime:
+            es->animtime = floatValue;
+            return 1;
+        case ES_FrameRate:
+            es->framerate = floatValue;
+            return 1;
+        case ES_Body:
+            es->body = intValue;
+            return 1;
+        case ES_AimEnt:
+            es->aiment = intValue;
+            return 1;
+        case ES_Owner:
+            es->owner = intValue;
+            return 1;
+        case ES_Friction:
+            es->friction = floatValue;
+            return 1;
+        case ES_Gravity:
+            es->gravity = floatValue;
+            return 1;
+        case ES_Team:
+            es->team = intValue;
+            return 1;
+        case ES_PlayerClass:
+            es->playerclass = intValue;
+            return 1;
+        case ES_Health:
+            es->health = intValue;
+            return 1;
+        case ES_Spectator:
+            es->spectator = intValue;
+            return 1;
+        case ES_WeaponModel:
+            es->weaponmodel = intValue;
+            return 1;
+        case ES_GaitSequence:
+            es->gaitsequence = intValue;
+            return 1;
+        case ES_UseHull:
+            es->usehull = intValue;
+            return 1;
+        case ES_OldButtons:
+            es->oldbuttons = intValue;
+            return 1;
+        case ES_OnGround:
+            es->onground = intValue;
+            return 1;
+        case ES_iStepLeft:
+            es->iStepLeft = intValue;
+            return 1;
+        case ES_flFallVelocity:
+            es->flFallVelocity = floatValue;
+            return 1;
+        case ES_FOV:
+            es->fov = intValue;
+            return 1;
+        case ES_WeaponAnim:
+            es->weaponanim = intValue;
+            return 1;
+        case ES_ImpactTime:
+            es->impacttime = floatValue;
+            return 1;
+        case ES_StartTime:
+            es->starttime = floatValue;
+            return 1;
+        case ES_iUser1:
+            es->iuser1 = intValue;
+            return 1;
+        case ES_iUser2:
+            es->iuser2 = intValue;
+            return 1;
+        case ES_iUser3:
+            es->iuser3 = intValue;
+            return 1;
+        case ES_iUser4:
+            es->iuser4 = intValue;
+            return 1;
+        case ES_fUser1:
+            es->fuser1 = floatValue;
+            return 1;
+        case ES_fUser2:
+            es->fuser2 = floatValue;
+            return 1;
+        case ES_fUser3:
+            es->fuser3 = floatValue;
+            return 1;
+        case ES_fUser4:
+            es->fuser4 = floatValue;
+            return 1;
+        default:
+            break;
+        }
+    }
+
+    if (lua_istable(L, 3))
+    {
+        float vec[3];
+        get_vec_from_table(L, 3, vec);
+        
+        switch(member)
+        {
+        case ES_Origin:
+            es->origin.x = vec[0];
+            es->origin.y = vec[1];
+            es->origin.z = vec[2];
+            return 1;
+        case ES_Angles:
+            es->angles.x = vec[0];
+            es->angles.y = vec[1];
+            es->angles.z = vec[2];
+            return 1;
+        case ES_Velocity:
+            es->velocity.x = vec[0];
+            es->velocity.y = vec[1];
+            es->velocity.z = vec[2];
+            return 1;
+        case ES_Mins:
+            es->mins.x = vec[0];
+            es->mins.y = vec[1];
+            es->mins.z = vec[2];
+            return 1;
+        case ES_Maxs:
+            es->maxs.x = vec[0];
+            es->maxs.y = vec[1];
+            es->maxs.z = vec[2];
+            return 1;
+        case ES_BaseVelocity:
+            es->basevelocity.x = vec[0];
+            es->basevelocity.y = vec[1];
+            es->basevelocity.z = vec[2];
+            return 1;
+        case ES_StartPos:
+            es->startpos.x = vec[0];
+            es->startpos.y = vec[1];
+            es->startpos.z = vec[2];
+            return 1;
+        case ES_EndPos:
+            es->endpos.x = vec[0];
+            es->endpos.y = vec[1];
+            es->endpos.z = vec[2];
+            return 1;
+        case ES_vUser1:
+            es->vuser1.x = vec[0];
+            es->vuser1.y = vec[1];
+            es->vuser1.z = vec[2];
+            return 1;
+        case ES_vUser2:
+            es->vuser2.x = vec[0];
+            es->vuser2.y = vec[1];
+            es->vuser2.z = vec[2];
+            return 1;
+        case ES_vUser3:
+            es->vuser3.x = vec[0];
+            es->vuser3.y = vec[1];
+            es->vuser3.z = vec[2];
+            return 1;
+        case ES_vUser4:
+            es->vuser4.x = vec[0];
+            es->vuser4.y = vec[1];
+            es->vuser4.z = vec[2];
+            return 1;
+        case ES_RenderColor:
+            es->rendercolor.r = (byte)vec[0];
+            es->rendercolor.g = (byte)vec[1];
+            es->rendercolor.b = (byte)vec[2];
+            return 1;
+        case ES_Controller:
+            for (int i = 0; i < 4; i++)
+            {
+                lua_rawgeti(L, 3, i + 1);
+                es->controller[i] = lua_tointeger(L, -1);
+                lua_pop(L, 1);
+            }
+            return 1;
+        case ES_Blending:
+            for (int i = 0; i < 4; i++)
+            {
+                lua_rawgeti(L, 3, i + 1);
+                es->blending[i] = (float)lua_tonumber(L, -1);
+                lua_pop(L, 1);
+            }
+            return 1;
+        default:
+            break;
+        }
+    }
+
+    luaL_error(L, "Unknown or unsupported EntityState member: %d", member);
+    return 0;
+}
+
 cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 {
     lua_State *L = (lua_State *)params[1];
@@ -897,10 +1445,12 @@ void InitLuaAPI(lua_State* L) {
     lua_register(L, "amxx2_entities_in_pvs", L_EntitiesInPVS);
     lua_register(L, "amxx2_remove_entity", L_RemoveEntity);
     lua_register(L, "amxx2_get_game_dir", L_GetGameDir);
-    lua_register(L, "amxx_trace_line", L_trace_line);
-    lua_register(L, "amxx_trace_toss", L_trace_toss);
-    lua_register(L, "amxx_trace_monster_hull", L_trace_monster_hull);
-    lua_register(L, "amxx_trace_hull", L_trace_hull);
+    lua_register(L, "amxx2_trace_line", L_trace_line);
+    lua_register(L, "amxx2_trace_toss", L_trace_toss);
+    lua_register(L, "amxx2_trace_monster_hull", L_trace_monster_hull);
+    lua_register(L, "amxx2_trace_hull", L_trace_hull);
+    lua_register(L, "amxx2_get_es", L_get_es);
+    lua_register(L, "amxx2_set_es", L_set_es);
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   
@@ -1490,6 +2040,63 @@ void DispatchTouch_Post(edict_t *pentTouched, edict_t *pentOther) {
         }
     }
     RETURN_META(MRES_IGNORED);
+}
+
+int AddToFullPack(struct entity_state_s *state, int e, edict_t *ent, edict_t *host, int hostflags, int player, unsigned char *pSet)
+{
+    if (g_L) {
+        lua_getglobal(g_L, "Meta_AddToFullPack");
+        if (lua_isfunction(g_L, -1)) {
+            lua_pushinteger(g_L, reinterpret_cast<lua_Integer>(state));
+            lua_pushinteger(g_L, e);
+            lua_pushentity(g_L, ent);
+            lua_pushentity(g_L, host);
+            lua_pushinteger(g_L, hostflags);
+            lua_pushinteger(g_L, player);
+            lua_pushinteger(g_L, reinterpret_cast<lua_Integer>(pSet));
+            if (lua_pcall(g_L, 7, 1, 0) == 0) {
+                if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    RETURN_META_VALUE(MRES_IGNORED,(META_RES)meta_res);
+                }
+                lua_pop(g_L, 1);
+            } else {
+                lua_pop(g_L, 1);
+            }
+        } else {
+            lua_pop(g_L, 1);
+        }
+    }
+    RETURN_META_VALUE(MRES_IGNORED,0);
+}
+int AddToFullPack_Post(struct entity_state_s *state, int e, edict_t *ent, edict_t *host, int hostflags, int player, unsigned char *pSet)
+{
+    if (g_L) {
+        lua_getglobal(g_L, "Meta_AddToFullPack_Post");
+        if (lua_isfunction(g_L, -1)) {
+            lua_pushinteger(g_L, reinterpret_cast<lua_Integer>(state));
+            lua_pushinteger(g_L, e);
+            lua_pushentity(g_L, ent);
+            lua_pushentity(g_L, host);
+            lua_pushinteger(g_L, hostflags);
+            lua_pushinteger(g_L, player);
+            lua_pushinteger(g_L, reinterpret_cast<lua_Integer>(pSet));
+            if (lua_pcall(g_L, 7, 1, 0) == 0) {
+                if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    RETURN_META_VALUE(MRES_IGNORED,(META_RES)meta_res);
+                }
+                lua_pop(g_L, 1);
+            } else {
+                lua_pop(g_L, 1);
+            }
+        } else {
+            lua_pop(g_L, 1);
+        }
+    }
+    RETURN_META_VALUE(MRES_IGNORED,0);
 }
 
 void CmdStart(const edict_t *player, const struct usercmd_s *_cmd, unsigned int random_seed) {
