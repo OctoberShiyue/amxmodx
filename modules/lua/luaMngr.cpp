@@ -2118,7 +2118,7 @@ bool SV_EmitSound2(IRehldsHook_SV_EmitSound2 *chain,
                     if (lua_toboolean(g_L, -1))
                     {
                         lua_pop(g_L, 1);
-                        return true;
+                        return chain->callNext(entity, receiver, channel, sample, volume, attenuation, flags, pitch, emitFlags, pOrigin);
                     }else{
                         lua_pop(g_L, 1);
                         return false;
