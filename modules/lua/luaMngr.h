@@ -34,6 +34,18 @@ cell UTIL_ExecNative(AMX *amx, const char *Nativename, cell *params);
 edict_t *ED_Alloc(IRehldsHook_ED_Alloc *chain);
 void ED_Free(IRehldsHook_ED_Free *chain, edict_t *ed);
 
+bool SV_EmitSound2(IRehldsHook_SV_EmitSound2 *chain,
+                    edict_t *entity,
+                    IGameClient *receiver,
+                    int channel,
+                    const char *sample,
+                    float volume,
+                    float attenuation,
+                    int flags,
+                    int pitch,
+                    int emitFlags,
+                    const float *pOrigin);
+
 
 
 enum EntityState

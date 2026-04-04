@@ -318,6 +318,80 @@ static int L_BuildSoundMsg(lua_State *L)
     return 0;
 }
 
+static int L_receiver_is_null(lua_State *L)
+{
+    if (lua_isnil(L, 1))
+    {
+        lua_pushboolean(L, 1);
+        return 1;
+    }
+    if (!lua_islightuserdata(L, 1))
+    {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    void *p = lua_touserdata(L, 1);
+    lua_pushboolean(L, p == nullptr);
+    return 1;
+}
+
+static int L_receiver_equal(lua_State *L)
+{
+    void *a = nullptr;
+    void *b = nullptr;
+
+    if (!lua_isnil(L, 1) && lua_islightuserdata(L, 1)) a = lua_touserdata(L, 1);
+    if (!lua_isnil(L, 2) && lua_islightuserdata(L, 2)) b = lua_touserdata(L, 2);
+
+    lua_pushboolean(L, a == b);
+    return 1;
+}
+
+// Direct call of RehldsFuncs->SV_EmitSound2 for Lua.
+// Lua receiver should be the lightuserdata value passed into the Rehlds_SV_EmitSound2 callback.
+static int L_SV_EmitSound2_call(lua_State *L)
+{
+    if (!HasReHlds || !RehldsFuncs || !RehldsFuncs->SV_EmitSound2)
+    {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *entity = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+
+    IGameClient *receiver = nullptr;
+    if (!lua_isnil(L, 2))
+    {
+        if (!lua_islightuserdata(L, 2))
+        {
+            return luaL_error(L, "receiver must be lightuserdata or nil");
+        }
+        receiver = reinterpret_cast<IGameClient *>(lua_touserdata(L, 2));
+    }
+
+    int channel = (int)luaL_checkinteger(L, 3);
+    const char *sample = luaL_checkstring(L, 4);
+    float volume = (float)luaL_checknumber(L, 5);
+    float attenuation = (float)luaL_checknumber(L, 6);
+    int flags = (int)luaL_checkinteger(L, 7);
+    int pitch = (int)luaL_checkinteger(L, 8);
+    int emitFlags = (int)luaL_checkinteger(L, 9);
+
+    float origin[3] = {0.0f, 0.0f, 0.0f};
+    const float *pOrigin = nullptr;
+    if (lua_istable(L, 10))
+    {
+        get_vec_from_table(L, 10, origin);
+        pOrigin = origin;
+    }
+
+    bool res = RehldsFuncs->SV_EmitSound2(entity, receiver, channel, sample, volume, attenuation,
+                                          flags, pitch, emitFlags, pOrigin);
+    lua_pushboolean(L, res ? 1 : 0);
+    return 1;
+}
+
 static int L_PrecacheModel(lua_State *L)
 {
     lua_pushinteger(L, PRECACHE_MODEL(luaL_checkstring(L, 1)));
@@ -1424,6 +1498,9 @@ void InitLuaAPI(lua_State* L) {
     lua_register(L, "amxx2_random_float", L_RandomFloat);
     lua_register(L, "amxx2_time", L_Time); 
     lua_register(L, "amxx2_build_sound_msg", L_BuildSoundMsg);
+    lua_register(L, "amxx2_sv_emit_sound2", L_SV_EmitSound2_call);
+    lua_register(L, "amxx2_receiver_is_null", L_receiver_is_null);
+    lua_register(L, "amxx2_receiver_equal", L_receiver_equal);
     lua_register(L, "amxx2_precache_model", L_PrecacheModel);
     lua_register(L, "amxx2_precache_sound", L_PrecacheSound);
     lua_register(L, "amxx2_set_model", L_SetModel);
@@ -1869,6 +1946,7 @@ void OnAmxxAttach()
 
     RehldsHookchains->ED_Alloc()->registerHook(&ED_Alloc, HC_PRIORITY_LOW);
     RehldsHookchains->ED_Free()->registerHook(&ED_Free, HC_PRIORITY_HIGH);
+    RehldsHookchains->SV_EmitSound2()->registerHook(&SV_EmitSound2, HC_PRIORITY_HIGH);
     
     MF_AddNatives(LuaNatives);
 
@@ -1984,6 +2062,82 @@ void ED_Free(IRehldsHook_ED_Free *chain, edict_t *ed)
         else lua_pop(g_L, 1);
     }
     chain->callNext(ed);
+}
+
+/* 47. SV_EmitSound2 */
+bool SV_EmitSound2(IRehldsHook_SV_EmitSound2 *chain,
+                    edict_t *entity,
+                    IGameClient *receiver,
+                    int channel,
+                    const char *sample,
+                    float volume,
+                    float attenuation,
+                    int flags,
+                    int pitch,
+                    int emitFlags,
+                    const float *pOrigin)
+{
+    if (g_L)
+    {
+        lua_getglobal(g_L, "Rehlds_SV_EmitSound2");
+        if (lua_isfunction(g_L, -1))
+        {
+            lua_pushentity(g_L, entity);
+
+            // IGameClient* receiver has no direct edict conversion here.
+            // Expose it as lightuserdata so Lua can do identity comparisons.
+            lua_pushlightuserdata(g_L, receiver);
+
+            lua_pushinteger(g_L, channel);
+            lua_pushstring(g_L, sample ? sample : "");
+            lua_pushnumber(g_L, (lua_Number)volume);
+            lua_pushnumber(g_L, (lua_Number)attenuation);
+            lua_pushinteger(g_L, flags);
+            lua_pushinteger(g_L, pitch);
+            lua_pushinteger(g_L, emitFlags);
+
+            lua_newtable(g_L);
+            float origin[3] = {0.0f, 0.0f, 0.0f};
+            if (pOrigin)
+            {
+                origin[0] = pOrigin[0];
+                origin[1] = pOrigin[1];
+                origin[2] = pOrigin[2];
+            }
+            for (int i = 0; i < 3; ++i)
+            {
+                lua_pushnumber(g_L, (lua_Number)origin[i]);
+                lua_rawseti(g_L, -2, i + 1);
+            }
+
+            // Lua returns boolean: true => handled (skip next), false => continue chain.
+            if (lua_pcall(g_L, 10, 1, 0) == 0)
+            {
+                if (lua_isboolean(g_L, -1))
+                {
+                    if (lua_toboolean(g_L, -1))
+                    {
+                        lua_pop(g_L, 1);
+                        return true;
+                    }else{
+                        lua_pop(g_L, 1);
+                        return false;
+                    }
+                }
+                lua_pop(g_L, 1);
+            }
+            else
+            {
+                lua_pop(g_L, 1);
+            }
+        }
+        else
+        {
+            lua_pop(g_L, 1);
+        }
+    }
+
+    return chain->callNext(entity, receiver, channel, sample, volume, attenuation, flags, pitch, emitFlags, pOrigin);
 }
 
 
