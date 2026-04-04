@@ -347,6 +347,36 @@ static int L_receiver_equal(lua_State *L)
     return 1;
 }
 
+static int L_receiver_id(lua_State *L)
+{
+    if (lua_isnil(L, 1))
+    {
+        return 0;
+    }
+    if (!lua_islightuserdata(L, 1))
+    {
+        return 0;
+    }
+    IGameClient *receiver = reinterpret_cast<IGameClient *>(lua_touserdata(L, 1));
+    lua_pushinteger(L, receiver ? receiver->GetId() : 0);
+    return 1;
+}
+
+static int L_receiver_to(lua_State *L)
+{
+    if (lua_isnil(L, 1))
+    {
+        return 0;
+    }
+    if (!lua_isnumber(L, 1))
+    {
+        return 0;
+    }
+    lua_pushlightuserdata(L, RehldsSvs->GetClient(luaL_checkinteger(L, 1)));
+    return 1;
+}
+
+
 // Direct call of RehldsFuncs->SV_EmitSound2 for Lua.
 // Lua receiver should be the lightuserdata value passed into the Rehlds_SV_EmitSound2 callback.
 static int L_SV_EmitSound2_call(lua_State *L)
@@ -1501,6 +1531,8 @@ void InitLuaAPI(lua_State* L) {
     lua_register(L, "amxx2_sv_emit_sound2", L_SV_EmitSound2_call);
     lua_register(L, "amxx2_receiver_is_null", L_receiver_is_null);
     lua_register(L, "amxx2_receiver_equal", L_receiver_equal);
+    lua_register(L, "amxx2_receiver_id", L_receiver_id);
+    lua_register(L, "amxx2_receiver_to", L_receiver_to);
     lua_register(L, "amxx2_precache_model", L_PrecacheModel);
     lua_register(L, "amxx2_precache_sound", L_PrecacheSound);
     lua_register(L, "amxx2_set_model", L_SetModel);
