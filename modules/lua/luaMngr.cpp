@@ -18,6 +18,27 @@ inline void lua_pushentity(lua_State* L,const edict_t* pent) {
         lua_pushinteger(L, 0);
 }
 
+// ---------------------------------------------------------
+// 辅助函数：从 Lua table 提取 {x, y, z} 坐标
+// ---------------------------------------------------------
+static void get_vec_from_table(lua_State *L, int idx, float *vec)
+{
+    if (lua_istable(L, idx))
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            lua_rawgeti(L, idx, i + 1);
+            vec[i] = (float)lua_tonumber(L, -1);
+            lua_pop(L, 1);
+        }
+    }
+    else
+    {
+        vec[0] = vec[1] = vec[2] = 0.0f;
+    }
+}
+
+
 
 // 1. 定义数据结构
 enum VarType {
@@ -194,7 +215,314 @@ static int Lua_CallPawnFunction_Proxy(lua_State *L)
     cell pawn_ret = MF_ExecuteForward(forwardId, (cell)L);
     return pawn_ret;
 }
+// ---------------------------------------------------------
+// 引擎消息函数 Lua 绑定
+// ---------------------------------------------------------
+static int L_message_begin(lua_State *L)
+{
+    int msg_dest = (int)luaL_checkinteger(L, 1);
+    int msg_type = (int)luaL_checkinteger(L, 2);
 
+    float origin[3] = {0.0f, 0.0f, 0.0f};
+    float *pOrigin = nullptr;
+
+    if (lua_istable(L, 3))
+    {
+        get_vec_from_table(L, 3, origin);
+        pOrigin = origin;
+    }
+
+    edict_t *ed = nullptr;
+    if (lua_isnumber(L, 4))
+    {
+        int entIndex = (int)lua_tointeger(L, 4);
+        if (entIndex > 0) ed = INDEXENT(entIndex);
+    }
+
+    // 调用 SDK 宏
+    MESSAGE_BEGIN(msg_dest, msg_type, pOrigin, ed);
+    return 0;
+}
+
+static int L_message_end(lua_State *L)
+{
+    MESSAGE_END();
+    return 0;
+}
+
+static int L_write_byte(lua_State *L) { WRITE_BYTE((int)luaL_checkinteger(L, 1)); return 0; }
+static int L_write_char(lua_State *L) { WRITE_CHAR((int)luaL_checkinteger(L, 1)); return 0; }
+static int L_write_short(lua_State *L) { WRITE_SHORT((int)luaL_checkinteger(L, 1)); return 0; }
+static int L_write_long(lua_State *L) { WRITE_LONG((int)luaL_checkinteger(L, 1)); return 0; }
+static int L_write_angle(lua_State *L) { WRITE_ANGLE((float)luaL_checknumber(L, 1)); return 0; }
+static int L_write_coord(lua_State *L) { WRITE_COORD((float)luaL_checknumber(L, 1)); return 0; }
+static int L_write_string(lua_State *L) { WRITE_STRING(luaL_checkstring(L, 1)); return 0; }
+static int L_write_entity(lua_State *L) { WRITE_ENTITY((int)luaL_checkinteger(L, 1)); return 0; }
+
+// ---------------------------------------------------------
+// 引擎工具函数绑定
+// ---------------------------------------------------------
+
+static int L_RandomLong(lua_State *L)
+{
+    int32_t lLow = (int32_t)luaL_checkinteger(L, 1);
+    int32_t lHigh = (int32_t)luaL_checkinteger(L, 2);
+    lua_pushinteger(L, RANDOM_LONG(lLow, lHigh));
+    return 1;
+}
+
+static int L_RandomFloat(lua_State *L)
+{
+    float flLow = (float)luaL_checknumber(L, 1);
+    float flHigh = (float)luaL_checknumber(L, 2);
+    lua_pushnumber(L, RANDOM_FLOAT(flLow, flHigh));
+    return 1;
+}
+
+static int L_Time(lua_State *L)
+{
+    // HL 引擎没有直接的 TIME 宏，时间通常存储在 gpGlobals 里
+    if (gpGlobals) {
+        lua_pushnumber(L, gpGlobals->time);
+    } else {
+        lua_pushnumber(L, 0.0);
+    }
+    return 1;
+}
+
+static int L_BuildSoundMsg(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *entity = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+    
+    int channel = (int)luaL_checkinteger(L, 2);
+    const char *sample = luaL_checkstring(L, 3);
+    float volume = (float)luaL_checknumber(L, 4);
+    float attenuation = (float)luaL_checknumber(L, 5);
+    int fFlags = (int)luaL_checkinteger(L, 6);
+    int pitch = (int)luaL_checkinteger(L, 7);
+    int msg_dest = (int)luaL_checkinteger(L, 8);
+    int msg_type = (int)luaL_checkinteger(L, 9);
+
+    float origin[3];
+    float *pOrigin = nullptr;
+    if (lua_istable(L, 10))
+    {
+        get_vec_from_table(L, 10, origin);
+        pOrigin = origin;
+    }
+
+    int edIndex = (int)luaL_optinteger(L, 11, 0);
+    edict_t *ed = (edIndex > 0) ? INDEXENT(edIndex) : nullptr;
+
+    BUILD_SOUND_MSG(entity, channel, sample, volume, attenuation, fFlags, pitch, msg_dest, msg_type, pOrigin, ed);
+    return 0;
+}
+
+static int L_PrecacheModel(lua_State *L)
+{
+    lua_pushinteger(L, PRECACHE_MODEL(luaL_checkstring(L, 1)));
+    return 1;
+}
+
+static int L_PrecacheSound(lua_State *L)
+{
+    lua_pushinteger(L, PRECACHE_SOUND(luaL_checkstring(L, 1)));
+    return 1;
+}
+
+static int L_SetModel(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *e = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+    if (e) SET_MODEL(e, luaL_checkstring(L, 2));
+    return 0;
+}
+
+static int L_ModelIndex(lua_State *L)
+{
+    lua_pushinteger(L, MODEL_INDEX(luaL_checkstring(L, 1)));
+    return 1;
+}
+
+static int L_ModelFrames(lua_State *L)
+{
+    lua_pushinteger(L, MODEL_FRAMES((int)luaL_checkinteger(L, 1)));
+    return 1;
+}
+
+static int L_SetSize(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *e = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+    
+    float min[3], max[3];
+    get_vec_from_table(L, 2, min);
+    get_vec_from_table(L, 3, max);
+
+    if (e) SET_SIZE(e, min, max);
+    return 0;
+}
+
+static int L_ChangeLevel(lua_State *L)
+{
+    CHANGE_LEVEL(luaL_checkstring(L, 1), luaL_optstring(L, 2, ""));
+    return 0;
+}
+
+static int L_GetSpawnParms(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *ent = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+    if (ent) GET_SPAWN_PARMS(ent);
+    return 0;
+}
+
+static int L_SaveSpawnParms(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *ent = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+    if (ent) SAVE_SPAWN_PARMS(ent);
+    return 0;
+}
+
+static int L_VecToYaw(lua_State *L)
+{
+    float vec[3];
+    get_vec_from_table(L, 1, vec);
+    lua_pushnumber(L, VEC_TO_YAW(vec));
+    return 1;
+}
+
+static int L_VecToAngles(lua_State *L)
+{
+    float vecIn[3], vecOut[3];
+    get_vec_from_table(L, 1, vecIn);
+    VEC_TO_ANGLES(vecIn, vecOut);
+
+    lua_newtable(L);
+    for (int i = 0; i < 3; i++)
+    {
+        lua_pushnumber(L, vecOut[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+    return 1;
+}
+
+static int L_MoveToOrigin(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *ent = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+    
+    float goal[3];
+    get_vec_from_table(L, 2, goal);
+    
+    float dist = (float)luaL_checknumber(L, 3);
+    int moveType = (int)luaL_checkinteger(L, 4);
+
+    if (ent) MOVE_TO_ORIGIN(ent, goal, dist, moveType);
+    return 0;
+}
+
+static int L_ChangeYaw(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *ent = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+    // 宏定义中写的是 oldCHANGE_YAW，这里直接使用原指针最安全
+    if (ent) g_engfuncs.pfnChangeYaw(ent); 
+    return 0;
+}
+
+static int L_ChangePitch(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *ent = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+    if (ent) CHANGE_PITCH(ent);
+    return 0;
+}
+
+static int L_FindEntityByString(lua_State *L)
+{
+    int startEntIdx = (int)luaL_checkinteger(L, 1);
+    edict_t *pStart = (startEntIdx > 0) ? INDEXENT(startEntIdx) : nullptr;
+    
+    edict_t *result = FIND_ENTITY_BY_STRING(pStart, luaL_checkstring(L, 2), luaL_checkstring(L, 3));
+    
+    if (result && !result->free) lua_pushinteger(L, ENTINDEX(result));
+    else lua_pushnil(L);
+    return 1;
+}
+
+static int L_GetEntityIllum(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *ent = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+    lua_pushinteger(L, ent ? GETENTITYILLUM(ent) : 0);
+    return 1;
+}
+
+static int L_FindEntityInSphere(lua_State *L)
+{
+    int startEntIdx = (int)luaL_checkinteger(L, 1);
+    edict_t *pStart = (startEntIdx > 0) ? INDEXENT(startEntIdx) : nullptr;
+    
+    float org[3];
+    get_vec_from_table(L, 2, org);
+
+    edict_t *result = FIND_ENTITY_IN_SPHERE(pStart, org, (float)luaL_checknumber(L, 3));
+    
+    if (result && !result->free) lua_pushinteger(L, ENTINDEX(result));
+    else lua_pushnil(L);
+    return 1;
+}
+
+static int L_FindClientInPVS(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *ent = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+
+    if (ent) {
+        edict_t *result = FIND_CLIENT_IN_PVS(ent);
+        if (result && !result->free) {
+            lua_pushinteger(L, ENTINDEX(result));
+            return 1;
+        }
+    }
+    lua_pushnil(L);
+    return 1;
+}
+
+static int L_EntitiesInPVS(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *ent = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+
+    if (ent && g_engfuncs.pfnEntitiesInPVS) {
+        edict_t *result = g_engfuncs.pfnEntitiesInPVS(ent);
+        if (result && !result->free) {
+            lua_pushinteger(L, ENTINDEX(result));
+            return 1;
+        }
+    }
+    lua_pushnil(L);
+    return 1;
+}
+
+static int L_RemoveEntity(lua_State *L)
+{
+    int entIndex = (int)luaL_checkinteger(L, 1);
+    edict_t *ent = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
+    if (ent) REMOVE_ENTITY(ent);
+    return 0;
+}
+
+static int L_GetGameDir(lua_State *L)
+{
+    char szGameDir[256] = {0};
+    GET_GAME_DIR(szGameDir);
+    lua_pushstring(L, szGameDir);
+    return 1;
+}
 cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 {
     lua_State *L = (lua_State *)params[1];
@@ -258,6 +586,42 @@ void InitLuaAPI(lua_State* L) {
     lua_register(L, "amxx2_is_nullent", L_is_nullent);
     lua_register(L, "amxx2_entity_players_range", L_entity_players_range);
     lua_register(L, "amxx2_entity_all_range", L_entity_all_range);
+    // 注册消息系统 API
+    lua_register(L, "amxx2_message_begin", L_message_begin);
+    lua_register(L, "amxx2_message_end", L_message_end);
+    lua_register(L, "amxx2_write_byte", L_write_byte);
+    lua_register(L, "amxx2_write_char", L_write_char);
+    lua_register(L, "amxx2_write_short", L_write_short);
+    lua_register(L, "amxx2_write_long", L_write_long);
+    lua_register(L, "amxx2_write_angle", L_write_angle);
+    lua_register(L, "amxx2_write_coord", L_write_coord);
+    lua_register(L, "amxx2_write_string", L_write_string);
+    lua_register(L, "amxx2_write_entity", L_write_entity);
+    lua_register(L, "amxx2_random_long", L_RandomLong);
+    lua_register(L, "amxx2_random_float", L_RandomFloat);
+    lua_register(L, "amxx2_time", L_Time); 
+    lua_register(L, "amxx2_build_sound_msg", L_BuildSoundMsg);
+    lua_register(L, "amxx2_precache_model", L_PrecacheModel);
+    lua_register(L, "amxx2_precache_sound", L_PrecacheSound);
+    lua_register(L, "amxx2_set_model", L_SetModel);
+    lua_register(L, "amxx2_model_index", L_ModelIndex);
+    lua_register(L, "amxx2_model_frames", L_ModelFrames);
+    lua_register(L, "amxx2_set_size", L_SetSize);
+    lua_register(L, "amxx2_change_level", L_ChangeLevel);
+    lua_register(L, "amxx2_get_spawn_parms", L_GetSpawnParms);
+    lua_register(L, "amxx2_save_spawn_parms", L_SaveSpawnParms);
+    lua_register(L, "amxx2_vec_to_yaw", L_VecToYaw);
+    lua_register(L, "amxx2_vec_to_angles", L_VecToAngles);
+    lua_register(L, "amxx2_move_to_origin", L_MoveToOrigin);
+    lua_register(L, "amxx2_change_yaw", L_ChangeYaw);
+    lua_register(L, "amxx2_change_pitch", L_ChangePitch);
+    lua_register(L, "amxx2_find_entity_by_string", L_FindEntityByString);
+    lua_register(L, "amxx2_get_entity_illum", L_GetEntityIllum);
+    lua_register(L, "amxx2_find_entity_in_sphere", L_FindEntityInSphere);
+    lua_register(L, "amxx2_find_client_in_pvs", L_FindClientInPVS);
+    lua_register(L, "amxx2_entities_in_pvs", L_EntitiesInPVS);
+    lua_register(L, "amxx2_remove_entity", L_RemoveEntity);
+    lua_register(L, "amxx2_get_game_dir", L_GetGameDir);
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   
