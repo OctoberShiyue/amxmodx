@@ -523,6 +523,281 @@ static int L_GetGameDir(lua_State *L)
     lua_pushstring(L, szGameDir);
     return 1;
 }
+
+static int L_trace_line(lua_State *L)
+{
+    float v1[3], v2[3];
+    get_vec_from_table(L, 1, v1);
+    get_vec_from_table(L, 2, v2);
+    int noMonsters = (int)luaL_checkinteger(L, 3);
+    
+    edict_t *pSkip = nullptr;
+    if (lua_isnumber(L, 4))
+    {
+        int entIndex = (int)lua_tointeger(L, 4);
+        if (entIndex > 0) pSkip = INDEXENT(entIndex);
+    }
+
+    TraceResult tr; 
+    
+    TRACE_LINE(v1, v2, noMonsters, pSkip, &tr);
+
+    lua_newtable(L);
+    
+    lua_pushstring(L, "fAllSolid");
+    lua_pushboolean(L, tr.fAllSolid);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fStartSolid");
+    lua_pushboolean(L, tr.fStartSolid);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fInOpen");
+    lua_pushboolean(L, tr.fInOpen);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fInWater");
+    lua_pushboolean(L, tr.fInWater);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "flFraction");
+    lua_pushnumber(L, tr.flFraction);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "vecEndPos");
+    lua_newtable(L);
+    for (int i = 0; i < 3; i++) {
+        lua_pushnumber(L, tr.vecEndPos[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "flPlaneDist");
+    lua_pushnumber(L, tr.flPlaneDist);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "vecPlaneNormal");
+    lua_newtable(L);
+    for (int i = 0; i < 3; i++) {
+        lua_pushnumber(L, tr.vecPlaneNormal[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "pHit");
+    if (tr.pHit) lua_pushinteger(L, ENTINDEX(tr.pHit));
+    else lua_pushinteger(L, 0);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "iHitgroup");
+    lua_pushinteger(L, tr.iHitgroup);
+    lua_settable(L, -3);
+
+    return 1;
+}
+
+static int L_trace_toss(lua_State *L)
+{
+    int pentIndex = (int)luaL_checkinteger(L, 1);
+    int pentToIgnoreIndex = (int)luaL_optinteger(L, 2, -1);
+    
+    edict_t *pent = INDEXENT(pentIndex);
+    edict_t *pentToIgnore = (pentToIgnoreIndex > 0) ? INDEXENT(pentToIgnoreIndex) : NULL;
+    
+    TraceResult tr;
+    TRACE_TOSS(pent, pentToIgnore, &tr);
+
+    lua_newtable(L);
+    
+    lua_pushstring(L, "fAllSolid");
+    lua_pushboolean(L, tr.fAllSolid);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fStartSolid");
+    lua_pushboolean(L, tr.fStartSolid);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fInOpen");
+    lua_pushboolean(L, tr.fInOpen);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fInWater");
+    lua_pushboolean(L, tr.fInWater);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "flFraction");
+    lua_pushnumber(L, tr.flFraction);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "vecEndPos");
+    lua_newtable(L);
+    for (int i = 0; i < 3; i++) {
+        lua_pushnumber(L, tr.vecEndPos[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "flPlaneDist");
+    lua_pushnumber(L, tr.flPlaneDist);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "vecPlaneNormal");
+    lua_newtable(L);
+    for (int i = 0; i < 3; i++) {
+        lua_pushnumber(L, tr.vecPlaneNormal[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "pHit");
+    if (tr.pHit) lua_pushinteger(L, ENTINDEX(tr.pHit));
+    else lua_pushinteger(L, 0);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "iHitgroup");
+    lua_pushinteger(L, tr.iHitgroup);
+    lua_settable(L, -3);
+
+    return 1;
+}
+
+static int L_trace_monster_hull(lua_State *L)
+{
+    int pentIndex = (int)luaL_checkinteger(L, 1);
+    float v1[3], v2[3];
+    get_vec_from_table(L, 2, v1);
+    get_vec_from_table(L, 3, v2);
+    int noMonsters = (int)luaL_checkinteger(L, 4);
+    int pentToSkipIndex = (int)luaL_optinteger(L, 5, 0);
+    
+    edict_t *pent = INDEXENT(pentIndex);
+    edict_t *pentToSkip = (pentToSkipIndex > 0) ? INDEXENT(pentToSkipIndex) : NULL;
+    
+    TraceResult tr;
+    TRACE_MONSTER_HULL(pent, v1, v2, noMonsters, pentToSkip, &tr);
+
+    lua_newtable(L);
+    
+    lua_pushstring(L, "fAllSolid");
+    lua_pushboolean(L, tr.fAllSolid);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fStartSolid");
+    lua_pushboolean(L, tr.fStartSolid);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fInOpen");
+    lua_pushboolean(L, tr.fInOpen);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fInWater");
+    lua_pushboolean(L, tr.fInWater);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "flFraction");
+    lua_pushnumber(L, tr.flFraction);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "vecEndPos");
+    lua_newtable(L);
+    for (int i = 0; i < 3; i++) {
+        lua_pushnumber(L, tr.vecEndPos[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "flPlaneDist");
+    lua_pushnumber(L, tr.flPlaneDist);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "vecPlaneNormal");
+    lua_newtable(L);
+    for (int i = 0; i < 3; i++) {
+        lua_pushnumber(L, tr.vecPlaneNormal[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "pHit");
+    if (tr.pHit) lua_pushinteger(L, ENTINDEX(tr.pHit));
+    else lua_pushinteger(L, 0);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "iHitgroup");
+    lua_pushinteger(L, tr.iHitgroup);
+    lua_settable(L, -3);
+
+    return 1;
+}
+
+static int L_trace_hull(lua_State *L)
+{
+    float v1[3], v2[3];
+    get_vec_from_table(L, 1, v1);
+    get_vec_from_table(L, 2, v2);
+    int noMonsters = (int)luaL_checkinteger(L, 3);
+    int hullNumber = (int)luaL_checkinteger(L, 4);
+    int pentToSkipIndex = (int)luaL_optinteger(L, 5, 0);
+    
+    edict_t *pentToSkip = (pentToSkipIndex > 0) ? INDEXENT(pentToSkipIndex) : NULL;
+    
+    TraceResult tr;
+    TRACE_HULL(v1, v2, noMonsters, hullNumber, pentToSkip, &tr);
+
+    lua_newtable(L);
+    
+    lua_pushstring(L, "fAllSolid");
+    lua_pushboolean(L, tr.fAllSolid);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fStartSolid");
+    lua_pushboolean(L, tr.fStartSolid);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fInOpen");
+    lua_pushboolean(L, tr.fInOpen);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "fInWater");
+    lua_pushboolean(L, tr.fInWater);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "flFraction");
+    lua_pushnumber(L, tr.flFraction);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "vecEndPos");
+    lua_newtable(L);
+    for (int i = 0; i < 3; i++) {
+        lua_pushnumber(L, tr.vecEndPos[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "flPlaneDist");
+    lua_pushnumber(L, tr.flPlaneDist);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "vecPlaneNormal");
+    lua_newtable(L);
+    for (int i = 0; i < 3; i++) {
+        lua_pushnumber(L, tr.vecPlaneNormal[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "pHit");
+    if (tr.pHit) lua_pushinteger(L, ENTINDEX(tr.pHit));
+    else lua_pushinteger(L, 0);
+    lua_settable(L, -3);
+    
+    lua_pushstring(L, "iHitgroup");
+    lua_pushinteger(L, tr.iHitgroup);
+    lua_settable(L, -3);
+
+    return 1;
+}
+
 cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 {
     lua_State *L = (lua_State *)params[1];
@@ -622,6 +897,10 @@ void InitLuaAPI(lua_State* L) {
     lua_register(L, "amxx2_entities_in_pvs", L_EntitiesInPVS);
     lua_register(L, "amxx2_remove_entity", L_RemoveEntity);
     lua_register(L, "amxx2_get_game_dir", L_GetGameDir);
+    lua_register(L, "amxx_trace_line", L_trace_line);
+    lua_register(L, "amxx_trace_toss", L_trace_toss);
+    lua_register(L, "amxx_trace_monster_hull", L_trace_monster_hull);
+    lua_register(L, "amxx_trace_hull", L_trace_hull);
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   
