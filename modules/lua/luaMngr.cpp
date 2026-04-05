@@ -2322,9 +2322,11 @@ void PM_Move(struct playermove_s *ppmove, int server ) {
         if (g_L) {
             lua_getglobal(g_L, "Meta_PM_Move_Player");
             if (lua_isfunction(g_L, -1)) {
+                float diff = GET_DISTANCE(ppmove->origin, ppmove->physents[j].origin);
                 lua_pushinteger(g_L, ppmove->player_index);
                 lua_pushinteger(g_L, entTarget);
-                if (lua_pcall(g_L, 2, 1, 0) == 0) {
+                lua_pushnumber(g_L, diff);
+                if (lua_pcall(g_L, 3, 1, 0) == 0) {
                     if (lua_isboolean(g_L, -1)) {
                         if (lua_toboolean(g_L, -1))
                         {

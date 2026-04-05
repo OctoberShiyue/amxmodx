@@ -4,6 +4,7 @@
 
 #define	MAX_PHYSENTS 600 		  // Must have room for all entities in the world.
 #define MAX_MOVEENTS 64
+#define GET_DISTANCE(a, b)		((a - b).Length2D())
 
 #include <main.h>
 
