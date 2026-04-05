@@ -2281,6 +2281,80 @@ int AddToFullPack_Post(struct entity_state_s *state, int e, edict_t *ent, edict_
     RETURN_META_VALUE(MRES_IGNORED,0);
 }
 
+int ShouldCollide(edict_t *pentTouched, edict_t *pentOther) {
+
+    if (g_L) {
+        lua_getglobal(g_L, "Meta_ShouldCollide");
+        if (lua_isfunction(g_L, -1)) {
+            lua_pushentity(g_L, pentTouched);
+            lua_pushentity(g_L, pentOther);
+            if (lua_pcall(g_L, 2, 1, 0) == 0) {
+                if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+                    RETURN_META_VALUE(MRES_SUPERCEDE,(META_RES)meta_res);
+                }
+                lua_pop(g_L, 1);
+            } else {
+                lua_pop(g_L, 1);
+            }
+        } else {
+            lua_pop(g_L, 1);
+        }
+    }
+    RETURN_META_VALUE(MRES_IGNORED,1);
+}
+
+void PM_Move(struct playermove_s *ppmove, int server ) {
+	if (ppmove->deadflag != DEAD_NO || ppmove->dead || ppmove->spectator )
+		return;
+
+	int j, numphysent = -1;
+	for (j = numphysent; j < ppmove->numphysent; ++j)
+	{
+		int entTarget = ppmove->physents[j].player;
+		if (!entTarget)
+		{
+			ppmove->physents[numphysent++] = ppmove->physents[j];
+			continue;
+		}
+
+        if (g_L) {
+            lua_getglobal(g_L, "Meta_PM_Move_Player");
+            if (lua_isfunction(g_L, -1)) {
+                lua_pushinteger(g_L, ppmove->player_index);
+                lua_pushinteger(g_L, entTarget);
+                if (lua_pcall(g_L, 2, 1, 0) == 0) {
+                    if (lua_isboolean(g_L, -1)) {
+                        if (lua_toboolean(g_L, -1))
+                        {
+                            lua_pop(g_L, 1);
+                            ppmove->physents[numphysent++] = ppmove->physents[j];
+			                continue;
+                        }else{
+                            lua_pop(g_L, 1);
+                            continue;
+                        }
+                    }else{
+                        lua_pop(g_L, 1);
+                        ppmove->physents[numphysent++] = ppmove->physents[j];
+			            continue;
+                    }
+                } else {
+                    lua_pop(g_L, 1);
+                    ppmove->physents[numphysent++] = ppmove->physents[j];
+			        continue;
+                }
+            } else {
+                lua_pop(g_L, 1);
+                ppmove->physents[numphysent++] = ppmove->physents[j];
+			    continue;
+            }
+        }
+	}
+	ppmove->numphysent = numphysent;
+}
+
 void CmdStart(const edict_t *player, const struct usercmd_s *_cmd, unsigned int random_seed) {
     if (g_L) {
         lua_getglobal(g_L, "Meta_CmdStart");
