@@ -2306,7 +2306,8 @@ int ShouldCollide(edict_t *pentTouched, edict_t *pentOther) {
 }
 
 void PM_Move(struct playermove_s *ppmove, int server ) {
-	if (ppmove->deadflag != DEAD_NO || ppmove->dead || ppmove->spectator )
+    edict_t* ent = INDEXENT(ppmove->player_index+1);
+	if (ppmove->deadflag != DEAD_NO || ppmove->dead || ppmove->spectator || (ent && ent->v.deadflag != DEAD_NO && ent->v.health<=0))
 		return;
 
 	int j, numphysent = -1;
@@ -2322,10 +2323,9 @@ void PM_Move(struct playermove_s *ppmove, int server ) {
         if (g_L) {
             lua_getglobal(g_L, "Meta_PM_Move_Player");
             if (lua_isfunction(g_L, -1)) {
-                float diff = GET_DISTANCE(ppmove->origin, ppmove->physents[j].origin);
-                lua_pushinteger(g_L, ppmove->player_index);
+                lua_pushinteger(g_L, ENTINDEX(ent));
                 lua_pushinteger(g_L, entTarget);
-                lua_pushnumber(g_L, diff);
+                lua_pushnumber(g_L, GET_DISTANCE(ent->v.origin, INDEXENT(entTarget)->v.origin));
                 if (lua_pcall(g_L, 3, 1, 0) == 0) {
                     if (lua_isboolean(g_L, -1)) {
                         if (lua_toboolean(g_L, -1))
