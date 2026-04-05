@@ -117,6 +117,11 @@ static int L_is_nullent(lua_State* L)
     lua_pushboolean(L, !is_ent_valid(lua_tointeger(L, 1)));
     return 1;
 }
+static int L_is_player_in_game(lua_State* L)
+{
+    lua_pushboolean(L, MF_IsPlayerIngame(lua_tointeger(L, 1)));
+    return 1;
+}
 // 查找指定半径内的玩家，并通过回调函数返回
 static int L_entity_players_range(lua_State *L)
 {
@@ -316,110 +321,6 @@ static int L_BuildSoundMsg(lua_State *L)
 
     BUILD_SOUND_MSG(entity, channel, sample, volume, attenuation, fFlags, pitch, msg_dest, msg_type, pOrigin, ed);
     return 0;
-}
-
-static int L_receiver_is_null(lua_State *L)
-{
-    if (lua_isnil(L, 1))
-    {
-        lua_pushboolean(L, 1);
-        return 1;
-    }
-    if (!lua_islightuserdata(L, 1))
-    {
-        lua_pushboolean(L, 0);
-        return 1;
-    }
-    void *p = lua_touserdata(L, 1);
-    lua_pushboolean(L, p == nullptr);
-    return 1;
-}
-
-static int L_receiver_equal(lua_State *L)
-{
-    void *a = nullptr;
-    void *b = nullptr;
-
-    if (!lua_isnil(L, 1) && lua_islightuserdata(L, 1)) a = lua_touserdata(L, 1);
-    if (!lua_isnil(L, 2) && lua_islightuserdata(L, 2)) b = lua_touserdata(L, 2);
-
-    lua_pushboolean(L, a == b);
-    return 1;
-}
-
-static int L_receiver_id(lua_State *L)
-{
-    if (lua_isnil(L, 1))
-    {
-        return 0;
-    }
-    if (!lua_islightuserdata(L, 1))
-    {
-        return 0;
-    }
-    IGameClient *receiver = reinterpret_cast<IGameClient *>(lua_touserdata(L, 1));
-    lua_pushinteger(L, receiver ? receiver->GetId() : 0);
-    return 1;
-}
-
-static int L_receiver_to(lua_State *L)
-{
-    if (lua_isnil(L, 1))
-    {
-        return 0;
-    }
-    if (!lua_isnumber(L, 1))
-    {
-        return 0;
-    }
-    lua_pushlightuserdata(L, RehldsSvs->GetClient(luaL_checkinteger(L, 1)));
-    return 1;
-}
-
-
-// Direct call of RehldsFuncs->SV_EmitSound2 for Lua.
-// Lua receiver should be the lightuserdata value passed into the Rehlds_SV_EmitSound2 callback.
-static int L_SV_EmitSound2_call(lua_State *L)
-{
-    if (!HasReHlds || !RehldsFuncs || !RehldsFuncs->SV_EmitSound2)
-    {
-        lua_pushboolean(L, 0);
-        return 1;
-    }
-
-    int entIndex = (int)luaL_checkinteger(L, 1);
-    edict_t *entity = (entIndex > 0) ? INDEXENT(entIndex) : nullptr;
-
-    IGameClient *receiver = nullptr;
-    if (!lua_isnil(L, 2))
-    {
-        if (!lua_islightuserdata(L, 2))
-        {
-            return luaL_error(L, "receiver must be lightuserdata or nil");
-        }
-        receiver = reinterpret_cast<IGameClient *>(lua_touserdata(L, 2));
-    }
-
-    int channel = (int)luaL_checkinteger(L, 3);
-    const char *sample = luaL_checkstring(L, 4);
-    float volume = (float)luaL_checknumber(L, 5);
-    float attenuation = (float)luaL_checknumber(L, 6);
-    int flags = (int)luaL_checkinteger(L, 7);
-    int pitch = (int)luaL_checkinteger(L, 8);
-    int emitFlags = (int)luaL_checkinteger(L, 9);
-
-    float origin[3] = {0.0f, 0.0f, 0.0f};
-    const float *pOrigin = nullptr;
-    if (lua_istable(L, 10))
-    {
-        get_vec_from_table(L, 10, origin);
-        pOrigin = origin;
-    }
-
-    bool res = RehldsFuncs->SV_EmitSound2(entity, receiver, channel, sample, volume, attenuation,
-                                          flags, pitch, emitFlags, pOrigin);
-    lua_pushboolean(L, res ? 1 : 0);
-    return 1;
 }
 
 static int L_PrecacheModel(lua_State *L)
@@ -1494,12 +1395,6 @@ cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 
     return 1;
 }
-
-/*
-** Lua for AMX Mod X 完整适配层
-** 支持 Lua 5.4.x
-*/
-
 // ---------------------------------------------------------
 // Native 实现: 生命周期
 // ---------------------------------------------------------
@@ -1507,6 +1402,7 @@ void InitLuaAPI(lua_State* L) {
     lua_register(L, "amxx_get_gametime", L_get_gametime);
     lua_register(L, "amxx_random_num", L_random_num);
     lua_register(L, "amxx2_is_nullent", L_is_nullent);
+    lua_register(L, "amxx2_is_player_in_game", L_is_player_in_game);
     lua_register(L, "amxx2_entity_players_range", L_entity_players_range);
     lua_register(L, "amxx2_entity_all_range", L_entity_all_range);
     // 注册消息系统 API
@@ -1524,11 +1420,6 @@ void InitLuaAPI(lua_State* L) {
     lua_register(L, "amxx2_random_float", L_RandomFloat);
     lua_register(L, "amxx2_time", L_Time); 
     lua_register(L, "amxx2_build_sound_msg", L_BuildSoundMsg);
-    lua_register(L, "amxx2_sv_emit_sound2", L_SV_EmitSound2_call);
-    lua_register(L, "amxx2_receiver_is_null", L_receiver_is_null);
-    lua_register(L, "amxx2_receiver_equal", L_receiver_equal);
-    lua_register(L, "amxx2_receiver_id", L_receiver_id);
-    lua_register(L, "amxx2_receiver_to", L_receiver_to);
     lua_register(L, "amxx2_precache_model", L_PrecacheModel);
     lua_register(L, "amxx2_precache_sound", L_PrecacheSound);
     lua_register(L, "amxx2_set_model", L_SetModel);
@@ -2105,66 +1996,61 @@ bool SV_EmitSound2(IRehldsHook_SV_EmitSound2 *chain,
                     int emitFlags,
                     const float *pOrigin)
 {
-    if (g_L)
+    if (g_L && RehldsFuncs && RehldsSvs)
     {
-        lua_getglobal(g_L, "Rehlds_SV_EmitSound2");
-        if (lua_isfunction(g_L, -1))
+        // 只有当 receiver 为空（全局广播声音）时才进行拆分群发
+        if (!receiver) 
         {
-            lua_pushentity(g_L, entity);
-
-            // IGameClient* receiver has no direct edict conversion here.
-            // Expose it as lightuserdata so Lua can do identity comparisons.
-            lua_pushlightuserdata(g_L, receiver);
-
-            lua_pushinteger(g_L, channel);
-            lua_pushstring(g_L, sample ? sample : "");
-            lua_pushnumber(g_L, (lua_Number)volume);
-            lua_pushnumber(g_L, (lua_Number)attenuation);
-            lua_pushinteger(g_L, flags);
-            lua_pushinteger(g_L, pitch);
-            lua_pushinteger(g_L, emitFlags);
-
-            lua_newtable(g_L);
-            float origin[3] = {0.0f, 0.0f, 0.0f};
-            if (pOrigin)
+            lua_getglobal(g_L, "Rehlds_SV_EmitSound_filter");
+            if (lua_isfunction(g_L, -1))
             {
-                origin[0] = pOrigin[0];
-                origin[1] = pOrigin[1];
-                origin[2] = pOrigin[2];
-            }
-            for (int i = 0; i < 3; ++i)
-            {
-                lua_pushnumber(g_L, (lua_Number)origin[i]);
-                lua_rawseti(g_L, -2, i + 1);
-            }
+                lua_pop(g_L, 1); // 确认是函数后先弹出来，保持栈平衡
 
-            // Lua returns boolean: true => handled (skip next), false => continue chain.
-            if (lua_pcall(g_L, 10, 1, 0) == 0)
-            {
-                if (lua_isboolean(g_L, -1))
+                // 玩家索引严格从 1 到 32 (引擎支持的最大玩家数)
+                for (int i = 1; i <= 32; ++i) 
                 {
-                    if (lua_toboolean(g_L, -1))
+                    if (!MF_IsPlayerIngame(i))
+                        continue;
+
+                    lua_getglobal(g_L, "Rehlds_SV_EmitSound_filter");
+                    lua_pushentity(g_L, entity);
+                    lua_pushinteger(g_L, i); 
+
+                    if (lua_pcall(g_L, 2, 1, 0) == 0)
                     {
+                        bool disable = lua_toboolean(g_L, -1) != 0;
                         lua_pop(g_L, 1);
-                        return chain->callNext(entity, receiver, channel, sample, volume, attenuation, flags, pitch, emitFlags, pOrigin);
-                    }else{
+
+                        if (!disable)
+                        {
+                            // 注意这里：GetClient 传入的是 i - 1 
+                            // 因为 EntIndex(1~32) 对应的 ClientSlot 是 0~31
+                            IGameClient* cl = RehldsSvs->GetClient(i - 1);
+                            if (cl) 
+                            {
+                                RehldsFuncs->SV_EmitSound2(entity, cl, channel, sample, volume, attenuation, flags, pitch, emitFlags, pOrigin);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 打印报错可以加在这里：printf("Lua Error: %s\n", lua_tostring(g_L, -1));
                         lua_pop(g_L, 1);
-                        return false;
                     }
                 }
-                lua_pop(g_L, 1);
+                // 拦截掉原本的群发发包
+                return false; 
             }
             else
             {
                 lua_pop(g_L, 1);
             }
         }
-        else
-        {
-            lua_pop(g_L, 1);
-        }
     }
 
+    // 1. 如果不是全局声音 (receiver 不为空)
+    // 2. 或者 Lua 没挂载成功
+    // 走引擎默认逻辑
     return chain->callNext(entity, receiver, channel, sample, volume, attenuation, flags, pitch, emitFlags, pOrigin);
 }
 
