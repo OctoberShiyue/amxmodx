@@ -906,10 +906,8 @@ static int L_trace_hull(lua_State *L)
 // ---------------------------------------------------------
 static int L_get_es(lua_State *L)
 {
-    int esHandle = (int)luaL_checkinteger(L, 1);
+    entity_state_t *es = reinterpret_cast<entity_state_t *>(lua_touserdata(L, 1));
     int member = (int)luaL_checkinteger(L, 2);
-
-    entity_state_t *es = reinterpret_cast<entity_state_t *>(esHandle);
 
     switch(member)
     {
@@ -1194,10 +1192,8 @@ static int L_get_es(lua_State *L)
 
 static int L_set_es(lua_State *L)
 {
-    int esHandle = (int)luaL_checkinteger(L, 1);
+    entity_state_t *es = reinterpret_cast<entity_state_t *>(lua_touserdata(L, 1));
     int member = (int)luaL_checkinteger(L, 2);
-
-    entity_state_t *es = reinterpret_cast<entity_state_t *>(esHandle);
 
     if (lua_isnumber(L, 3))
     {
@@ -2233,13 +2229,13 @@ int AddToFullPack(struct entity_state_s *state, int e, edict_t *ent, edict_t *ho
     if (g_L) {
         lua_getglobal(g_L, "Meta_AddToFullPack");
         if (lua_isfunction(g_L, -1)) {
-            lua_pushinteger(g_L, reinterpret_cast<lua_Integer>(state));
+            lua_pushlightuserdata(g_L, state);
             lua_pushinteger(g_L, e);
             lua_pushentity(g_L, ent);
             lua_pushentity(g_L, host);
             lua_pushinteger(g_L, hostflags);
             lua_pushinteger(g_L, player);
-            lua_pushinteger(g_L, reinterpret_cast<lua_Integer>(pSet));
+            lua_pushlightuserdata(g_L, pSet);
             if (lua_pcall(g_L, 7, 1, 0) == 0) {
                 if (lua_isnumber(g_L, -1)) {
                     int meta_res = lua_tointeger(g_L, -1);
@@ -2261,13 +2257,13 @@ int AddToFullPack_Post(struct entity_state_s *state, int e, edict_t *ent, edict_
     if (g_L) {
         lua_getglobal(g_L, "Meta_AddToFullPack_Post");
         if (lua_isfunction(g_L, -1)) {
-            lua_pushinteger(g_L, reinterpret_cast<lua_Integer>(state));
+            lua_pushlightuserdata(g_L, state);
             lua_pushinteger(g_L, e);
             lua_pushentity(g_L, ent);
             lua_pushentity(g_L, host);
             lua_pushinteger(g_L, hostflags);
             lua_pushinteger(g_L, player);
-            lua_pushinteger(g_L, reinterpret_cast<lua_Integer>(pSet));
+            lua_pushlightuserdata(g_L, pSet);
             if (lua_pcall(g_L, 7, 1, 0) == 0) {
                 if (lua_isnumber(g_L, -1)) {
                     int meta_res = lua_tointeger(g_L, -1);
