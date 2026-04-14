@@ -224,28 +224,85 @@ static int Lua_CallPawnFunction_Proxy(lua_State *L)
 // ---------------------------------------------------------
 static int L_message_begin(lua_State *L)
 {
+    // 获取前两个必填参数
     int msg_dest = (int)luaL_checkinteger(L, 1);
     int msg_type = (int)luaL_checkinteger(L, 2);
 
-    float origin[3] = {0.0f, 0.0f, 0.0f};
-    float *pOrigin = nullptr;
-
-    if (lua_istable(L, 3))
+    // 1. 验证 Message ID (完美复刻 AMX 的安全性拦截)
+    if (msg_type < 1 || (msg_type > 63 && !GET_USER_MSG_NAME(PLID, msg_type, NULL)))
     {
-        get_vec_from_table(L, 3, origin);
-        pOrigin = origin;
+        // 使用 luaL_error 中断执行并向 Lua 抛出错误
+        return luaL_error(L, "Plugin called message_begin with an invalid message id (%d).", msg_type);
     }
 
-    edict_t *ed = nullptr;
-    if (lua_isnumber(L, 4))
+    int numparam = lua_gettop(L); // 获取 Lua 传入的参数总数
+    float vecOrigin[3] = {0.0f, 0.0f, 0.0f};
+
+    // 2. 根据 msg_dest 的类型，严格校验和提取对应参数
+    switch (msg_dest)
     {
-        int entIndex = (int)lua_tointeger(L, 4);
-        if (entIndex > 0) ed = INDEXENT(entIndex);
+        case MSG_BROADCAST:
+        case MSG_ALL:
+        case MSG_SPEC:
+        case MSG_INIT:
+            // 这些类型不需要坐标 (Origin) 也不需要实体 (Edict)
+            MESSAGE_BEGIN(msg_dest, msg_type, NULL);
+            break;
+
+        case MSG_PVS: 
+        case MSG_PAS:
+        case MSG_PVS_R: 
+        case MSG_PAS_R:
+            // 这些类型需要 3 个参数，且第 3 个参数必须是坐标
+            if (numparam < 3)
+            {
+                return luaL_error(L, "Invalid number of parameters passed (expected at least 3 for MSG_PVS/PAS)");
+            }
+
+            if (lua_istable(L, 3))
+            {
+                // 调用你自定义的辅助函数
+                get_vec_from_table(L, 3, vecOrigin); 
+            }
+            else
+            {
+                return luaL_error(L, "Argument 3 (origin) must be a table");
+            }
+
+            MESSAGE_BEGIN(msg_dest, msg_type, vecOrigin);
+            break;
+
+        case MSG_ONE_UNRELIABLE:
+        case MSG_ONE:
+            { // <--- 新增的大括号，限定作用域
+            if (numparam < 4)
+            {
+                return luaL_error(L, "Invalid number of parameters passed (expected at least 4 for MSG_ONE)");
+            }
+
+            edict_t *ed = nullptr;
+            if (lua_isnumber(L, 4))
+            {
+                int entIndex = (int)lua_tointeger(L, 4);
+                if (entIndex > 0) 
+                {
+                    ed = INDEXENT(entIndex);
+                }
+            }
+            else
+            {
+                return luaL_error(L, "Argument 4 (entity index) must be a number");
+            }
+
+            MESSAGE_BEGIN(msg_dest, msg_type, NULL, ed);
+            break;
+        } // <--- 新增的大括号结尾
+            
+        default:
+            return luaL_error(L, "Invalid message destination (%d)", msg_dest);
     }
 
-    // 调用 SDK 宏
-    MESSAGE_BEGIN(msg_dest, msg_type, pOrigin, ed);
-    return 0;
+    return 0; // 无返回值返回给 Lua
 }
 
 static int L_message_end(lua_State *L)
