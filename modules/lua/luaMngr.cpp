@@ -5,6 +5,7 @@ bool HasReGameDll;
 
 
 lua_State *g_L = nullptr;
+clientdata_t g_cd_glb;
 // float g_fCurrentTime;
 // float g_fNextActionTime;
 // typedef ke::HashMap<ke::AString, int,int> g_FuncIdMap;
@@ -1403,6 +1404,180 @@ static int L_set_es(lua_State *L)
     luaL_error(L, "Unknown or unsupported EntityState member: %d", member);
     return 0;
 }
+static void push_vec3_to_table(lua_State *L, float x, float y, float z)
+{
+    lua_newtable(L);
+    lua_pushnumber(L, x); lua_rawseti(L, -2, 1);
+    lua_pushnumber(L, y); lua_rawseti(L, -2, 2);
+    lua_pushnumber(L, z); lua_rawseti(L, -2, 3);
+}
+// ---------------------------------------------------------
+// amxx2_get_cd
+// Lua 调用示例: local val = amxx2_get_cd(cd_handle, cd_enum)
+// ---------------------------------------------------------
+static int L_get_cd(lua_State *L)
+{
+    // 获取 cd 句柄
+    lua_Integer handle = luaL_optinteger(L, 1, 0);
+    clientdata_s *cd;
+    if (handle == 0)
+        cd = &g_cd_glb;
+    else
+        cd = reinterpret_cast<clientdata_s *>((intptr_t)handle);
+
+    int member = (int)luaL_checkinteger(L, 2);
+
+    switch(member)
+    {
+    // --- 向量 (返回 Table {x, y, z}) ---
+    case CD_Origin:     push_vec3_to_table(L, cd->origin.x, cd->origin.y, cd->origin.z); return 1;
+    case CD_Velocity:   push_vec3_to_table(L, cd->velocity.x, cd->velocity.y, cd->velocity.z); return 1;
+    case CD_PunchAngle: push_vec3_to_table(L, cd->punchangle.x, cd->punchangle.y, cd->punchangle.z); return 1;
+    case CD_ViewOfs:    push_vec3_to_table(L, cd->view_ofs.x, cd->view_ofs.y, cd->view_ofs.z); return 1;
+    case CD_vUser1:     push_vec3_to_table(L, cd->vuser1.x, cd->vuser1.y, cd->vuser1.z); return 1;
+    case CD_vUser2:     push_vec3_to_table(L, cd->vuser2.x, cd->vuser2.y, cd->vuser2.z); return 1;
+    case CD_vUser3:     push_vec3_to_table(L, cd->vuser3.x, cd->vuser3.y, cd->vuser3.z); return 1;
+    case CD_vUser4:     push_vec3_to_table(L, cd->vuser4.x, cd->vuser4.y, cd->vuser4.z); return 1;
+
+    // --- 浮点数 Float (AMX 中使用了 amx_ftoc 的变量) ---
+    case CD_Health:       lua_pushnumber(L, cd->health); return 1;
+    case CD_MaxSpeed:     lua_pushnumber(L, cd->maxspeed); return 1;
+    case CD_FOV:          lua_pushnumber(L, cd->fov); return 1;
+    case CD_flNextAttack: lua_pushnumber(L, cd->m_flNextAttack); return 1;
+    case CD_fUser1:       lua_pushnumber(L, cd->fuser1); return 1;
+    case CD_fUser2:       lua_pushnumber(L, cd->fuser2); return 1;
+    case CD_fUser3:       lua_pushnumber(L, cd->fuser3); return 1;
+    case CD_fUser4:       lua_pushnumber(L, cd->fuser4); return 1;
+
+    // --- 整数 Integer (AMX 中直接返回的变量) ---
+    case CD_ViewModel:       lua_pushinteger(L, cd->viewmodel); return 1;
+    case CD_Flags:           lua_pushinteger(L, cd->flags); return 1;
+    case CD_WaterLevel:      lua_pushinteger(L, cd->waterlevel); return 1;
+    case CD_WaterType:       lua_pushinteger(L, cd->watertype); return 1;
+    case CD_bInDuck:         lua_pushinteger(L, cd->bInDuck); return 1;
+    case CD_Weapons:         lua_pushinteger(L, cd->weapons); return 1;
+    case CD_flTimeStepSound: lua_pushinteger(L, cd->flTimeStepSound); return 1;
+    case CD_flDuckTime:      lua_pushinteger(L, cd->flDuckTime); return 1;
+    case CD_flSwimTime:      lua_pushinteger(L, cd->flSwimTime); return 1;
+    case CD_WaterJumpTime:   lua_pushinteger(L, cd->waterjumptime); return 1;
+    case CD_WeaponAnim:      lua_pushinteger(L, cd->weaponanim); return 1;
+    case CD_ID:              lua_pushinteger(L, cd->m_iId); return 1;
+    case CD_AmmoShells:      lua_pushinteger(L, cd->ammo_shells); return 1;
+    case CD_AmmoNails:       lua_pushinteger(L, cd->ammo_nails); return 1;
+    case CD_AmmoCells:       lua_pushinteger(L, cd->ammo_cells); return 1;
+    case CD_AmmoRockets:     lua_pushinteger(L, cd->ammo_rockets); return 1;
+    case CD_tfState:         lua_pushinteger(L, cd->tfstate); return 1;
+    case CD_PushMsec:        lua_pushinteger(L, cd->pushmsec); return 1;
+    case CD_DeadFlag:        lua_pushinteger(L, cd->deadflag); return 1;
+    case CD_iUser1:          lua_pushinteger(L, cd->iuser1); return 1;
+    case CD_iUser2:          lua_pushinteger(L, cd->iuser2); return 1;
+    case CD_iUser3:          lua_pushinteger(L, cd->iuser3); return 1;
+    case CD_iUser4:          lua_pushinteger(L, cd->iuser4); return 1;
+
+    // --- 字符串 String ---
+    case CD_PhysInfo:        lua_pushstring(L, cd->physinfo); return 1;
+    }
+
+    return luaL_error(L, "Invalid ClientData member: %d", member);
+}
+
+// ---------------------------------------------------------
+// amxx2_set_cd
+// Lua 调用示例: amxx2_set_cd(cd_handle, cd_enum, value)
+// ---------------------------------------------------------
+static int L_set_cd(lua_State *L)
+{
+    // 获取参数数量保护
+    if (lua_gettop(L) < 3) {
+        return luaL_error(L, "No data passed. Expected: handle, member, value");
+    }
+
+    lua_Integer handle = luaL_optinteger(L, 1, 0);
+    clientdata_s *cd;
+    if (handle == 0)
+        cd = &g_cd_glb;
+    else
+        cd = reinterpret_cast<clientdata_s *>((intptr_t)handle);
+
+    int member = (int)luaL_checkinteger(L, 2);
+
+    // 根据枚举解析第3个参数的值
+    switch(member)
+    {
+    // --- 向量 (期望接收 Table) ---
+    case CD_Origin:
+    case CD_Velocity:
+    case CD_PunchAngle:
+    case CD_ViewOfs:
+    case CD_vUser1:
+    case CD_vUser2:
+    case CD_vUser3:
+    case CD_vUser4:
+    {
+        if (!lua_istable(L, 3)) return luaL_error(L, "Value must be a table for Vector elements");
+        float vec[3] = {0.0f, 0.0f, 0.0f};
+        get_vec_from_table(L, 3, vec); // 调用你已有的辅助函数
+
+        if (member == CD_Origin)     { cd->origin.x = vec[0];     cd->origin.y = vec[1];     cd->origin.z = vec[2]; }
+        else if (member == CD_Velocity)   { cd->velocity.x = vec[0];   cd->velocity.y = vec[1];   cd->velocity.z = vec[2]; }
+        else if (member == CD_PunchAngle) { cd->punchangle.x = vec[0]; cd->punchangle.y = vec[1]; cd->punchangle.z = vec[2]; }
+        else if (member == CD_ViewOfs)    { cd->view_ofs.x = vec[0];   cd->view_ofs.y = vec[1];   cd->view_ofs.z = vec[2]; }
+        else if (member == CD_vUser1)     { cd->vuser1.x = vec[0];     cd->vuser1.y = vec[1];     cd->vuser1.z = vec[2]; }
+        else if (member == CD_vUser2)     { cd->vuser2.x = vec[0];     cd->vuser2.y = vec[1];     cd->vuser2.z = vec[2]; }
+        else if (member == CD_vUser3)     { cd->vuser3.x = vec[0];     cd->vuser3.y = vec[1];     cd->vuser3.z = vec[2]; }
+        else if (member == CD_vUser4)     { cd->vuser4.x = vec[0];     cd->vuser4.y = vec[1];     cd->vuser4.z = vec[2]; }
+        return 0;
+    }
+
+    // --- 浮点数 ---
+    case CD_Health:       cd->health = (float)luaL_checknumber(L, 3); return 0;
+    case CD_MaxSpeed:     cd->maxspeed = (float)luaL_checknumber(L, 3); return 0;
+    case CD_FOV:          cd->fov = (float)luaL_checknumber(L, 3); return 0;
+    case CD_flNextAttack: cd->m_flNextAttack = (float)luaL_checknumber(L, 3); return 0;
+    case CD_fUser1:       cd->fuser1 = (float)luaL_checknumber(L, 3); return 0;
+    case CD_fUser2:       cd->fuser2 = (float)luaL_checknumber(L, 3); return 0;
+    case CD_fUser3:       cd->fuser3 = (float)luaL_checknumber(L, 3); return 0;
+    case CD_fUser4:       cd->fuser4 = (float)luaL_checknumber(L, 3); return 0;
+
+    // --- 整数 ---
+    case CD_ViewModel:       cd->viewmodel = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_Flags:           cd->flags = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_WaterLevel:      cd->waterlevel = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_WaterType:       cd->watertype = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_bInDuck:         cd->bInDuck = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_Weapons:         cd->weapons = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_flTimeStepSound: cd->flTimeStepSound = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_flDuckTime:      cd->flDuckTime = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_flSwimTime:      cd->flSwimTime = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_WaterJumpTime:   cd->waterjumptime = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_WeaponAnim:      cd->weaponanim = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_ID:              cd->m_iId = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_AmmoShells:      cd->ammo_shells = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_AmmoNails:       cd->ammo_nails = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_AmmoCells:       cd->ammo_cells = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_AmmoRockets:     cd->ammo_rockets = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_tfState:         cd->tfstate = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_PushMsec:        cd->pushmsec = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_DeadFlag:        cd->deadflag = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_iUser1:          cd->iuser1 = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_iUser2:          cd->iuser2 = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_iUser3:          cd->iuser3 = (int)luaL_checkinteger(L, 3); return 0;
+    case CD_iUser4:          cd->iuser4 = (int)luaL_checkinteger(L, 3); return 0;
+
+    // --- 字符串 (带溢出保护) ---
+    case CD_PhysInfo:
+    {
+        size_t len;
+        const char *phys = luaL_checklstring(L, 3, &len);
+        // 使用 sizeof 确保不会发生缓冲区溢出
+        strncpy(cd->physinfo, phys, sizeof(cd->physinfo) - 1);
+        cd->physinfo[sizeof(cd->physinfo) - 1] = '\0'; // 确保结尾符安全
+        return 0;
+    }
+    }
+
+    return luaL_error(L, "Invalid ClientData member: %d", member);
+}
 
 cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 {
@@ -1504,6 +1679,8 @@ void InitLuaAPI(lua_State* L) {
     lua_register(L, "amxx2_trace_hull", L_trace_hull);
     lua_register(L, "amxx2_get_es", L_get_es);
     lua_register(L, "amxx2_set_es", L_set_es);
+    lua_register(L, "amxx2_get_cd", L_get_cd);
+    lua_register(L, "amxx2_set_cd", L_set_cd);
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   

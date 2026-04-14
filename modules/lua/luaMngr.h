@@ -147,6 +147,52 @@ enum EntityState
 	ES_vUser4
 };
 
+
+enum ClientData
+{
+	CD_Origin,
+	CD_Velocity,
+	CD_ViewModel,
+	CD_PunchAngle,
+	CD_Flags,
+	CD_WaterLevel,
+	CD_WaterType,
+	CD_ViewOfs,
+	CD_Health,
+	CD_bInDuck,
+	CD_Weapons,
+	CD_flTimeStepSound,
+	CD_flDuckTime,
+	CD_flSwimTime,
+	CD_WaterJumpTime,
+	CD_MaxSpeed,
+	CD_FOV,
+	CD_WeaponAnim,
+	CD_ID,
+	CD_AmmoShells,
+	CD_AmmoNails,
+	CD_AmmoCells,
+	CD_AmmoRockets,
+	CD_flNextAttack,
+	CD_tfState,
+	CD_PushMsec,
+	CD_DeadFlag,
+	CD_PhysInfo,
+	CD_iUser1,
+	CD_iUser2,
+	CD_iUser3,
+	CD_iUser4,
+	CD_fUser1,
+	CD_fUser2,
+	CD_fUser3,
+	CD_fUser4,
+	CD_vUser1,
+	CD_vUser2,
+	CD_vUser3,
+	CD_vUser4
+};
+
+
 typedef struct
 {
 	vec3_t	normal;
