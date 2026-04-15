@@ -6,6 +6,9 @@ binary = AMXX.MetaModule(builder, 'fakemetal')
 binary.compiler.defines += [
   'HAVE_STDINT_H',
 ]
+binary.compiler.cxxincludes += [
+  os.path.join(builder.currentSourcePath, 'lualib'),
+]
 
 binary.sources = [
   '../../public/sdk/amxxmodule.cpp',
@@ -23,6 +26,7 @@ binary.sources = [
   'glb.cpp',
   'fm_tr2.cpp',
   'misc.cpp',
+  'lualib/ljamalg.c',
 ]
 
 if builder.target_platform == 'windows':
@@ -30,6 +34,7 @@ if builder.target_platform == 'windows':
     binary.compiler.linkflags += [
       '/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8,@1',
       '/SECTION:.data,RW',
+      os.path.join(builder.currentSourcePath, 'lualib', 'lj_vm.obj')
     ]
 
 AMXX.modules += [builder.Add(binary)]

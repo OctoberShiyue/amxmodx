@@ -27,6 +27,7 @@
 #include <amtl/am-vector.h>
 #include <IGameConfigs.h>
 #include <HLTypeConversion.h>
+#include "lualib/lua.hpp"
 
 #ifdef DONT_TOUCH_THIS_AGAIN_BAIL
 #define CHECK_ENTITY(x) \
@@ -72,6 +73,7 @@ extern AMX_NATIVE_INFO pev_natives[];
 extern AMX_NATIVE_INFO glb_natives[];
 extern AMX_NATIVE_INFO misc_natives[];
 extern TraceResult g_tr;
+extern lua_State* g_L ;
 
 /* Wouldnt modifying the table AFTER it's memcpy'd be ... pointless?
 extern enginefuncs_t g_EngineFuncs_Table;

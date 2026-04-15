@@ -16,6 +16,7 @@
 /** Optimizations for Fakemeta.  In the end we'll do this for other things too.
  */
 static int g_offset_table[pev_absolute_end] = {-1};
+lua_State* g_L = nullptr;
 
 #define DO_OFFSET(offs)	g_offset_table[offs] = offsetof(entvars_t, offs)
 #define DO_OFFSET_R(named, real, offs) g_offset_table[named] = offsetof(entvars_t, real) + offs
@@ -474,11 +475,18 @@ static cell AMX_NATIVE_CALL amx_pev_serial(AMX* amx, cell* params)
 
 	return ent->serialnumber;
 }
+cell AMX_NATIVE_CALL amx_fakemetal_func_init(AMX* amx, cell* params)
+{
+	lua_State* L = (lua_State*)params[1];
+	g_L=L;
+	return TRUE;
+}
 AMX_NATIVE_INFO pev_natives[] = {
 	{ "pevL",			amx_pev },
 	{ "set_pevL",		amx_set_pev },
 	{ "set_pev_stringL",	amx_set_pev_string },
 	{ "pev_validL",		amx_pev_valid },
 	{ "pev_serialL",		amx_pev_serial },
+	{ "Lfakemetal_func_init", amx_fakemetal_func_init },
 	{NULL,				NULL},
 };
