@@ -1403,6 +1403,10 @@ static int L_fakemeta_engfunc(lua_State* L)
 			iparam1 = static_cast<int>(luaL_checkinteger(L, 4));
 			int skipindex = static_cast<int>(luaL_optinteger(L, 5, -1));
 			TraceResult* tr = &g_tr;
+			if (lua_gettop(L) >= 6 && lua_isuserdata(L, 6))
+			{
+				tr = static_cast<TraceResult*>(lua_touserdata(L, 6));
+			}
 			(*g_engfuncs.pfnTraceLine)(Vec1, Vec2, iparam1, skipindex == -1 ? NULL : TypeConversion.id_to_edict(skipindex), tr);
 			return 0;
 		}
@@ -1413,7 +1417,12 @@ static int L_fakemeta_engfunc(lua_State* L)
 			if (index < 0 || index > gpGlobals->maxEntities)
 				return luaL_error(L, "Invalid entity index");
 			int ignoreindex = static_cast<int>(luaL_optinteger(L, 3, -1));
-			(*g_engfuncs.pfnTraceToss)(TypeConversion.id_to_edict(index), ignoreindex == -1 ? NULL : TypeConversion.id_to_edict(ignoreindex), &g_tr);
+			TraceResult* tr = &g_tr;
+			if (lua_gettop(L) >= 4 && lua_isuserdata(L, 4))
+			{
+				tr = static_cast<TraceResult*>(lua_touserdata(L, 4));
+			}
+			(*g_engfuncs.pfnTraceToss)(TypeConversion.id_to_edict(index), ignoreindex == -1 ? NULL : TypeConversion.id_to_edict(ignoreindex), tr);
 			return 0;
 		}
 
@@ -1426,7 +1435,12 @@ static int L_fakemeta_engfunc(lua_State* L)
 			get_vec_from_lua(L, 4, Vec2);
 			iparam1 = static_cast<int>(luaL_checkinteger(L, 5));
 			int skipindex = static_cast<int>(luaL_optinteger(L, 6, 0));
-			return (*g_engfuncs.pfnTraceMonsterHull)(TypeConversion.id_to_edict(index), Vec1, Vec2, iparam1, skipindex == 0 ? NULL : TypeConversion.id_to_edict(skipindex), &g_tr);
+			TraceResult* tr = &g_tr;
+			if (lua_gettop(L) >= 7 && lua_isuserdata(L, 7))
+			{
+				tr = static_cast<TraceResult*>(lua_touserdata(L, 7));
+			}
+			return (*g_engfuncs.pfnTraceMonsterHull)(TypeConversion.id_to_edict(index), Vec1, Vec2, iparam1, skipindex == 0 ? NULL : TypeConversion.id_to_edict(skipindex), tr);
 		}
 
 	case EngFunc_TraceHull:
@@ -1436,7 +1450,12 @@ static int L_fakemeta_engfunc(lua_State* L)
 			iparam1 = static_cast<int>(luaL_checkinteger(L, 4));
 			iparam2 = static_cast<int>(luaL_checkinteger(L, 5));
 			int skipindex = static_cast<int>(luaL_optinteger(L, 6, 0));
-			(*g_engfuncs.pfnTraceHull)(Vec1, Vec2, iparam1, iparam2, skipindex == 0 ? NULL : TypeConversion.id_to_edict(skipindex), &g_tr);
+			TraceResult* tr = &g_tr;
+			if (lua_gettop(L) >= 7 && lua_isuserdata(L, 7))
+			{
+				tr = static_cast<TraceResult*>(lua_touserdata(L, 7));
+			}
+			(*g_engfuncs.pfnTraceHull)(Vec1, Vec2, iparam1, iparam2, skipindex == 0 ? NULL : TypeConversion.id_to_edict(skipindex), tr);
 			return 0;
 		}
 
@@ -1448,7 +1467,12 @@ static int L_fakemeta_engfunc(lua_State* L)
 			int pent = static_cast<int>(luaL_checkinteger(L, 5));
 			if (pent < 0 || pent > gpGlobals->maxEntities)
 				return luaL_error(L, "Invalid entity index");
-			(*g_engfuncs.pfnTraceModel)(Vec1, Vec2, iparam1, TypeConversion.id_to_edict(pent), &g_tr);
+			TraceResult* tr = &g_tr;
+			if (lua_gettop(L) >= 6 && lua_isuserdata(L, 6))
+			{
+				tr = static_cast<TraceResult*>(lua_touserdata(L, 6));
+			}
+			(*g_engfuncs.pfnTraceModel)(Vec1, Vec2, iparam1, TypeConversion.id_to_edict(pent), tr);
 			return 0;
 		}
 
@@ -1462,6 +1486,22 @@ static int L_fakemeta_engfunc(lua_State* L)
 			temp = (char*)(*g_engfuncs.pfnTraceTexture)(TypeConversion.id_to_edict(index), Vec1, Vec2);
 			lua_pushstring(L, temp ? temp : "NoTexture");
 			return 1;
+		}
+
+	case EngFunc_TraceSphere:
+		{
+			get_vec_from_lua(L, 2, Vec1);
+			get_vec_from_lua(L, 3, Vec2);
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 4));
+			fparam1 = static_cast<float>(luaL_checknumber(L, 5));
+			int skipindex = static_cast<int>(luaL_optinteger(L, 6, 0));
+			TraceResult* tr = &g_tr;
+			if (lua_gettop(L) >= 7 && lua_isuserdata(L, 7))
+			{
+				tr = static_cast<TraceResult*>(lua_touserdata(L, 7));
+			}
+			(*g_engfuncs.pfnTraceSphere)(Vec1, Vec2, iparam1, fparam1, skipindex == 0 ? NULL : TypeConversion.id_to_edict(skipindex), tr);
+			return 0;
 		}
 
 	case EngFunc_GetAimVector:
