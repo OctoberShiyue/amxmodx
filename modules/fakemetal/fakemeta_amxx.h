@@ -73,7 +73,12 @@ extern AMX_NATIVE_INFO pev_natives[];
 extern AMX_NATIVE_INFO glb_natives[];
 extern AMX_NATIVE_INFO misc_natives[];
 extern TraceResult g_tr;
-extern lua_State* g_L ;
+extern lua_State* g_L;
+cell AMX_NATIVE_CALL amx_fakemetal_func_init_tr2(AMX* amx, cell* params);
+cell AMX_NATIVE_CALL amx_fakemetal_func_init_dll(AMX* amx, cell* params);
+cell AMX_NATIVE_CALL amx_fakemetal_func_init_eng(AMX* amx, cell* params);
+cell AMX_NATIVE_CALL amx_fakemetal_func_init_glb(AMX* amx, cell* params);
+cell AMX_NATIVE_CALL amx_fakemetal_func_init_forward(AMX* amx, cell* params);
 
 /* Wouldnt modifying the table AFTER it's memcpy'd be ... pointless?
 extern enginefuncs_t g_EngineFuncs_Table;

@@ -1110,6 +1110,561 @@ static cell AMX_NATIVE_CALL engfunc(AMX *amx, cell *params)
 
 AMX_NATIVE_INFO engfunc_natives[] = {
 	{"engfuncL",			engfunc},
+	{"Lfakemetal_func_init_eng",	amx_fakemetal_func_init_eng},
 	{NULL,				NULL},
 };
+
+static void get_vec_from_lua(lua_State* L, int idx, float* vec)
+{
+	if (lua_istable(L, idx))
+	{
+		lua_rawgeti(L, idx, 1);
+		vec[0] = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, idx, 2);
+		vec[1] = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, idx, 3);
+		vec[2] = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+	}
+	else
+	{
+		vec[0] = vec[1] = vec[2] = 0.0f;
+	}
+}
+
+static void push_vec_to_lua(lua_State* L, const float* vec)
+{
+	lua_createtable(L, 3, 0);
+	lua_pushnumber(L, vec[0]);
+	lua_rawseti(L, -2, 1);
+	lua_pushnumber(L, vec[1]);
+	lua_rawseti(L, -2, 2);
+	lua_pushnumber(L, vec[2]);
+	lua_rawseti(L, -2, 3);
+}
+
+static int L_fakemeta_engfunc(lua_State* L)
+{
+	int type = static_cast<int>(luaL_checkinteger(L, 1));
+	int iparam1 = 0, iparam2 = 0, iparam3 = 0, iparam4 = 0, iparam5 = 0, iparam6 = 0;
+	int entindex = 0;
+	float fparam1 = 0.0f, fparam2 = 0.0f, fparam3 = 0.0f;
+	vec3_t Vec1, Vec2, Vec3, Vec4;
+	const char* temp = nullptr;
+	edict_t* pRet = nullptr;
+
+	switch (type)
+	{
+	case EngFunc_PrecacheModel:
+		temp = luaL_checkstring(L, 2);
+		if (temp[0] == 0) return 0;
+		return (*g_engfuncs.pfnPrecacheModel)((char*)STRING(ALLOC_STRING(temp)));
+
+	case EngFunc_PrecacheSound:
+		temp = luaL_checkstring(L, 2);
+		if (temp[0] == 0) return 0;
+		return (*g_engfuncs.pfnPrecacheSound)((char*)STRING(ALLOC_STRING(temp)));
+
+	case EngFunc_SetModel:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			temp = luaL_checkstring(L, 3);
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			(*g_engfuncs.pfnSetModel)(TypeConversion.id_to_edict(index), (char*)STRING(ALLOC_STRING(temp)));
+			return 0;
+		}
+
+	case EngFunc_ModelIndex:
+		temp = luaL_checkstring(L, 2);
+		return (*g_engfuncs.pfnModelIndex)(temp);
+
+	case EngFunc_ModelFrames:
+		iparam1 = static_cast<int>(luaL_checkinteger(L, 2));
+		return (*g_engfuncs.pfnModelFrames)(iparam1);
+
+	case EngFunc_SetSize:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			get_vec_from_lua(L, 3, Vec1);
+			get_vec_from_lua(L, 4, Vec2);
+			(*g_engfuncs.pfnSetSize)(TypeConversion.id_to_edict(index), Vec1, Vec2);
+			return 0;
+		}
+
+	case EngFunc_ChangeLevel:
+		temp = luaL_checkstring(L, 2);
+		(*g_engfuncs.pfnChangeLevel)(temp, nullptr);
+		return 0;
+
+	case EngFunc_VecToYaw:
+		get_vec_from_lua(L, 2, Vec1);
+		fparam1 = (*g_engfuncs.pfnVecToYaw)(Vec1);
+		lua_pushnumber(L, fparam1);
+		return 1;
+
+	case EngFunc_VecToAngles:
+		get_vec_from_lua(L, 2, Vec1);
+		(*g_engfuncs.pfnVecToAngles)(Vec1, Vec2);
+		push_vec_to_lua(L, Vec2);
+		return 1;
+
+	case EngFunc_MoveToOrigin:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			get_vec_from_lua(L, 3, Vec1);
+			fparam1 = static_cast<float>(luaL_checknumber(L, 4));
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 5));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			(*g_engfuncs.pfnMoveToOrigin)(TypeConversion.id_to_edict(index), Vec1, fparam1, iparam1);
+			return 0;
+		}
+
+	case EngFunc_ChangeYaw:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			(*g_engfuncs.pfnChangeYaw)(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case EngFunc_ChangePitch:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			(*g_engfuncs.pfnChangePitch)(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case EngFunc_FindEntityByString:
+		{
+			int index = static_cast<int>(luaL_optinteger(L, 2, -1));
+			temp = luaL_checkstring(L, 3);
+			const char* value = luaL_checkstring(L, 4);
+			pRet = (*g_engfuncs.pfnFindEntityByString)(index == -1 ? NULL : TypeConversion.id_to_edict(index), temp, value);
+			if (pRet)
+				return ENTINDEX(pRet);
+			return -1;
+		}
+
+	case EngFunc_GetEntityIllum:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			return (*g_engfuncs.pfnGetEntityIllum)(TypeConversion.id_to_edict(index));
+		}
+
+	case EngFunc_FindEntityInSphere:
+		{
+			int index = static_cast<int>(luaL_optinteger(L, 2, -1));
+			get_vec_from_lua(L, 3, Vec1);
+			fparam1 = static_cast<float>(luaL_checknumber(L, 4));
+			pRet = (*g_engfuncs.pfnFindEntityInSphere)(index == -1 ? NULL : TypeConversion.id_to_edict(index), Vec1, fparam1);
+			if (pRet)
+				return ENTINDEX(pRet);
+			return -1;
+		}
+
+	case EngFunc_FindClientInPVS:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			pRet = (*g_engfuncs.pfnFindClientInPVS)(TypeConversion.id_to_edict(index));
+			return pRet ? ENTINDEX(pRet) : -1;
+		}
+
+	case EngFunc_EntitiesInPVS:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			pRet = (*g_engfuncs.pfnEntitiesInPVS)(TypeConversion.id_to_edict(index));
+			return pRet ? ENTINDEX(pRet) : -1;
+		}
+
+	case EngFunc_MakeVectors:
+		get_vec_from_lua(L, 2, Vec1);
+		(*g_engfuncs.pfnMakeVectors)(Vec1);
+		return 0;
+
+	case EngFunc_AngleVectors:
+		get_vec_from_lua(L, 2, Vec1);
+		(*g_engfuncs.pfnAngleVectors)(Vec1, Vec2, Vec3, Vec4);
+		push_vec_to_lua(L, Vec2);
+		push_vec_to_lua(L, Vec3);
+		push_vec_to_lua(L, Vec4);
+		return 3;
+
+	case EngFunc_CreateEntity:
+		pRet = (*g_engfuncs.pfnCreateEntity)();
+		return pRet ? ENTINDEX(pRet) : 0;
+
+	case EngFunc_RemoveEntity:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 1 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			(*g_engfuncs.pfnRemoveEntity)(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case EngFunc_CreateNamedEntity:
+		iparam1 = static_cast<int>(luaL_checkinteger(L, 2));
+		pRet = (*g_engfuncs.pfnCreateNamedEntity)(iparam1);
+		return pRet ? ENTINDEX(pRet) : 0;
+
+	case EngFunc_MakeStatic:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			(*g_engfuncs.pfnMakeStatic)(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case EngFunc_EntIsOnFloor:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			return (*g_engfuncs.pfnEntIsOnFloor)(TypeConversion.id_to_edict(index));
+		}
+
+	case EngFunc_DropToFloor:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			return (*g_engfuncs.pfnDropToFloor)(TypeConversion.id_to_edict(index));
+		}
+
+	case EngFunc_WalkMove:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			fparam1 = static_cast<float>(luaL_checknumber(L, 3));
+			fparam2 = static_cast<float>(luaL_checknumber(L, 4));
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 5));
+			return (*g_engfuncs.pfnWalkMove)(TypeConversion.id_to_edict(index), fparam1, fparam2, iparam1);
+		}
+
+	case EngFunc_SetOrigin:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			get_vec_from_lua(L, 3, Vec1);
+			(*g_engfuncs.pfnSetOrigin)(TypeConversion.id_to_edict(index), Vec1);
+			return 0;
+		}
+
+	case EngFunc_EmitSound:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 3));
+			temp = luaL_checkstring(L, 4);
+			fparam1 = static_cast<float>(luaL_checknumber(L, 5));
+			fparam2 = static_cast<float>(luaL_checknumber(L, 6));
+			iparam2 = static_cast<int>(luaL_checkinteger(L, 7));
+			iparam3 = static_cast<int>(luaL_checkinteger(L, 8));
+			(*g_engfuncs.pfnEmitSound)(TypeConversion.id_to_edict(index), iparam1, temp, fparam1, fparam2, iparam2, iparam3);
+			return 0;
+		}
+
+	case EngFunc_EmitAmbientSound:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			get_vec_from_lua(L, 3, Vec1);
+			temp = luaL_checkstring(L, 4);
+			fparam1 = static_cast<float>(luaL_checknumber(L, 5));
+			fparam2 = static_cast<float>(luaL_checknumber(L, 6));
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 7));
+			iparam2 = static_cast<int>(luaL_checkinteger(L, 8));
+			(*g_engfuncs.pfnEmitAmbientSound)(TypeConversion.id_to_edict(index), Vec1, temp, fparam1, fparam2, iparam1, iparam2);
+			return 0;
+		}
+
+	case EngFunc_TraceLine:
+		{
+			get_vec_from_lua(L, 2, Vec1);
+			get_vec_from_lua(L, 3, Vec2);
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 4));
+			int skipindex = static_cast<int>(luaL_optinteger(L, 5, -1));
+			TraceResult* tr = &g_tr;
+			(*g_engfuncs.pfnTraceLine)(Vec1, Vec2, iparam1, skipindex == -1 ? NULL : TypeConversion.id_to_edict(skipindex), tr);
+			return 0;
+		}
+
+	case EngFunc_TraceToss:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			int ignoreindex = static_cast<int>(luaL_optinteger(L, 3, -1));
+			(*g_engfuncs.pfnTraceToss)(TypeConversion.id_to_edict(index), ignoreindex == -1 ? NULL : TypeConversion.id_to_edict(ignoreindex), &g_tr);
+			return 0;
+		}
+
+	case EngFunc_TraceMonsterHull:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			get_vec_from_lua(L, 3, Vec1);
+			get_vec_from_lua(L, 4, Vec2);
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 5));
+			int skipindex = static_cast<int>(luaL_optinteger(L, 6, 0));
+			return (*g_engfuncs.pfnTraceMonsterHull)(TypeConversion.id_to_edict(index), Vec1, Vec2, iparam1, skipindex == 0 ? NULL : TypeConversion.id_to_edict(skipindex), &g_tr);
+		}
+
+	case EngFunc_TraceHull:
+		{
+			get_vec_from_lua(L, 2, Vec1);
+			get_vec_from_lua(L, 3, Vec2);
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 4));
+			iparam2 = static_cast<int>(luaL_checkinteger(L, 5));
+			int skipindex = static_cast<int>(luaL_optinteger(L, 6, 0));
+			(*g_engfuncs.pfnTraceHull)(Vec1, Vec2, iparam1, iparam2, skipindex == 0 ? NULL : TypeConversion.id_to_edict(skipindex), &g_tr);
+			return 0;
+		}
+
+	case EngFunc_TraceModel:
+		{
+			get_vec_from_lua(L, 2, Vec1);
+			get_vec_from_lua(L, 3, Vec2);
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 4));
+			int pent = static_cast<int>(luaL_checkinteger(L, 5));
+			if (pent < 0 || pent > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			(*g_engfuncs.pfnTraceModel)(Vec1, Vec2, iparam1, TypeConversion.id_to_edict(pent), &g_tr);
+			return 0;
+		}
+
+	case EngFunc_TraceTexture:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			get_vec_from_lua(L, 3, Vec1);
+			get_vec_from_lua(L, 4, Vec2);
+			temp = (char*)(*g_engfuncs.pfnTraceTexture)(TypeConversion.id_to_edict(index), Vec1, Vec2);
+			lua_pushstring(L, temp ? temp : "NoTexture");
+			return 1;
+		}
+
+	case EngFunc_GetAimVector:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			fparam1 = static_cast<float>(luaL_checknumber(L, 3));
+			(*g_engfuncs.pfnGetAimVector)(TypeConversion.id_to_edict(index), fparam1, Vec1);
+			push_vec_to_lua(L, Vec1);
+			return 1;
+		}
+
+	case EngFunc_ParticleEffect:
+		{
+			get_vec_from_lua(L, 2, Vec1);
+			get_vec_from_lua(L, 3, Vec2);
+			fparam1 = static_cast<float>(luaL_checknumber(L, 4));
+			fparam2 = static_cast<float>(luaL_checknumber(L, 5));
+			(*g_engfuncs.pfnParticleEffect)(Vec1, Vec2, fparam1, fparam2);
+			return 0;
+		}
+
+	case EngFunc_LightStyle:
+		{
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 2));
+			temp = luaL_checkstring(L, 3);
+			if (iparam1 < 0 || iparam1 >= MAX_LIGHTSTYLES)
+				return luaL_error(L, "Invalid style %d", iparam1);
+			LightStyleBuffers[iparam1] = temp;
+			(*g_engfuncs.pfnLightStyle)(iparam1, LightStyleBuffers[iparam1].chars());
+			return 0;
+		}
+
+	case EngFunc_DecalIndex:
+		temp = luaL_checkstring(L, 2);
+		return (*g_engfuncs.pfnDecalIndex)(temp);
+
+	case EngFunc_PointContents:
+		get_vec_from_lua(L, 2, Vec1);
+		return (*g_engfuncs.pfnPointContents)(Vec1);
+
+	case EngFunc_FreeEntPrivateData:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			(*g_engfuncs.pfnFreeEntPrivateData)(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case EngFunc_AllocString:
+		temp = luaL_checkstring(L, 2);
+		return (*g_engfuncs.pfnAllocString)(temp);
+
+	case EngFunc_RegUserMsg:
+		temp = luaL_checkstring(L, 2);
+		iparam1 = static_cast<int>(luaL_optinteger(L, 3, 0));
+		return (*g_engfuncs.pfnRegUserMsg)(temp, iparam1);
+
+	case EngFunc_Time:
+		lua_pushnumber(L, (*g_engfuncs.pfnTime)());
+		return 1;
+
+	case EngFunc_CreateFakeClient:
+		temp = luaL_checkstring(L, 2);
+		pRet = (*g_engfuncs.pfnCreateFakeClient)(STRING(ALLOC_STRING(temp)));
+		return pRet ? ENTINDEX(pRet) : 0;
+
+	case EngFunc_RunPlayerMove:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			get_vec_from_lua(L, 3, Vec1);
+			fparam1 = static_cast<float>(luaL_checknumber(L, 4));
+			fparam2 = static_cast<float>(luaL_checknumber(L, 5));
+			fparam3 = static_cast<float>(luaL_checknumber(L, 6));
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 7));
+			iparam2 = static_cast<int>(luaL_checkinteger(L, 8));
+			iparam3 = static_cast<int>(luaL_checkinteger(L, 9));
+			(*g_engfuncs.pfnRunPlayerMove)(TypeConversion.id_to_edict(index), Vec1, fparam1, fparam2, fparam3, iparam1, iparam2, iparam3);
+			return 0;
+		}
+
+	case EngFunc_NumberOfEntities:
+		return (*g_engfuncs.pfnNumberOfEntities)();
+
+	case EngFunc_StaticDecal:
+		{
+			get_vec_from_lua(L, 2, Vec1);
+			iparam1 = static_cast<int>(luaL_checkinteger(L, 3));
+			iparam2 = static_cast<int>(luaL_checkinteger(L, 4));
+			iparam3 = static_cast<int>(luaL_checkinteger(L, 5));
+			(*g_engfuncs.pfnStaticDecal)(Vec1, iparam1, iparam2, iparam3);
+			return 0;
+		}
+
+	case EngFunc_PrecacheGeneric:
+		temp = luaL_checkstring(L, 2);
+		return (*g_engfuncs.pfnPrecacheGeneric)((char*)STRING(ALLOC_STRING(temp)));
+
+	case EngFunc_GetPhysicsInfoString:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			temp = (char*)(*g_engfuncs.pfnGetPhysicsInfoString)(TypeConversion.id_to_edict(index));
+			lua_pushstring(L, temp ? temp : "");
+			return 1;
+		}
+
+	case EngFunc_SetPhysicsKeyValue:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			temp = luaL_checkstring(L, 3);
+			const char* value = luaL_checkstring(L, 4);
+			(*g_engfuncs.pfnSetPhysicsKeyValue)(TypeConversion.id_to_edict(index), temp, value);
+			return 0;
+		}
+
+	case EngFunc_GetPhysicsKeyValue:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			temp = luaL_checkstring(L, 3);
+			temp = (char*)(*g_engfuncs.pfnGetPhysicsKeyValue)(TypeConversion.id_to_edict(index), temp);
+			lua_pushstring(L, temp ? temp : "");
+			return 1;
+		}
+
+	case EngFunc_CheckVisibility:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			return (*g_engfuncs.pfnCheckVisibility)(TypeConversion.id_to_edict(index), nullptr);
+		}
+
+	case EngFunc_GetCurrentPlayer:
+		return (*g_engfuncs.pfnGetCurrentPlayer)();
+
+	case EngFunc_CanSkipPlayer:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			return (*g_engfuncs.pfnCanSkipPlayer)(TypeConversion.id_to_edict(index));
+		}
+
+	case EngFunc_SetGroupMask:
+		iparam1 = static_cast<int>(luaL_checkinteger(L, 2));
+		iparam2 = static_cast<int>(luaL_checkinteger(L, 3));
+		(*g_engfuncs.pfnSetGroupMask)(iparam1, iparam2);
+		return 0;
+
+	case EngFunc_GetClientListening:
+		iparam1 = static_cast<int>(luaL_checkinteger(L, 2));
+		iparam2 = static_cast<int>(luaL_checkinteger(L, 3));
+		return (*g_engfuncs.pfnVoice_GetClientListening)(iparam1, iparam2);
+
+	case EngFunc_SetClientListening:
+		iparam1 = static_cast<int>(luaL_checkinteger(L, 2));
+		iparam2 = static_cast<int>(luaL_checkinteger(L, 3));
+		iparam3 = static_cast<int>(luaL_checkinteger(L, 4));
+		return (*g_engfuncs.pfnVoice_SetClientListening)(iparam1, iparam2, iparam3);
+
+	case EngFunc_MessageBegin:
+		iparam1 = static_cast<int>(luaL_checkinteger(L, 2));
+		iparam2 = static_cast<int>(luaL_checkinteger(L, 3));
+		get_vec_from_lua(L, 4, Vec1);
+		entindex = static_cast<int>(luaL_optinteger(L, 5, 0));
+		(*g_engfuncs.pfnMessageBegin)(iparam1, iparam2, Vec1, entindex == 0 ? NULL : TypeConversion.id_to_edict(entindex));
+		return 0;
+
+	case EngFunc_WriteCoord:
+		fparam1 = static_cast<float>(luaL_checknumber(L, 2));
+		(*g_engfuncs.pfnWriteCoord)(fparam1);
+		return 0;
+
+	case EngFunc_WriteAngle:
+		fparam1 = static_cast<float>(luaL_checknumber(L, 2));
+		(*g_engfuncs.pfnWriteAngle)(fparam1);
+		return 0;
+
+	case EngFunc_ServerPrint:
+		temp = luaL_checkstring(L, 2);
+		(*g_engfuncs.pfnServerPrint)(temp);
+		return 0;
+
+	default:
+		return luaL_error(L, "Unknown engfunc type: %d", type);
+	}
+}
+
+cell AMX_NATIVE_CALL amx_fakemetal_func_init_eng(AMX* amx, cell* params)
+{
+	lua_State* L = (lua_State*)params[1];
+	g_L = L;
+	lua_register(L, "fakemeta_engfunc", L_fakemeta_engfunc);
+	return TRUE;
+}
 

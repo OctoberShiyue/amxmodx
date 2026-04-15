@@ -12,6 +12,7 @@
 //
 
 #include "fakemeta_amxx.h"
+#include <vector>
 
 ke::Vector<int> Engine[ENGFUNC_NUM+10];
 ke::Vector<int> EnginePost[ENGFUNC_NUM + 10];
@@ -1541,10 +1542,338 @@ static cell AMX_NATIVE_CALL get_orig_retval(AMX *amx, cell *params)
 	}
 }
 
+static int L_fakemeta_forward_return(lua_State* L)
+{
+	int type = static_cast<int>(luaL_checkinteger(L, 1));
+
+	switch (type)
+	{
+	case FMV_STRING:
+		{
+			const char* str = luaL_checkstring(L, 2);
+			mStringResult = STRING(ALLOC_STRING(str));
+			break;
+		}
+	case FMV_FLOAT:
+		{
+			float val = static_cast<float>(luaL_checknumber(L, 2));
+			mFloatResult = val;
+			break;
+		}
+	case FMV_CELL:
+		{
+			cell val = static_cast<cell>(luaL_checkinteger(L, 2));
+			mCellResult = val;
+			break;
+		}
+	default:
+		return 0;
+	}
+
+	retType = type;
+	return 1;
+}
+
+static int L_fakemeta_get_orig_retval(lua_State* L)
+{
+	int n = lua_gettop(L);
+
+	switch (n)
+	{
+	case 0:
+		lua_pushinteger(L, origCellRet);
+		return 1;
+	case 1:
+		lua_pushnumber(L, origFloatRet);
+		return 1;
+	default:
+		lua_pushstring(L, origStringRet ? origStringRet : "");
+		return 1;
+	}
+}
+
+struct LuaCallback {
+	int ref;
+	bool post;
+	int hook_type;
+};
+
+static int g_lua_forward_ref = LUA_REFNIL;
+static std::vector<LuaCallback> g_lua_callbacks;
+static int g_next_callback_id = 1;
+
+struct LuaForwardEntry {
+	int ref;
+	int pawn_forward_id;
+	int hook_type;
+	bool post;
+};
+
+static std::vector<LuaForwardEntry> g_lua_forwards;
+static int g_lua_fwd_table_ref = LUA_REFNIL;
+
+static void ensure_lua_fwd_table(lua_State* L)
+{
+	if (g_lua_fwd_table_ref == LUA_REFNIL)
+	{
+		lua_newtable(L);
+		g_lua_fwd_table_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+	}
+}
+
+static void trigger_lua_forward(int fwd_idx)
+{
+	lua_State* L = g_L;
+	if (!L || g_lua_fwd_table_ref == LUA_REFNIL || fwd_idx < 0 || fwd_idx >= (int)g_lua_forwards.size())
+		return;
+
+	lua_rawgeti(L, LUA_REGISTRYINDEX, g_lua_fwd_table_ref);
+	lua_pushinteger(L, fwd_idx);
+	lua_gettable(L, -2);
+
+	if (!lua_isfunction(L, -1))
+	{
+		lua_pop(L, 2);
+		return;
+	}
+
+	if (lua_pcall(L, 0, 0, 0) != 0)
+	{
+		lua_pop(L, 1);
+	}
+}
+
+static int L_fakemeta_register_forward(lua_State* L)
+{
+	return luaL_error(L, "Use fakemeta.register_lua_forward() from Pawn to register Lua hooks");
+}
+
+static cell AMX_NATIVE_CALL amx_fakemeta_register_lua_forward(AMX* amx, cell* params)
+{
+	int func = params[1];
+	int callbackRef = params[2];
+	int post = params[3];
+
+	cell tempParams[4];
+	tempParams[0] = 3 * sizeof(cell);
+	tempParams[1] = func;
+	tempParams[2] = params[2];
+	tempParams[3] = post;
+
+	int fwdId = register_forward(amx, tempParams);
+
+	if (fwdId > 0)
+	{
+		for (size_t i = 0; i < g_lua_forwards.size(); ++i)
+		{
+			if (g_lua_forwards[i].ref == callbackRef)
+			{
+				g_lua_forwards[i].pawn_forward_id = fwdId;
+				break;
+			}
+		}
+	}
+
+	return fwdId;
+}
+
+static cell AMX_NATIVE_CALL amx_fakemeta_unregister_lua_forward(AMX* amx, cell* params)
+{
+	cell ret = 0;
+	cell tempParams[4];
+	tempParams[0] = 3 * sizeof(cell);
+	tempParams[1] = 0;
+	tempParams[2] = params[1];
+	tempParams[3] = 0;
+
+	for (size_t i = 0; i < g_lua_forwards.size(); ++i)
+	{
+		if ((int)g_lua_forwards[i].pawn_forward_id == (int)params[1])
+		{
+			tempParams[1] = g_lua_forwards[i].hook_type;
+			tempParams[3] = g_lua_forwards[i].post ? 1 : 0;
+			ret = unregister_forward(amx, tempParams);
+			break;
+		}
+	}
+
+	return ret;
+}
+
+static cell AMX_NATIVE_CALL amx_fakemeta_lua_trigger(AMX* amx, cell* params)
+{
+	int callbackRef = params[1];
+
+	lua_State* L = g_L;
+	if (!L)
+		return 0;
+
+	lua_rawgeti(L, LUA_REGISTRYINDEX, g_lua_fwd_table_ref);
+	lua_pushinteger(L, callbackRef);
+	lua_gettable(L, -2);
+
+	if (!lua_isfunction(L, -1))
+	{
+		lua_pop(L, 2);
+		return 0;
+	}
+
+	if (lua_pcall(L, 0, 0, 0) != 0)
+	{
+		lua_pop(L, 1);
+	}
+
+	return 0;
+}
+
+static cell AMX_NATIVE_CALL amx_fakemeta_lua_hook(AMX* amx, cell* params)
+{
+	int callbackRef = params[1];
+
+	lua_State* L = g_L;
+	if (!L)
+		return 0;
+
+	lua_rawgeti(L, LUA_REGISTRYINDEX, g_lua_fwd_table_ref);
+	lua_pushinteger(L, callbackRef);
+	lua_gettable(L, -2);
+
+	if (!lua_isfunction(L, -1))
+	{
+		lua_pop(L, 2);
+		return 0;
+	}
+
+	int paramCount = params[0] / sizeof(cell);
+	for (int i = 2; i <= paramCount && i <= 9; i++)
+	{
+		lua_pushinteger(L, params[i]);
+	}
+
+	int nargs = paramCount >= 1 ? paramCount - 1 : 0;
+	int nresults = 1;
+	if (lua_pcall(L, nargs, nresults, 0) != 0)
+	{
+		const char* err = lua_tostring(L, -1);
+		if (err)
+		{
+			MF_LogError(amx, AMX_ERR_NATIVE, "Lua hook error: %s", err);
+		}
+		lua_pop(L, 1);
+		return 0;
+	}
+
+	int ret = 0;
+	if (lua_isnumber(L, -1))
+	{
+		ret = (int)lua_tointeger(L, -1);
+	}
+	lua_pop(L, 1);
+
+	return ret;
+}
+
+static cell AMX_NATIVE_CALL amx_fakemeta_set_lua_ret(AMX* amx, cell* params)
+{
+	int type = params[1];
+
+	switch (type)
+	{
+	case 1:
+		{
+			int len;
+			const char* str = MF_GetAmxString(amx, params[2], 0, &len);
+			if (str && len > 0)
+			{
+				mStringResult = STRING(ALLOC_STRING(str));
+			}
+			break;
+		}
+	case 2:
+		mFloatResult = amx_ctof(params[2]);
+		break;
+	case 3:
+		mCellResult = params[2];
+		break;
+	}
+
+	retType = type;
+	return 1;
+}
+
+static cell AMX_NATIVE_CALL amx_fakemeta_get_lua_orig_retval(AMX* amx, cell* params)
+{
+	int paramCount = params[0] / sizeof(cell);
+
+	switch (paramCount)
+	{
+	case 0:
+		return origCellRet;
+	case 1:
+		*MF_GetAmxAddr(amx, params[1]) = amx_ftoc(origFloatRet);
+		return 1;
+	default:
+		MF_SetAmxString(amx, params[1], origStringRet ? origStringRet : "", 256);
+		return 1;
+	}
+}
+
+static int L_fakemeta_unregister_forward(lua_State* L)
+{
+	int fwd_idx = static_cast<int>(luaL_checkinteger(L, 1)) - 1;
+
+	if (fwd_idx < 0 || fwd_idx >= (int)g_lua_forwards.size())
+	{
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+
+	LuaForwardEntry& entry = g_lua_forwards[fwd_idx];
+
+	if (entry.ref != LUA_REFNIL)
+	{
+		luaL_unref(g_L, LUA_REGISTRYINDEX, entry.ref);
+		entry.ref = LUA_REFNIL;
+	}
+
+	if (entry.pawn_forward_id > 0)
+	{
+		cell params[4];
+		params[0] = 3 * sizeof(cell);
+		params[1] = entry.hook_type;
+		params[2] = entry.pawn_forward_id;
+		params[3] = entry.post ? 1 : 0;
+		AMX* amx = nullptr;
+		unregister_forward(amx, params);
+		entry.pawn_forward_id = 0;
+	}
+
+	lua_pushboolean(L, 1);
+	return 1;
+}
+
+cell AMX_NATIVE_CALL amx_fakemetal_func_init_forward(AMX* amx, cell* params)
+{
+	lua_State* L = (lua_State*)params[1];
+	g_L = L;
+	lua_register(L, "fakemeta_forward_return", L_fakemeta_forward_return);
+	lua_register(L, "fakemeta_get_orig_retval", L_fakemeta_get_orig_retval);
+	lua_register(L, "fakemeta_register_forward", L_fakemeta_register_forward);
+	lua_register(L, "fakemeta_unregister_forward", L_fakemeta_unregister_forward);
+	return TRUE;
+}
+
 AMX_NATIVE_INFO forward_natives[] = {
 	{ "register_forwardL",	register_forward },
 	{ "unregister_forwardL", unregister_forward },
 	{ "forward_returnL",		fm_return },
 	{ "get_orig_retvalL",	get_orig_retval },
+	{ "Lfakemetal_func_init_forward",	amx_fakemetal_func_init_forward },
+	{ "fakemeta_register_lua_forward",	amx_fakemeta_register_lua_forward },
+	{ "fakemeta_unregister_lua_forward",	amx_fakemeta_unregister_lua_forward },
+	{ "fakemeta_lua_trigger",	amx_fakemeta_lua_trigger },
+	{ "fakemeta_lua_hook",	amx_fakemeta_lua_hook },
+	{ "fakemeta_set_lua_ret",	amx_fakemeta_set_lua_ret },
+	{ "fakemeta_get_lua_orig_retval",	amx_fakemeta_get_lua_orig_retval },
 	{ NULL,					NULL }
 };

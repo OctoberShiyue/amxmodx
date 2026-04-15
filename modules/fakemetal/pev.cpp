@@ -475,10 +475,30 @@ static cell AMX_NATIVE_CALL amx_pev_serial(AMX* amx, cell* params)
 
 	return ent->serialnumber;
 }
+
+static int L_fakemeta_pev_serial(lua_State* L)
+{
+	int entindex = (int)luaL_checkinteger(L, 1);
+	if (entindex < 1 || entindex > gpGlobals->maxEntities)
+	{
+		lua_pushnil(L);
+		return 1;
+	}
+	edict_t* ent = TypeConversion.id_to_edict(entindex);
+	if (FNullEnt(ent))
+	{
+		lua_pushnil(L);
+		return 1;
+	}
+	lua_pushinteger(L, ent->serialnumber);
+	return 1;
+}
+
 cell AMX_NATIVE_CALL amx_fakemetal_func_init(AMX* amx, cell* params)
 {
 	lua_State* L = (lua_State*)params[1];
-	g_L=L;
+	g_L = L;
+	lua_register(L, "fakemeta_pev_serial", L_fakemeta_pev_serial);
 	return TRUE;
 }
 AMX_NATIVE_INFO pev_natives[] = {

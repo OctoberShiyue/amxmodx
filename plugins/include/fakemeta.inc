@@ -1125,3 +1125,24 @@ enum
  *                      Invalid model pointer.
  */
 native GetModelBoundingBox(entity, Float:mins[3], Float:maxs[3], sequence = Model_DefaultSize);
+
+/**
+ * Lua Hook Functions - For fakemeta Lua bindings.
+ * These natives are used internally by the Lua fakemeta module to bridge
+ * Pawn forwards with Lua callbacks.
+ */
+native fakemeta_register_lua_forward(forwardType, const callback[], post = 0);
+native fakemeta_unregister_lua_forward(fwdId);
+native fakemeta_lua_hook(callbackRef, any:...);
+native fakemeta_set_lua_ret(type, any:...);
+native any:fakemeta_get_lua_orig_retval(any:...);
+
+/**
+ * Lua hook handler - internal use only.
+ * This public function is used as a generic dispatcher for all Lua hooks.
+ */
+public _lua_hooker(callbackRef, ...)
+{
+	new ret = fakemeta_lua_hook(callbackRef, get_param(2), get_param(3), get_param(4), get_param(5), get_param(6), get_param(7), get_param(8));
+	return ret;
+}

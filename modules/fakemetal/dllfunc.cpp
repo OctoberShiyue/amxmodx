@@ -382,6 +382,320 @@ static cell AMX_NATIVE_CALL dllfunc(AMX *amx,cell *params)
 
 AMX_NATIVE_INFO dllfunc_natives[] = {
 	{"dllfuncL",			dllfunc},
+	{"Lfakemetal_func_init_dll",	amx_fakemetal_func_init_dll},
 	{NULL,				NULL},
 };
+
+static void get_vec_from_lua(lua_State* L, int idx, float* vec)
+{
+	if (lua_istable(L, idx))
+	{
+		lua_rawgeti(L, idx, 1);
+		vec[0] = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, idx, 2);
+		vec[1] = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, idx, 3);
+		vec[2] = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+	}
+	else
+	{
+		vec[0] = vec[1] = vec[2] = 0.0f;
+	}
+}
+
+static int L_fakemeta_dllfunc(lua_State* L)
+{
+	int type = static_cast<int>(luaL_checkinteger(L, 1));
+	int iparam1 = 0, iparam2 = 0, iparam3 = 0;
+	float fparam1 = 0.0f, fparam2 = 0.0f, fparam3 = 0.0f;
+	vec3_t Vec1, Vec2, Vec3, Vec4;
+	const char* temp = nullptr;
+	const char* temp2 = nullptr;
+
+	switch (type)
+	{
+	case DLLFunc_GameInit:
+		gpGamedllFuncs->dllapi_table->pfnGameInit();
+		return 0;
+
+	case DLLFunc_Spawn:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			return gpGamedllFuncs->dllapi_table->pfnSpawn(TypeConversion.id_to_edict(index));
+		}
+
+	case DLLFunc_Think:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnThink(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_Use:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			int indexb = static_cast<int>(luaL_checkinteger(L, 3));
+			if (index < 0 || index > gpGlobals->maxEntities || indexb < 0 || indexb > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnUse(TypeConversion.id_to_edict(index), TypeConversion.id_to_edict(indexb));
+			return 0;
+		}
+
+	case DLLFunc_Touch:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			int indexb = static_cast<int>(luaL_checkinteger(L, 3));
+			if (index < 0 || index > gpGlobals->maxEntities || indexb < 0 || indexb > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnTouch(TypeConversion.id_to_edict(index), TypeConversion.id_to_edict(indexb));
+			return 0;
+		}
+
+	case DLLFunc_Blocked:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			int indexb = static_cast<int>(luaL_checkinteger(L, 3));
+			if (index < 0 || index > gpGlobals->maxEntities || indexb < 0 || indexb > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnBlocked(TypeConversion.id_to_edict(index), TypeConversion.id_to_edict(indexb));
+			return 0;
+		}
+
+	case DLLFunc_KeyValue:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			KeyValueData* kvd = &(g_kvd_glb.kvd);
+			gpGamedllFuncs->dllapi_table->pfnKeyValue(TypeConversion.id_to_edict(index), kvd);
+			return 0;
+		}
+
+	case DLLFunc_SetAbsBox:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnSetAbsBox(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_ClientConnect:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			const char* name = luaL_checkstring(L, 3);
+			const char* address = lua_tostring(L, 4) ? lua_tostring(L, 4) : "";
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			int result = gpGamedllFuncs->dllapi_table->pfnClientConnect(TypeConversion.id_to_edict(index), name, address, (char*)"");
+			lua_pushboolean(L, result);
+			return 1;
+		}
+
+	case DLLFunc_ClientDisconnect:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnClientDisconnect(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_ClientKill:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnClientKill(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_ClientPutInServer:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnClientPutInServer(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_ServerDeactivate:
+		gpGamedllFuncs->dllapi_table->pfnServerDeactivate();
+		return 0;
+
+	case DLLFunc_PlayerPreThink:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnPlayerPreThink(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_PlayerPostThink:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnPlayerPostThink(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_StartFrame:
+		gpGamedllFuncs->dllapi_table->pfnStartFrame();
+		return 0;
+
+	case DLLFunc_ParmsNewLevel:
+		gpGamedllFuncs->dllapi_table->pfnParmsNewLevel();
+		return 0;
+
+	case DLLFunc_ParmsChangeLevel:
+		gpGamedllFuncs->dllapi_table->pfnParmsChangeLevel();
+		return 0;
+
+	case DLLFunc_GetGameDescription:
+		{
+			const char* desc = (char*)gpGamedllFuncs->dllapi_table->pfnGetGameDescription();
+			lua_pushstring(L, desc ? desc : "");
+			return 1;
+		}
+
+	case DLLFunc_SpectatorConnect:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnSpectatorConnect(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_SpectatorDisconnect:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnSpectatorDisconnect(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_SpectatorThink:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnSpectatorThink(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_Sys_Error:
+		{
+			const char* error = luaL_checkstring(L, 2);
+			gpGamedllFuncs->dllapi_table->pfnSys_Error(error);
+			return 0;
+		}
+
+	case DLLFunc_PM_FindTextureType:
+		{
+			const char* name = luaL_checkstring(L, 2);
+			return gpGamedllFuncs->dllapi_table->pfnPM_FindTextureType(name);
+		}
+
+	case DLLFunc_RegisterEncoders:
+		gpGamedllFuncs->dllapi_table->pfnRegisterEncoders();
+		return 0;
+
+	case DLLFunc_GetHullBounds:
+		{
+			int hullnumber = static_cast<int>(luaL_checkinteger(L, 2));
+			int result = gpGamedllFuncs->dllapi_table->pfnGetHullBounds(hullnumber, Vec1, Vec2);
+			lua_createtable(L, 2, 0);
+			lua_createtable(L, 3, 0);
+			lua_pushnumber(L, Vec1[0]);
+			lua_rawseti(L, -2, 1);
+			lua_pushnumber(L, Vec1[1]);
+			lua_rawseti(L, -2, 2);
+			lua_pushnumber(L, Vec1[2]);
+			lua_rawseti(L, -2, 3);
+			lua_rawseti(L, -2, 1);
+			lua_createtable(L, 3, 0);
+			lua_pushnumber(L, Vec2[0]);
+			lua_rawseti(L, -2, 1);
+			lua_pushnumber(L, Vec2[1]);
+			lua_rawseti(L, -2, 2);
+			lua_pushnumber(L, Vec2[2]);
+			lua_rawseti(L, -2, 3);
+			lua_rawseti(L, -2, 2);
+			return 2;
+		}
+
+	case DLLFunc_CreateInstancedBaselines:
+		gpGamedllFuncs->dllapi_table->pfnCreateInstancedBaselines();
+		return 0;
+
+	case DLLFunc_pfnAllowLagCompensation:
+		return gpGamedllFuncs->dllapi_table->pfnAllowLagCompensation();
+
+	case DLLFunc_ClientUserInfoChanged:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnClientUserInfoChanged(TypeConversion.id_to_edict(index), (*g_engfuncs.pfnGetInfoKeyBuffer)(TypeConversion.id_to_edict(index)));
+			return 0;
+		}
+
+	case DLLFunc_CmdStart:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			usercmd_t* uc = &g_uc_glb;
+			unsigned int seed = static_cast<unsigned int>(luaL_optinteger(L, 3, 0));
+			gpGamedllFuncs->dllapi_table->pfnCmdStart(TypeConversion.id_to_edict(index), uc, seed);
+			return 0;
+		}
+
+	case DLLFunc_CmdEnd:
+		{
+			int index = static_cast<int>(luaL_checkinteger(L, 2));
+			if (index < 0 || index > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnCmdEnd(TypeConversion.id_to_edict(index));
+			return 0;
+		}
+
+	case DLLFunc_CreateBaseline:
+		{
+			int player = static_cast<int>(luaL_checkinteger(L, 2));
+			int eindex = static_cast<int>(luaL_checkinteger(L, 3));
+			int entindex = static_cast<int>(luaL_checkinteger(L, 4));
+			int playermodelindex = static_cast<int>(luaL_checkinteger(L, 5));
+			get_vec_from_lua(L, 6, Vec1);
+			get_vec_from_lua(L, 7, Vec2);
+			entity_state_t* es = &g_es_glb;
+			if (entindex < 0 || entindex > gpGlobals->maxEntities)
+				return luaL_error(L, "Invalid entity index");
+			gpGamedllFuncs->dllapi_table->pfnCreateBaseline(player, eindex, es, TypeConversion.id_to_edict(entindex), playermodelindex, Vec1, Vec2);
+			return 0;
+		}
+
+	default:
+		return luaL_error(L, "Unknown dllfunc type: %d", type);
+	}
+}
+
+cell AMX_NATIVE_CALL amx_fakemetal_func_init_dll(AMX* amx, cell* params)
+{
+	lua_State* L = (lua_State*)params[1];
+	g_L = L;
+	lua_register(L, "fakemeta_dllfunc", L_fakemeta_dllfunc);
+	return TRUE;
+}
 

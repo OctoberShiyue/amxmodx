@@ -183,8 +183,81 @@ static cell AMX_NATIVE_CALL amx_glb(AMX *amx, cell *params)
 	return 0;
 }
 
+static int L_fakemeta_global_get(lua_State* L)
+{
+	int iSwitch = static_cast<int>(luaL_checkinteger(L, 1));
+
+	if (iSwitch <= glb_start_int || iSwitch >= glb_end_pchar)
+	{
+		return luaL_error(L, "Undefined global index: %d", iSwitch);
+	}
+
+	int offset = g_glob_offset_table[iSwitch];
+	if (offset == -1)
+	{
+		return luaL_error(L, "Undefined global index: %d", iSwitch);
+	}
+
+	if (iSwitch > glb_start_int && iSwitch < glb_end_int)
+	{
+		int val = *(int *)GET_OFFS(gpGlobals, offset);
+		lua_pushinteger(L, val);
+		return 1;
+	}
+	else if (iSwitch > glb_start_float && iSwitch < glb_end_float)
+	{
+		float val = *(float *)GET_OFFS(gpGlobals, offset);
+		lua_pushnumber(L, val);
+		return 1;
+	}
+	else if (iSwitch > glb_start_edict && iSwitch < glb_end_edict)
+	{
+		edict_t* e = *(edict_t **)GET_OFFS(gpGlobals, offset);
+		if (FNullEnt(e))
+		{
+			lua_pushnil(L);
+		}
+		else
+		{
+			lua_pushinteger(L, ENTINDEX(e));
+		}
+		return 1;
+	}
+	else if (iSwitch > glb_start_vector && iSwitch < glb_end_vector)
+	{
+		vec3_t vec = *(vec3_t *)GET_OFFS(gpGlobals, offset);
+		lua_pushnumber(L, vec.x);
+		lua_pushnumber(L, vec.y);
+		lua_pushnumber(L, vec.z);
+		return 3;
+	}
+	else if (iSwitch > glb_start_string && iSwitch < glb_end_string)
+	{
+		const char* str = STRING(*(string_t *)GET_OFFS(gpGlobals, offset));
+		lua_pushstring(L, str ? str : "");
+		return 1;
+	}
+	else if (iSwitch > glb_start_pchar && iSwitch < glb_end_pchar)
+	{
+		const char* str = *(const char **)GET_OFFS(gpGlobals, offset);
+		lua_pushstring(L, str ? str : "");
+		return 1;
+	}
+
+	return luaL_error(L, "Unknown global index or return combination %d", iSwitch);
+}
+
+cell AMX_NATIVE_CALL amx_fakemetal_func_init_glb(AMX* amx, cell* params)
+{
+	lua_State* L = (lua_State*)params[1];
+	g_L = L;
+	lua_register(L, "fakemeta_global_get", L_fakemeta_global_get);
+	return TRUE;
+}
+
 AMX_NATIVE_INFO glb_natives[] = 
 {
 	{"global_getL",		amx_glb}, 
+	{"Lfakemetal_func_init_glb",	amx_fakemetal_func_init_glb},
 	{NULL,				NULL},
 };

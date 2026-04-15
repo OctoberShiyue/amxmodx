@@ -1329,6 +1329,1416 @@ AMX_NATIVE_INFO ext2_natives[] =
 	{"set_esL",			set_es},
 	{"get_ucL",			get_uc},
 	{"set_ucL",			set_uc},
+	{"Lfakemetal_func_init_tr2",	amx_fakemetal_func_init_tr2},
 	{NULL,				NULL},
 };
+
+static int L_fakemeta_create_tr2(lua_State* L)
+{
+	TraceResult *tr;
+	if (g_FreeTRs.empty())
+	{
+		tr = new TraceResult;
+	}
+	else
+	{
+		tr = g_FreeTRs.front();
+		g_FreeTRs.pop();
+	}
+	memset(static_cast<void*>(tr), 0, sizeof(TraceResult));
+	lua_pushlightuserdata(L, tr);
+	return 1;
+}
+
+static int L_fakemeta_free_tr2(lua_State* L)
+{
+	TraceResult *tr = static_cast<TraceResult*>(lua_touserdata(L, 1));
+	if (!tr)
+		return 0;
+	g_FreeTRs.push(tr);
+	return 1;
+}
+
+static int L_fakemeta_get_tr2(lua_State* L)
+{
+	TraceResult *tr;
+	if (lua_isnil(L, 1))
+		tr = &g_tr_2;
+	else
+		tr = static_cast<TraceResult*>(lua_touserdata(L, 1));
+
+	if (!tr)
+		return 0;
+
+	int member = static_cast<int>(luaL_checkinteger(L, 2));
+
+	switch (member)
+	{
+	case TR_AllSolid:
+		lua_pushinteger(L, tr->fAllSolid);
+		break;
+	case TR_StartSolid:
+		lua_pushinteger(L, tr->fStartSolid);
+		break;
+	case TR_InOpen:
+		lua_pushinteger(L, tr->fInOpen);
+		break;
+	case TR_InWater:
+		lua_pushinteger(L, tr->fInWater);
+		break;
+	case TR_flFraction:
+		lua_pushnumber(L, tr->flFraction);
+		break;
+	case TR_vecEndPos:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, tr->vecEndPos.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, tr->vecEndPos.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, tr->vecEndPos.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case TR_flPlaneDist:
+		lua_pushnumber(L, tr->flPlaneDist);
+		break;
+	case TR_vecPlaneNormal:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, tr->vecPlaneNormal.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, tr->vecPlaneNormal.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, tr->vecPlaneNormal.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case TR_pHit:
+		if (FNullEnt(tr->pHit))
+			lua_pushinteger(L, -1);
+		else
+			lua_pushinteger(L, ENTINDEX(tr->pHit));
+		break;
+	case TR_iHitgroup:
+		lua_pushinteger(L, tr->iHitgroup);
+		break;
+	default:
+		return luaL_error(L, "Unknown TraceResult member: %d", member);
+	}
+	return 1;
+}
+
+static int L_fakemeta_set_tr2(lua_State* L)
+{
+	TraceResult *tr;
+	if (lua_isnil(L, 1))
+		tr = &g_tr_2;
+	else
+		tr = static_cast<TraceResult*>(lua_touserdata(L, 1));
+
+	if (!tr)
+		return 0;
+
+	int member = static_cast<int>(luaL_checkinteger(L, 2));
+
+	switch (member)
+	{
+	case TR_AllSolid:
+		tr->fAllSolid = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case TR_StartSolid:
+		tr->fStartSolid = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case TR_InOpen:
+		tr->fInOpen = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case TR_InWater:
+		tr->fInWater = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case TR_flFraction:
+		tr->flFraction = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case TR_vecEndPos:
+		if (!lua_istable(L, 3))
+			return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+		lua_rawgeti(L, 3, 1);
+		tr->vecEndPos.x = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 2);
+		tr->vecEndPos.y = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 3);
+		tr->vecEndPos.z = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		break;
+	case TR_flPlaneDist:
+		tr->flPlaneDist = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case TR_vecPlaneNormal:
+		if (!lua_istable(L, 3))
+			return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+		lua_rawgeti(L, 3, 1);
+		tr->vecPlaneNormal.x = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 2);
+		tr->vecPlaneNormal.y = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 3);
+		tr->vecPlaneNormal.z = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		break;
+	case TR_pHit:
+		{
+			int entindex = static_cast<int>(luaL_checkinteger(L, 3));
+			if (entindex <= 0)
+				tr->pHit = NULL;
+			else
+				tr->pHit = INDEXENT(entindex);
+		}
+		break;
+	case TR_iHitgroup:
+		tr->iHitgroup = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	default:
+		return luaL_error(L, "Unknown TraceResult member: %d", member);
+	}
+	return 1;
+}
+
+static int L_fakemeta_create_kvd(lua_State* L)
+{
+	KVD_Wrapper *kvdw;
+	if (g_FreeKVDWs.empty())
+	{
+		kvdw = new KVD_Wrapper;
+	}
+	else
+	{
+		kvdw = g_FreeKVDWs.popCopy();
+	}
+
+	kvdw->cls = "";
+	kvdw->kvd.szClassName = const_cast<char*>(kvdw->cls.chars());
+	kvdw->key = "";
+	kvdw->kvd.szKeyName = const_cast<char*>(kvdw->key.chars());
+	kvdw->val = "";
+	kvdw->kvd.szValue = const_cast<char*>(kvdw->val.chars());
+	kvdw->kvd.fHandled = 0;
+
+	g_KVDWs.append(kvdw);
+
+	lua_pushlightuserdata(L, kvdw);
+	return 1;
+}
+
+static int L_fakemeta_free_kvd(lua_State* L)
+{
+	KVD_Wrapper *kvdw = static_cast<KVD_Wrapper*>(lua_touserdata(L, 1));
+	if (!kvdw)
+		return 0;
+
+	for (size_t i = 0; i < g_KVDWs.length(); ++i)
+	{
+		if (g_KVDWs[i] == kvdw)
+		{
+			g_KVDWs.remove(i);
+			g_FreeKVDWs.append(kvdw);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int L_fakemeta_get_kvd(lua_State* L)
+{
+	KeyValueData *kvd;
+	if (lua_isnil(L, 1))
+		kvd = &(g_kvd_glb.kvd);
+	else
+		kvd = &(static_cast<KVD_Wrapper*>(lua_touserdata(L, 1))->kvd);
+
+	if (!kvd)
+		return 0;
+
+	int member = static_cast<int>(luaL_checkinteger(L, 2));
+
+	switch (member)
+	{
+	case KV_ClassName:
+		lua_pushstring(L, kvd->szClassName ? kvd->szClassName : "");
+		break;
+	case KV_KeyName:
+		lua_pushstring(L, kvd->szKeyName ? kvd->szKeyName : "");
+		break;
+	case KV_Value:
+		lua_pushstring(L, kvd->szValue ? kvd->szValue : "");
+		break;
+	case KV_fHandled:
+		lua_pushinteger(L, kvd->fHandled);
+		break;
+	default:
+		return luaL_error(L, "Unknown KeyValueData member: %d", member);
+	}
+	return 1;
+}
+
+static int L_fakemeta_set_kvd(lua_State* L)
+{
+	KVD_Wrapper *kvdw = nullptr;
+	KeyValueData *kvd = nullptr;
+
+	if (lua_isnil(L, 1))
+	{
+		kvdw = &g_kvd_glb;
+		kvd = &(kvdw->kvd);
+	}
+	else
+	{
+		kvdw = static_cast<KVD_Wrapper*>(lua_touserdata(L, 1));
+		kvd = &(kvdw->kvd);
+	}
+
+	if (!kvd)
+		return 0;
+
+	int member = static_cast<int>(luaL_checkinteger(L, 2));
+
+	switch (member)
+	{
+	case KV_ClassName:
+		kvdw->cls = luaL_checkstring(L, 3);
+		kvd->szClassName = const_cast<char*>(kvdw->cls.chars());
+		break;
+	case KV_KeyName:
+		kvdw->key = luaL_checkstring(L, 3);
+		kvd->szKeyName = const_cast<char*>(kvdw->key.chars());
+		break;
+	case KV_Value:
+		kvdw->val = luaL_checkstring(L, 3);
+		kvd->szValue = const_cast<char*>(kvdw->val.chars());
+		break;
+	case KV_fHandled:
+		kvd->fHandled = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	default:
+		return luaL_error(L, "Unknown KeyValueData member: %d", member);
+	}
+	return 1;
+}
+
+static int L_fakemeta_get_cd(lua_State* L)
+{
+	clientdata_t *cd;
+	if (lua_isnil(L, 1))
+		cd = &g_cd_glb;
+	else
+		cd = reinterpret_cast<clientdata_t*>(lua_touserdata(L, 1));
+
+	if (!cd)
+		return 0;
+
+	int member = static_cast<int>(luaL_checkinteger(L, 2));
+
+	switch (member)
+	{
+	case CD_Origin:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, cd->origin.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, cd->origin.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, cd->origin.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case CD_Velocity:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, cd->velocity.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, cd->velocity.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, cd->velocity.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case CD_ViewModel:
+		lua_pushinteger(L, cd->viewmodel);
+		break;
+	case CD_PunchAngle:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, cd->punchangle.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, cd->punchangle.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, cd->punchangle.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case CD_Flags:
+		lua_pushinteger(L, cd->flags);
+		break;
+	case CD_WaterLevel:
+		lua_pushinteger(L, cd->waterlevel);
+		break;
+	case CD_WaterType:
+		lua_pushinteger(L, cd->watertype);
+		break;
+	case CD_ViewOfs:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, cd->view_ofs.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, cd->view_ofs.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, cd->view_ofs.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case CD_Health:
+		lua_pushnumber(L, cd->health);
+		break;
+	case CD_bInDuck:
+		lua_pushinteger(L, cd->bInDuck);
+		break;
+	case CD_Weapons:
+		lua_pushinteger(L, cd->weapons);
+		break;
+	case CD_flTimeStepSound:
+		lua_pushinteger(L, cd->flTimeStepSound);
+		break;
+	case CD_flDuckTime:
+		lua_pushinteger(L, cd->flDuckTime);
+		break;
+	case CD_flSwimTime:
+		lua_pushinteger(L, cd->flSwimTime);
+		break;
+	case CD_WaterJumpTime:
+		lua_pushnumber(L, cd->waterjumptime);
+		break;
+	case CD_MaxSpeed:
+		lua_pushnumber(L, cd->maxspeed);
+		break;
+	case CD_FOV:
+		lua_pushnumber(L, cd->fov);
+		break;
+	case CD_WeaponAnim:
+		lua_pushinteger(L, cd->weaponanim);
+		break;
+	case CD_ID:
+		lua_pushinteger(L, cd->m_iId);
+		break;
+	case CD_AmmoShells:
+		lua_pushinteger(L, cd->ammo_shells);
+		break;
+	case CD_AmmoNails:
+		lua_pushinteger(L, cd->ammo_nails);
+		break;
+	case CD_AmmoCells:
+		lua_pushinteger(L, cd->ammo_cells);
+		break;
+	case CD_AmmoRockets:
+		lua_pushinteger(L, cd->ammo_rockets);
+		break;
+	case CD_flNextAttack:
+		lua_pushnumber(L, cd->m_flNextAttack);
+		break;
+	case CD_tfState:
+		lua_pushinteger(L, cd->tfstate);
+		break;
+	case CD_PushMsec:
+		lua_pushinteger(L, cd->pushmsec);
+		break;
+	case CD_DeadFlag:
+		lua_pushinteger(L, cd->deadflag);
+		break;
+	case CD_PhysInfo:
+		lua_pushstring(L, cd->physinfo);
+		break;
+	case CD_iUser1:
+		lua_pushinteger(L, cd->iuser1);
+		break;
+	case CD_iUser2:
+		lua_pushinteger(L, cd->iuser2);
+		break;
+	case CD_iUser3:
+		lua_pushinteger(L, cd->iuser3);
+		break;
+	case CD_iUser4:
+		lua_pushinteger(L, cd->iuser4);
+		break;
+	case CD_fUser1:
+		lua_pushnumber(L, cd->fuser1);
+		break;
+	case CD_fUser2:
+		lua_pushnumber(L, cd->fuser2);
+		break;
+	case CD_fUser3:
+		lua_pushnumber(L, cd->fuser3);
+		break;
+	case CD_fUser4:
+		lua_pushnumber(L, cd->fuser4);
+		break;
+	case CD_vUser1:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, cd->vuser1.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, cd->vuser1.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, cd->vuser1.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case CD_vUser2:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, cd->vuser2.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, cd->vuser2.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, cd->vuser2.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case CD_vUser3:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, cd->vuser3.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, cd->vuser3.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, cd->vuser3.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case CD_vUser4:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, cd->vuser4.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, cd->vuser4.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, cd->vuser4.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	default:
+		return luaL_error(L, "Unknown ClientData member: %d", member);
+	}
+	return 1;
+}
+
+static int L_fakemeta_set_cd(lua_State* L)
+{
+	clientdata_t *cd;
+	if (lua_isnil(L, 1))
+		cd = &g_cd_glb;
+	else
+		cd = reinterpret_cast<clientdata_t*>(lua_touserdata(L, 1));
+
+	if (!cd)
+		return 0;
+
+	int member = static_cast<int>(luaL_checkinteger(L, 2));
+
+	switch (member)
+	{
+	case CD_Origin:
+		if (!lua_istable(L, 3))
+			return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+		lua_rawgeti(L, 3, 1);
+		cd->origin.x = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 2);
+		cd->origin.y = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 3);
+		cd->origin.z = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		break;
+	case CD_Velocity:
+		if (!lua_istable(L, 3))
+			return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+		lua_rawgeti(L, 3, 1);
+		cd->velocity.x = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 2);
+		cd->velocity.y = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 3);
+		cd->velocity.z = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		break;
+	case CD_ViewModel:
+		cd->viewmodel = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_PunchAngle:
+		if (!lua_istable(L, 3))
+			return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+		lua_rawgeti(L, 3, 1);
+		cd->punchangle.x = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 2);
+		cd->punchangle.y = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 3);
+		cd->punchangle.z = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		break;
+	case CD_Flags:
+		cd->flags = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_WaterLevel:
+		cd->waterlevel = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_WaterType:
+		cd->watertype = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_ViewOfs:
+		if (!lua_istable(L, 3))
+			return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+		lua_rawgeti(L, 3, 1);
+		cd->view_ofs.x = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 2);
+		cd->view_ofs.y = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 3);
+		cd->view_ofs.z = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		break;
+	case CD_Health:
+		cd->health = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case CD_bInDuck:
+		cd->bInDuck = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_Weapons:
+		cd->weapons = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_flTimeStepSound:
+		cd->flTimeStepSound = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_flDuckTime:
+		cd->flDuckTime = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_flSwimTime:
+		cd->flSwimTime = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_WaterJumpTime:
+		cd->waterjumptime = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case CD_MaxSpeed:
+		cd->maxspeed = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case CD_FOV:
+		cd->fov = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case CD_WeaponAnim:
+		cd->weaponanim = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_ID:
+		cd->m_iId = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_AmmoShells:
+		cd->ammo_shells = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_AmmoNails:
+		cd->ammo_nails = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_AmmoCells:
+		cd->ammo_cells = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_AmmoRockets:
+		cd->ammo_rockets = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_flNextAttack:
+		cd->m_flNextAttack = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case CD_tfState:
+		cd->tfstate = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_PushMsec:
+		cd->pushmsec = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_DeadFlag:
+		cd->deadflag = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_PhysInfo:
+		strncpy(cd->physinfo, luaL_checkstring(L, 3), sizeof(cd->physinfo) - 1);
+		cd->physinfo[sizeof(cd->physinfo) - 1] = 0;
+		break;
+	case CD_iUser1:
+		cd->iuser1 = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_iUser2:
+		cd->iuser2 = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_iUser3:
+		cd->iuser3 = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_iUser4:
+		cd->iuser4 = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case CD_fUser1:
+		cd->fuser1 = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case CD_fUser2:
+		cd->fuser2 = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case CD_fUser3:
+		cd->fuser3 = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case CD_fUser4:
+		cd->fuser4 = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case CD_vUser1:
+		if (!lua_istable(L, 3))
+			return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+		lua_rawgeti(L, 3, 1);
+		cd->vuser1.x = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 2);
+		cd->vuser1.y = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 3);
+		cd->vuser1.z = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		break;
+	case CD_vUser2:
+		if (!lua_istable(L, 3))
+			return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+		lua_rawgeti(L, 3, 1);
+		cd->vuser2.x = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 2);
+		cd->vuser2.y = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 3);
+		cd->vuser2.z = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		break;
+	case CD_vUser3:
+		if (!lua_istable(L, 3))
+			return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+		lua_rawgeti(L, 3, 1);
+		cd->vuser3.x = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 2);
+		cd->vuser3.y = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 3);
+		cd->vuser3.z = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		break;
+	case CD_vUser4:
+		if (!lua_istable(L, 3))
+			return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+		lua_rawgeti(L, 3, 1);
+		cd->vuser4.x = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 2);
+		cd->vuser4.y = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		lua_rawgeti(L, 3, 3);
+		cd->vuser4.z = static_cast<float>(lua_tonumber(L, -1));
+		lua_pop(L, 1);
+		break;
+	default:
+		return luaL_error(L, "Unknown ClientData member: %d", member);
+	}
+	return 1;
+}
+
+static int L_fakemeta_get_es(lua_State* L)
+{
+	entity_state_t *es;
+	if (lua_isnil(L, 1))
+		es = &g_es_glb;
+	else
+		es = reinterpret_cast<entity_state_t*>(lua_touserdata(L, 1));
+
+	if (!es)
+		return 0;
+
+	int member = static_cast<int>(luaL_checkinteger(L, 2));
+
+	switch (member)
+	{
+	case ES_EntityType:
+		lua_pushinteger(L, es->entityType);
+		break;
+	case ES_Number:
+		lua_pushinteger(L, es->number);
+		break;
+	case ES_MsgTime:
+		lua_pushnumber(L, es->msg_time);
+		break;
+	case ES_MessageNum:
+		lua_pushinteger(L, es->messagenum);
+		break;
+	case ES_Origin:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->origin.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->origin.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->origin.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_Angles:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->angles.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->angles.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->angles.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_ModelIndex:
+		lua_pushinteger(L, es->modelindex);
+		break;
+	case ES_Sequence:
+		lua_pushinteger(L, es->sequence);
+		break;
+	case ES_Frame:
+		lua_pushnumber(L, es->frame);
+		break;
+	case ES_ColorMap:
+		lua_pushinteger(L, es->colormap);
+		break;
+	case ES_Skin:
+		lua_pushinteger(L, es->skin);
+		break;
+	case ES_Solid:
+		lua_pushinteger(L, es->solid);
+		break;
+	case ES_Effects:
+		lua_pushinteger(L, es->effects);
+		break;
+	case ES_Scale:
+		lua_pushnumber(L, es->scale);
+		break;
+	case ES_eFlags:
+		lua_pushinteger(L, es->eflags);
+		break;
+	case ES_RenderMode:
+		lua_pushinteger(L, es->rendermode);
+		break;
+	case ES_RenderAmt:
+		lua_pushinteger(L, es->renderamt);
+		break;
+	case ES_RenderColor:
+		lua_createtable(L, 3, 0);
+		lua_pushinteger(L, es->rendercolor.r);
+		lua_rawseti(L, -2, 1);
+		lua_pushinteger(L, es->rendercolor.g);
+		lua_rawseti(L, -2, 2);
+		lua_pushinteger(L, es->rendercolor.b);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_RenderFx:
+		lua_pushinteger(L, es->renderfx);
+		break;
+	case ES_MoveType:
+		lua_pushinteger(L, es->movetype);
+		break;
+	case ES_AnimTime:
+		lua_pushnumber(L, es->animtime);
+		break;
+	case ES_FrameRate:
+		lua_pushnumber(L, es->framerate);
+		break;
+	case ES_Body:
+		lua_pushinteger(L, es->body);
+		break;
+	case ES_Controller:
+		lua_createtable(L, 4, 0);
+		for (int i = 0; i < 4; i++)
+		{
+			lua_pushinteger(L, es->controller[i]);
+			lua_rawseti(L, -2, i + 1);
+		}
+		break;
+	case ES_Blending:
+		lua_createtable(L, 2, 0);
+		lua_pushinteger(L, es->blending[0]);
+		lua_rawseti(L, -2, 1);
+		lua_pushinteger(L, es->blending[1]);
+		lua_rawseti(L, -2, 2);
+		break;
+	case ES_Velocity:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->velocity.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->velocity.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->velocity.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_Mins:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->mins.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->mins.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->mins.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_Maxs:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->maxs.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->maxs.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->maxs.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_AimEnt:
+		lua_pushinteger(L, es->aiment);
+		break;
+	case ES_Owner:
+		lua_pushinteger(L, es->owner);
+		break;
+	case ES_Friction:
+		lua_pushnumber(L, es->friction);
+		break;
+	case ES_Gravity:
+		lua_pushnumber(L, es->gravity);
+		break;
+	case ES_Team:
+		lua_pushinteger(L, es->team);
+		break;
+	case ES_PlayerClass:
+		lua_pushinteger(L, es->playerclass);
+		break;
+	case ES_Health:
+		lua_pushinteger(L, es->health);
+		break;
+	case ES_Spectator:
+		lua_pushinteger(L, es->spectator);
+		break;
+	case ES_WeaponModel:
+		lua_pushinteger(L, es->weaponmodel);
+		break;
+	case ES_GaitSequence:
+		lua_pushinteger(L, es->gaitsequence);
+		break;
+	case ES_BaseVelocity:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->basevelocity.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->basevelocity.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->basevelocity.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_UseHull:
+		lua_pushinteger(L, es->usehull);
+		break;
+	case ES_OldButtons:
+		lua_pushinteger(L, es->oldbuttons);
+		break;
+	case ES_OnGround:
+		lua_pushinteger(L, es->onground);
+		break;
+	case ES_iStepLeft:
+		lua_pushinteger(L, es->iStepLeft);
+		break;
+	case ES_flFallVelocity:
+		lua_pushnumber(L, es->flFallVelocity);
+		break;
+	case ES_FOV:
+		lua_pushnumber(L, es->fov);
+		break;
+	case ES_WeaponAnim:
+		lua_pushinteger(L, es->weaponanim);
+		break;
+	case ES_StartPos:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->startpos.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->startpos.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->startpos.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_EndPos:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->endpos.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->endpos.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->endpos.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_ImpactTime:
+		lua_pushnumber(L, es->impacttime);
+		break;
+	case ES_StartTime:
+		lua_pushnumber(L, es->starttime);
+		break;
+	case ES_iUser1:
+		lua_pushinteger(L, es->iuser1);
+		break;
+	case ES_iUser2:
+		lua_pushinteger(L, es->iuser2);
+		break;
+	case ES_iUser3:
+		lua_pushinteger(L, es->iuser3);
+		break;
+	case ES_iUser4:
+		lua_pushinteger(L, es->iuser4);
+		break;
+	case ES_fUser1:
+		lua_pushnumber(L, es->fuser1);
+		break;
+	case ES_fUser2:
+		lua_pushnumber(L, es->fuser2);
+		break;
+	case ES_fUser3:
+		lua_pushnumber(L, es->fuser3);
+		break;
+	case ES_fUser4:
+		lua_pushnumber(L, es->fuser4);
+		break;
+	case ES_vUser1:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->vuser1.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->vuser1.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->vuser1.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_vUser2:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->vuser2.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->vuser2.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->vuser2.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_vUser3:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->vuser3.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->vuser3.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->vuser3.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case ES_vUser4:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, es->vuser4.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, es->vuser4.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, es->vuser4.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	default:
+		return luaL_error(L, "Unknown EntityState member: %d", member);
+	}
+	return 1;
+}
+
+static int L_fakemeta_set_es(lua_State* L)
+{
+	entity_state_t *es;
+	if (lua_isnil(L, 1))
+		es = &g_es_glb;
+	else
+		es = reinterpret_cast<entity_state_t*>(lua_touserdata(L, 1));
+
+	if (!es)
+		return 0;
+
+	int member = static_cast<int>(luaL_checkinteger(L, 2));
+
+	switch (member)
+	{
+	case ES_EntityType:
+		es->entityType = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Number:
+		es->number = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_MsgTime:
+		es->msg_time = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_MessageNum:
+		es->messagenum = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Origin:
+	case ES_Angles:
+	case ES_Velocity:
+	case ES_Mins:
+	case ES_Maxs:
+	case ES_BaseVelocity:
+	case ES_StartPos:
+	case ES_EndPos:
+	case ES_vUser1:
+	case ES_vUser2:
+	case ES_vUser3:
+	case ES_vUser4:
+		{
+			if (!lua_istable(L, 3))
+				return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+			float *vec = nullptr;
+			switch (member)
+			{
+			case ES_Origin: vec = &es->origin.x; break;
+			case ES_Angles: vec = &es->angles.x; break;
+			case ES_Velocity: vec = &es->velocity.x; break;
+			case ES_Mins: vec = &es->mins.x; break;
+			case ES_Maxs: vec = &es->maxs.x; break;
+			case ES_BaseVelocity: vec = &es->basevelocity.x; break;
+			case ES_StartPos: vec = &es->startpos.x; break;
+			case ES_EndPos: vec = &es->endpos.x; break;
+			case ES_vUser1: vec = &es->vuser1.x; break;
+			case ES_vUser2: vec = &es->vuser2.x; break;
+			case ES_vUser3: vec = &es->vuser3.x; break;
+			case ES_vUser4: vec = &es->vuser4.x; break;
+			}
+			lua_rawgeti(L, 3, 1);
+			vec[0] = static_cast<float>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+			lua_rawgeti(L, 3, 2);
+			vec[1] = static_cast<float>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+			lua_rawgeti(L, 3, 3);
+			vec[2] = static_cast<float>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+		}
+		break;
+	case ES_ModelIndex:
+		es->modelindex = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Sequence:
+		es->sequence = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Frame:
+		es->frame = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_ColorMap:
+		es->colormap = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Skin:
+		es->skin = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Solid:
+		es->solid = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Effects:
+		es->effects = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Scale:
+		es->scale = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_eFlags:
+		es->eflags = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_RenderMode:
+		es->rendermode = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_RenderAmt:
+		es->renderamt = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_RenderColor:
+		{
+			if (!lua_istable(L, 3))
+				return luaL_error(L, "Argument 3 must be a table {r, g, b}");
+			lua_rawgeti(L, 3, 1);
+			es->rendercolor.r = static_cast<byte>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+			lua_rawgeti(L, 3, 2);
+			es->rendercolor.g = static_cast<byte>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+			lua_rawgeti(L, 3, 3);
+			es->rendercolor.b = static_cast<byte>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+		}
+		break;
+	case ES_RenderFx:
+		es->renderfx = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_MoveType:
+		es->movetype = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_AnimTime:
+		es->animtime = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_FrameRate:
+		es->framerate = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_Body:
+		es->body = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Controller:
+		{
+			if (!lua_istable(L, 3))
+				return luaL_error(L, "Argument 3 must be a table {0, 1, 2, 3}");
+			for (int i = 0; i < 4; i++)
+			{
+				lua_rawgeti(L, 3, i + 1);
+				es->controller[i] = static_cast<byte>(lua_tonumber(L, -1));
+				lua_pop(L, 1);
+			}
+		}
+		break;
+	case ES_Blending:
+		{
+			if (!lua_istable(L, 3))
+				return luaL_error(L, "Argument 3 must be a table {0, 1}");
+			for (int i = 0; i < 2; i++)
+			{
+				lua_rawgeti(L, 3, i + 1);
+				es->blending[i] = static_cast<byte>(lua_tonumber(L, -1));
+				lua_pop(L, 1);
+			}
+		}
+		break;
+	case ES_AimEnt:
+		es->aiment = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Owner:
+		es->owner = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Friction:
+		es->friction = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_Gravity:
+		es->gravity = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_Team:
+		es->team = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_PlayerClass:
+		es->playerclass = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Health:
+		es->health = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_Spectator:
+		es->spectator = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_WeaponModel:
+		es->weaponmodel = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_GaitSequence:
+		es->gaitsequence = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_UseHull:
+		es->usehull = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_OldButtons:
+		es->oldbuttons = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_OnGround:
+		es->onground = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_iStepLeft:
+		es->iStepLeft = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_flFallVelocity:
+		es->flFallVelocity = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_FOV:
+		es->fov = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_WeaponAnim:
+		es->weaponanim = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_ImpactTime:
+		es->impacttime = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_StartTime:
+		es->starttime = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_iUser1:
+		es->iuser1 = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_iUser2:
+		es->iuser2 = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_iUser3:
+		es->iuser3 = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_iUser4:
+		es->iuser4 = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case ES_fUser1:
+		es->fuser1 = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_fUser2:
+		es->fuser2 = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_fUser3:
+		es->fuser3 = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case ES_fUser4:
+		es->fuser4 = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	default:
+		return luaL_error(L, "Unknown EntityState member: %d", member);
+	}
+	return 1;
+}
+
+static int L_fakemeta_get_uc(lua_State* L)
+{
+	usercmd_t *uc;
+	if (lua_isnil(L, 1))
+		uc = &g_uc_glb;
+	else
+		uc = reinterpret_cast<usercmd_t*>(lua_touserdata(L, 1));
+
+	if (!uc)
+		return 0;
+
+	int member = static_cast<int>(luaL_checkinteger(L, 2));
+
+	switch (member)
+	{
+	case UC_LerpMsec:
+		lua_pushinteger(L, uc->lerp_msec);
+		break;
+	case UC_Msec:
+		lua_pushinteger(L, uc->msec);
+		break;
+	case UC_ViewAngles:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, uc->viewangles.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, uc->viewangles.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, uc->viewangles.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	case UC_ForwardMove:
+		lua_pushnumber(L, uc->forwardmove);
+		break;
+	case UC_SideMove:
+		lua_pushnumber(L, uc->sidemove);
+		break;
+	case UC_UpMove:
+		lua_pushnumber(L, uc->upmove);
+		break;
+	case UC_LightLevel:
+		lua_pushinteger(L, uc->lightlevel);
+		break;
+	case UC_Buttons:
+		lua_pushinteger(L, uc->buttons);
+		break;
+	case UC_Impulse:
+		lua_pushinteger(L, uc->impulse);
+		break;
+	case UC_WeaponSelect:
+		lua_pushinteger(L, uc->weaponselect);
+		break;
+	case UC_ImpactIndex:
+		lua_pushinteger(L, uc->impact_index);
+		break;
+	case UC_ImpactPosition:
+		lua_createtable(L, 3, 0);
+		lua_pushnumber(L, uc->impact_position.x);
+		lua_rawseti(L, -2, 1);
+		lua_pushnumber(L, uc->impact_position.y);
+		lua_rawseti(L, -2, 2);
+		lua_pushnumber(L, uc->impact_position.z);
+		lua_rawseti(L, -2, 3);
+		break;
+	default:
+		return luaL_error(L, "Unknown UserCmd member: %d", member);
+	}
+	return 1;
+}
+
+static int L_fakemeta_set_uc(lua_State* L)
+{
+	usercmd_t *uc;
+	if (lua_isnil(L, 1))
+		uc = &g_uc_glb;
+	else
+		uc = reinterpret_cast<usercmd_t*>(lua_touserdata(L, 1));
+
+	if (!uc)
+		return 0;
+
+	int member = static_cast<int>(luaL_checkinteger(L, 2));
+
+	switch (member)
+	{
+	case UC_LerpMsec:
+		uc->lerp_msec = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case UC_Msec:
+		uc->msec = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case UC_ViewAngles:
+		{
+			if (!lua_istable(L, 3))
+				return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+			lua_rawgeti(L, 3, 1);
+			uc->viewangles.x = static_cast<float>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+			lua_rawgeti(L, 3, 2);
+			uc->viewangles.y = static_cast<float>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+			lua_rawgeti(L, 3, 3);
+			uc->viewangles.z = static_cast<float>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+		}
+		break;
+	case UC_ForwardMove:
+		uc->forwardmove = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case UC_SideMove:
+		uc->sidemove = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case UC_UpMove:
+		uc->upmove = static_cast<float>(luaL_checknumber(L, 3));
+		break;
+	case UC_LightLevel:
+		uc->lightlevel = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case UC_Buttons:
+		uc->buttons = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case UC_Impulse:
+		uc->impulse = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case UC_WeaponSelect:
+		uc->weaponselect = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case UC_ImpactIndex:
+		uc->impact_index = static_cast<int>(luaL_checkinteger(L, 3));
+		break;
+	case UC_ImpactPosition:
+		{
+			if (!lua_istable(L, 3))
+				return luaL_error(L, "Argument 3 must be a table {x, y, z}");
+			lua_rawgeti(L, 3, 1);
+			uc->impact_position.x = static_cast<float>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+			lua_rawgeti(L, 3, 2);
+			uc->impact_position.y = static_cast<float>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+			lua_rawgeti(L, 3, 3);
+			uc->impact_position.z = static_cast<float>(lua_tonumber(L, -1));
+			lua_pop(L, 1);
+		}
+		break;
+	default:
+		return luaL_error(L, "Unknown UserCmd member: %d", member);
+	}
+	return 1;
+}
+
+cell AMX_NATIVE_CALL amx_fakemetal_func_init_tr2(AMX* amx, cell* params)
+{
+	lua_State* L = (lua_State*)params[1];
+	g_L = L;
+	lua_register(L, "fakemeta_create_tr2", L_fakemeta_create_tr2);
+	lua_register(L, "fakemeta_free_tr2", L_fakemeta_free_tr2);
+	lua_register(L, "fakemeta_get_tr2", L_fakemeta_get_tr2);
+	lua_register(L, "fakemeta_set_tr2", L_fakemeta_set_tr2);
+	lua_register(L, "fakemeta_create_kvd", L_fakemeta_create_kvd);
+	lua_register(L, "fakemeta_free_kvd", L_fakemeta_free_kvd);
+	lua_register(L, "fakemeta_get_kvd", L_fakemeta_get_kvd);
+	lua_register(L, "fakemeta_set_kvd", L_fakemeta_set_kvd);
+	lua_register(L, "fakemeta_get_cd", L_fakemeta_get_cd);
+	lua_register(L, "fakemeta_set_cd", L_fakemeta_set_cd);
+	lua_register(L, "fakemeta_get_es", L_fakemeta_get_es);
+	lua_register(L, "fakemeta_set_es", L_fakemeta_set_es);
+	lua_register(L, "fakemeta_get_uc", L_fakemeta_get_uc);
+	lua_register(L, "fakemeta_set_uc", L_fakemeta_set_uc);
+	return TRUE;
+}
 
