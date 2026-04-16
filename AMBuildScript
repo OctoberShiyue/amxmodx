@@ -487,6 +487,7 @@ builder.RunBuildScripts(
     'modules/fun/AMBuilder',
     'modules/geoip/AMBuilder',
     'modules/hamsandwich/AMBuilder',
+    'modules/hamsandwichl/AMBuilder',
     'modules/json/AMBuilder',
     'modules/lua/AMBuilder',
     'modules/mysqlx/AMBuilder',
