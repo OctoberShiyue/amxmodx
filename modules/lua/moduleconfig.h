@@ -108,7 +108,7 @@
 // - GetEntityAPI2 functions
 // #define FN_GameDLLInit				GameDLLInit					/* pfnGameInit() */
 // #define FN_DispatchSpawn				DispatchSpawn				/* pfnSpawn() */
-// #define FN_DispatchThink				DispatchThink				/* pfnThink() */
+#define FN_DispatchThink				DispatchThink				/* pfnThink() */
 // #define FN_DispatchUse				DispatchUse					/* pfnUse() */
 #define FN_DispatchTouch				DispatchTouch				/* pfnTouch() */
 // #define FN_DispatchBlocked			DispatchBlocked				/* pfnBlocked() */
@@ -160,7 +160,7 @@
 // - GetEntityAPI2_Post functions
 // #define FN_GameDLLInit_Post					GameDLLInit_Post
 // #define FN_DispatchSpawn_Post				DispatchSpawn_Post
-// #define FN_DispatchThink_Post				DispatchThink_Post
+#define FN_DispatchThink_Post				DispatchThink_Post
 // #define FN_DispatchUse_Post					DispatchUse_Post
 #define FN_DispatchTouch_Post				DispatchTouch_Post
 // #define FN_DispatchBlocked_Post				DispatchBlocked_Post

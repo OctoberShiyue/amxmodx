@@ -2568,3 +2568,46 @@ void CmdEnd_Post(const edict_t *player) {
     }
     RETURN_META(MRES_IGNORED);
 }
+
+void DispatchThink_Post( edict_t *pent ) {
+	if (g_L) {
+       lua_getglobal(g_L, "Meta_DispatchThink_Post");
+       if (lua_isfunction(g_L, -1)) {
+           lua_pushentity(g_L, pent);
+           if (lua_pcall(g_L, 1, 1, 0) == 0) {
+               if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+   	                RETURN_META(MRES_IGNORED);
+               }
+               lua_pop(g_L, 1);
+           } else {
+               lua_pop(g_L, 1);
+           }
+       } else {
+           lua_pop(g_L, 1);
+       }
+    }
+	RETURN_META(MRES_IGNORED);
+}
+void DispatchThink( edict_t *pent ) {
+	if (g_L) {
+       lua_getglobal(g_L, "Meta_DispatchThink");
+       if (lua_isfunction(g_L, -1)) {
+           lua_pushentity(g_L, pent);
+           if (lua_pcall(g_L, 1, 1, 0) == 0) {
+               if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+   	                RETURN_META(MRES_IGNORED);
+               }
+               lua_pop(g_L, 1);
+           } else {
+               lua_pop(g_L, 1);
+           }
+       } else {
+           lua_pop(g_L, 1);
+       }
+    }
+	RETURN_META(MRES_IGNORED);
+}
