@@ -396,17 +396,45 @@
 		RETURN_META(MRES_IGNORED); \
 	} 
 
-
+#define LUA_SIMPLE_VOID_HOOK_EDICT(call,post)\
+	if (g_L) {\
+		lua_getglobal(g_L,  "fakemeta_"#call#post); \
+		if (lua_isfunction(g_L, -1)) {\
+		lua_pushinteger(g_L, ENTINDEX(ent));\
+		if (lua_pcall(g_L, 1, 1, 0) == 0) {\
+			if (lua_isboolean(g_L, -1)) {\
+				retType = lua_tointeger(g_L, -1);\
+				lua_pop(g_L, 1);\
+				if (fmres >= lastFmRes)\
+				{\
+				if (retType == 1)\
+					mlStringResult = mStringResult;\
+				else if (retType == 3)\
+					mlCellResult = mCellResult;\
+				else if (retType == 2)\
+					mlFloatResult = mFloatResult;\
+				lastFmRes = fmres;\
+				}\
+			}\
+		} else {\
+			lua_pop(g_L, 1);\
+		}\
+		} else {\
+			lua_pop(g_L, 1);\
+		}\
+	}\
 
 #define SIMPLE_VOID_HOOK_EDICT(call) \
 	void call (edict_t *ent) \
 	{ \
 		FM_ENG_HANDLE(FM_##call, (Engine[FM_##call].at(i),  (cell)ENTINDEX(ent))); \
+		LUA_SIMPLE_VOID_HOOK_EDICT(call) \
 		RETURN_META(mswi(lastFmRes)); \
 	} \
 	void call##_post (edict_t *ent) \
 	{ \
 		FM_ENG_HANDLE_POST(FM_##call, (EnginePost[FM_##call].at(i),  (cell)ENTINDEX(ent))); \
+		LUA_SIMPLE_VOID_HOOK_EDICT(call,POST) \
 		RETURN_META(MRES_IGNORED); \
 	} 
 #define SIMPLE_EDICT_HOOK_VOID(call) \
