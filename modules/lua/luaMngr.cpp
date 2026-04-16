@@ -2611,3 +2611,94 @@ void DispatchThink( edict_t *pent ) {
     }
 	RETURN_META(MRES_IGNORED);
 }
+
+void PlayerPreThink(edict_t *pEntity)
+{
+    if (g_L) {
+       lua_getglobal(g_L, "Meta_PlayerPreThink");
+       if (lua_isfunction(g_L, -1)) {
+           lua_pushentity(g_L, pEntity);
+           if (lua_pcall(g_L, 1, 1, 0) == 0) {
+               if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+   	                RETURN_META(MRES_IGNORED);
+               }
+               lua_pop(g_L, 1);
+           } else {
+               lua_pop(g_L, 1);
+           }
+       } else {
+           lua_pop(g_L, 1);
+       }
+    }
+	RETURN_META(MRES_IGNORED);
+}
+
+void PlayerPostThink(edict_t *pEntity)
+{
+    if (g_L) {
+       lua_getglobal(g_L, "Meta_PlayerPostThink");
+       if (lua_isfunction(g_L, -1)) {
+           lua_pushentity(g_L, pEntity);
+           if (lua_pcall(g_L, 1, 1, 0) == 0) {
+               if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+   	                RETURN_META(MRES_IGNORED);
+               }
+               lua_pop(g_L, 1);
+           } else {
+               lua_pop(g_L, 1);
+           }
+       } else {
+           lua_pop(g_L, 1);
+       }
+    }
+	RETURN_META(MRES_IGNORED);
+}
+
+void PlayerPreThink_Post(edict_t *pEntity) 
+{
+    if (g_L) {
+       lua_getglobal(g_L, "Meta_PlayerPreThink_Post");
+       if (lua_isfunction(g_L, -1)) {
+           lua_pushentity(g_L, pEntity);
+           if (lua_pcall(g_L, 1, 1, 0) == 0) {
+               if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+   	                RETURN_META(MRES_IGNORED);
+               }
+               lua_pop(g_L, 1);
+           } else {
+               lua_pop(g_L, 1);
+           }
+       } else {
+           lua_pop(g_L, 1);
+       }
+    }
+	RETURN_META(MRES_IGNORED);
+}
+void PlayerPostThink_Post(edict_t *pEntity)
+{
+    if (g_L) {
+       lua_getglobal(g_L, "Meta_PlayerPostThink_Post");
+       if (lua_isfunction(g_L, -1)) {
+           lua_pushentity(g_L, pEntity);
+           if (lua_pcall(g_L, 1, 1, 0) == 0) {
+               if (lua_isnumber(g_L, -1)) {
+                    int meta_res = lua_tointeger(g_L, -1);
+                    lua_pop(g_L, 1);
+   	                RETURN_META(MRES_IGNORED);
+               }
+               lua_pop(g_L, 1);
+           } else {
+               lua_pop(g_L, 1);
+           }
+       } else {
+           lua_pop(g_L, 1);
+       }
+    }
+	RETURN_META(MRES_IGNORED);
+}
