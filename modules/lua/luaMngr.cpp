@@ -108,6 +108,34 @@ static int L_get_gametime(lua_State* L)
     lua_pushnumber(L, gpGlobals->time);
     return 1;
 }
+
+static int L_lua_print(lua_State* L)
+{
+    int n = lua_gettop(L);
+    if (n == 0) {
+        return 0;
+    }
+
+    lua_getglobal(L, "tostring");
+    for (int i = 1; i <= n; i++) {
+        const char* s;
+        lua_pushvalue(L, -1);
+        lua_pushvalue(L, i);
+        lua_call(L, 1, 1);
+        s = lua_tostring(L, -1);
+        if (s == NULL) {
+            lua_pushfstring(L, "[Lua] (error object is a %s)", luaL_typename(L, i));
+        } else {
+            if (i > 1) {
+                MF_Log("[Lua] \t%s", s);
+            } else {
+                MF_Log("[Lua] %s", s);
+            }
+        }
+        lua_pop(L, 1);
+    }
+    return 0;
+}
 static int L_random_num(lua_State* L)
 {
     lua_pushinteger(L, RANDOM_LONG(lua_tointeger(L, 1), lua_tointeger(L, 2)));
@@ -1631,6 +1659,7 @@ cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
 // Native 实现: 生命周期
 // ---------------------------------------------------------
 void InitLuaAPI(lua_State* L) {
+    lua_register(L, "amxx2_print", L_lua_print);
     lua_register(L, "amxx_get_gametime", L_get_gametime);
     lua_register(L, "amxx_random_num", L_random_num);
     lua_register(L, "amxx2_is_nullent", L_is_nullent);
