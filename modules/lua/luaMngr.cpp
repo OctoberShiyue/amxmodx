@@ -3,6 +3,19 @@
 bool HasReHlds;
 bool HasReGameDll;
 
+#define LUA_CALL_MAX_ARGS 64
+#define LUA_CALL_MAX_RETURNS 16
+#define LUA_CALL_STRING_LEN 1024
+
+enum LuaCallRetType
+{
+    LUA_CALL_RET_NIL = 0,
+    LUA_CALL_RET_INT,
+    LUA_CALL_RET_FLOAT,
+    LUA_CALL_RET_STRING,
+    LUA_CALL_RET_BOOL
+};
+
 
 lua_State *g_L = nullptr;
 clientdata_t g_cd_glb;
@@ -10,6 +23,13 @@ clientdata_t g_cd_glb;
 // float g_fNextActionTime;
 // typedef ke::HashMap<ke::AString, int,int> g_FuncIdMap;
 StringHashMap<int> g_LuaPawnFuncMap;
+char g_LuaCallArgTypes[LUA_CALL_MAX_ARGS + 1] = {0};
+int g_LuaCallArgCount = 0;
+int g_LuaCallReturnCount = 0;
+int g_LuaCallReturnTypes[LUA_CALL_MAX_RETURNS] = {0};
+cell g_LuaCallReturnInts[LUA_CALL_MAX_RETURNS] = {0};
+float g_LuaCallReturnFloats[LUA_CALL_MAX_RETURNS] = {0.0f};
+char g_LuaCallReturnStrings[LUA_CALL_MAX_RETURNS][LUA_CALL_STRING_LEN] = {{0}};
 
 inline void lua_pushentity(lua_State* L,const edict_t* pent) {
     if (pent && !FNullEnt(pent)) 
@@ -2082,6 +2102,192 @@ static cell AMX_NATIVE_CALL n_lua_getL(AMX *amx, cell *params)
     return reinterpret_cast<cell>(g_L);
 }
 
+static void lua_call_clear_returns()
+{
+    g_LuaCallReturnCount = 0;
+    for (int i = 0; i < LUA_CALL_MAX_RETURNS; i++)
+    {
+        g_LuaCallReturnTypes[i] = LUA_CALL_RET_NIL;
+        g_LuaCallReturnInts[i] = 0;
+        g_LuaCallReturnFloats[i] = 0.0f;
+        g_LuaCallReturnStrings[i][0] = '\0';
+    }
+}
+
+static char normalize_lua_call_arg_type(char type)
+{
+    if (type >= 'a' && type <= 'z')
+        type = type - 'a' + 'A';
+    return type;
+}
+
+static cell AMX_NATIVE_CALL n_lua_call_function_args(AMX *amx, cell *params)
+{
+    int totalParams = params[0] / sizeof(cell);
+    g_LuaCallArgCount = 0;
+    g_LuaCallArgTypes[0] = '\0';
+
+    for (int i = 1; i <= totalParams && g_LuaCallArgCount < LUA_CALL_MAX_ARGS; i++)
+    {
+        char *typeStr = MF_GetAmxString(amx, params[i], (i - 1) % 4, NULL);
+        if (!typeStr || !typeStr[0])
+            continue;
+
+        char type = normalize_lua_call_arg_type(typeStr[0]);
+        if (type != 'I' && type != 'F' && type != 'S' && type != 'B')
+            continue;
+
+        g_LuaCallArgTypes[g_LuaCallArgCount++] = type;
+    }
+
+    g_LuaCallArgTypes[g_LuaCallArgCount] = '\0';
+    return g_LuaCallArgCount;
+}
+
+static cell AMX_NATIVE_CALL n_lua_call_function(AMX *amx, cell *params)
+{
+    lua_State *L = (lua_State *)params[1];
+    if (!L)
+    {
+        MF_Log("n_lua_call_function: Invalid Lua state.");
+        lua_call_clear_returns();
+        return 0;
+    }
+
+    char *funcName = MF_GetAmxString(amx, params[2], 0, NULL);
+    int totalParams = params[0] / sizeof(cell);
+    int argCount = totalParams - 2;
+    int stackBase = lua_gettop(L);
+
+    lua_call_clear_returns();
+    lua_getglobal(L, funcName);
+    if (!lua_isfunction(L, -1))
+    {
+        lua_pop(L, 1);
+        MF_Log("n_lua_call_function: Lua function '%s' not found.", funcName);
+        return 0;
+    }
+
+    for (int i = 0; i < argCount; i++)
+    {
+        char type = (i < g_LuaCallArgCount) ? g_LuaCallArgTypes[i] : 'I';
+        cell *argPtr = MF_GetAmxAddr(amx, params[i + 3]);
+        cell argValue = argPtr ? *argPtr : params[i + 3];
+        switch (type)
+        {
+            case 'F':
+                lua_pushnumber(L, amx_ctof(argValue));
+                break;
+            case 'S':
+                lua_pushstring(L, MF_GetAmxString(amx, params[i + 3], i % 4, NULL));
+                break;
+            case 'B':
+                lua_pushboolean(L, argValue ? 1 : 0);
+                break;
+            case 'I':
+            default:
+                lua_pushinteger(L, argValue);
+                break;
+        }
+    }
+
+    if (lua_pcall(L, argCount, LUA_MULTRET, 0) != LUA_OK)
+    {
+        MF_Log("n_lua_call_function: Lua error calling '%s': %s", funcName, lua_tostring(L, -1));
+        lua_settop(L, stackBase);
+        return 0;
+    }
+
+    int retCount = lua_gettop(L) - stackBase;
+    if (retCount > LUA_CALL_MAX_RETURNS)
+        retCount = LUA_CALL_MAX_RETURNS;
+
+    g_LuaCallReturnCount = retCount;
+    for (int i = 0; i < retCount; i++)
+    {
+        int idx = stackBase + i + 1;
+        if (lua_isboolean(L, idx))
+        {
+            g_LuaCallReturnTypes[i] = LUA_CALL_RET_BOOL;
+            g_LuaCallReturnInts[i] = lua_toboolean(L, idx) ? 1 : 0;
+            g_LuaCallReturnFloats[i] = g_LuaCallReturnInts[i] ? 1.0f : 0.0f;
+        }
+        else if (lua_isnumber(L, idx))
+        {
+            lua_Number num = lua_tonumber(L, idx);
+            lua_Integer integer = lua_tointeger(L, idx);
+            g_LuaCallReturnInts[i] = (cell)integer;
+            g_LuaCallReturnFloats[i] = (float)num;
+            if ((lua_Number)integer == num)
+                g_LuaCallReturnTypes[i] = LUA_CALL_RET_INT;
+            else
+                g_LuaCallReturnTypes[i] = LUA_CALL_RET_FLOAT;
+        }
+        else if (lua_isstring(L, idx))
+        {
+            const char *str = lua_tostring(L, idx);
+            g_LuaCallReturnTypes[i] = LUA_CALL_RET_STRING;
+            if (str)
+            {
+                strncpy(g_LuaCallReturnStrings[i], str, LUA_CALL_STRING_LEN - 1);
+                g_LuaCallReturnStrings[i][LUA_CALL_STRING_LEN - 1] = '\0';
+            }
+        }
+        else
+        {
+            g_LuaCallReturnTypes[i] = LUA_CALL_RET_NIL;
+        }
+    }
+
+    lua_settop(L, stackBase);
+    return g_LuaCallReturnCount;
+}
+
+static cell AMX_NATIVE_CALL n_lua_call_function_ret_i(AMX *amx, cell *params)
+{
+    int index = params[1] - 1;
+    if (index < 0 || index >= g_LuaCallReturnCount)
+        return 0;
+
+    if (g_LuaCallReturnTypes[index] == LUA_CALL_RET_FLOAT)
+        return (cell)g_LuaCallReturnFloats[index];
+
+    return g_LuaCallReturnInts[index];
+}
+
+static cell AMX_NATIVE_CALL n_lua_call_function_ret_f(AMX *amx, cell *params)
+{
+    int index = params[1] - 1;
+    if (index < 0 || index >= g_LuaCallReturnCount)
+        return amx_ftoc(0.0f);
+
+    if (g_LuaCallReturnTypes[index] == LUA_CALL_RET_INT || g_LuaCallReturnTypes[index] == LUA_CALL_RET_BOOL)
+        return amx_ftoc((float)g_LuaCallReturnInts[index]);
+
+    return amx_ftoc(g_LuaCallReturnFloats[index]);
+}
+
+static cell AMX_NATIVE_CALL n_lua_call_function_ret_s(AMX *amx, cell *params)
+{
+    int index = params[1] - 1;
+    if (index < 0 || index >= g_LuaCallReturnCount)
+        return MF_SetAmxStringUTF8Char(amx, params[2], "", 0, params[3]);
+
+    if (g_LuaCallReturnTypes[index] == LUA_CALL_RET_STRING)
+    {
+        size_t len = strlen(g_LuaCallReturnStrings[index]);
+        return MF_SetAmxStringUTF8Char(amx, params[2], g_LuaCallReturnStrings[index], len, params[3]);
+    }
+
+    char buffer[64];
+    if (g_LuaCallReturnTypes[index] == LUA_CALL_RET_FLOAT)
+        _snprintf(buffer, sizeof(buffer), "%g", g_LuaCallReturnFloats[index]);
+    else
+        _snprintf(buffer, sizeof(buffer), "%d", g_LuaCallReturnInts[index]);
+    buffer[sizeof(buffer) - 1] = '\0';
+    return MF_SetAmxStringUTF8Char(amx, params[2], buffer, strlen(buffer), params[3]);
+}
+
 // ---------------------------------------------------------
 // 注册 Native 列表
 // ---------------------------------------------------------
@@ -2119,6 +2325,11 @@ AMX_NATIVE_INFO LuaNatives[] = {
     {"lua_unref", Native_LuaUnref},
     {"lua_ref", Native_LuaRef},
     {"lua_getL", n_lua_getL},
+    {"lua_call_function_args", n_lua_call_function_args},
+    {"lua_call_function", n_lua_call_function},
+    {"lua_call_function_ret_i", n_lua_call_function_ret_i},
+    {"lua_call_function_ret_f", n_lua_call_function_ret_f},
+    {"lua_call_function_ret_s", n_lua_call_function_ret_s},
     {NULL, NULL}};
 
 void OnAmxxAttach()
