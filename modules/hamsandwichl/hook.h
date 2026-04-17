@@ -29,6 +29,7 @@ class Hook
 public:
 	ke::Vector<Forward *> pre;     // pre forwards
 	ke::Vector<Forward *> post;    // post forwards
+	int              hamId;   // ham function id
 	void			*func;    // original function
 	void           **vtable;  // vtable of the original location
 	int              entry;   // vtable entry of the function
@@ -39,8 +40,8 @@ public:
 	char			*ent;     // ent name that's being hooked
 	int              trampSize;
 
-	Hook(void **vtable_, int entry_, void *target_, bool voidcall, bool retbuf, int paramcount, const char *name) :
-		func(NULL), vtable(vtable_), entry(entry_), target(target_), exec(0), del(0), tramp(NULL), trampSize(0)
+	Hook(void **vtable_, int hamId_, int entry_, void *target_, bool voidcall, bool retbuf, int paramcount, const char *name) :
+		hamId(hamId_), func(NULL), vtable(vtable_), entry(entry_), target(target_), exec(0), del(0), tramp(NULL), trampSize(0)
 		{
 			// original function is vtable[entry]
 			// to not make the compiler whine, cast vtable to int **

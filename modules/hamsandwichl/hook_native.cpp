@@ -681,7 +681,7 @@ static cell AMX_NATIVE_CALL RegisterHam(AMX *amx, cell *params)
 	}
 
 	// If we got here, the function is not hooked
-	Hook *hook = new Hook(vtable, hooklist[func].vtid, hooklist[func].targetfunc, hooklist[func].isvoid, hooklist[func].needsretbuf, hooklist[func].paramcount, classname.chars());
+	Hook *hook = new Hook(vtable,func, hooklist[func].vtid, hooklist[func].targetfunc, hooklist[func].isvoid, hooklist[func].needsretbuf, hooklist[func].paramcount, classname.chars());
 	hooks[func].append(hook);
 
 	if (post)
@@ -774,7 +774,7 @@ static cell AMX_NATIVE_CALL RegisterHamFromEntity(AMX *amx, cell *params)
 	ke::SafeSprintf(classname, sizeof(classname), "%s", STRING(Entity->v.classname));
 
 	// If we got here, the function is not hooked
-	Hook *hook = new Hook(vtable, hooklist[func].vtid, hooklist[func].targetfunc, hooklist[func].isvoid, hooklist[func].needsretbuf, hooklist[func].paramcount, classname);
+	Hook *hook = new Hook(vtable,func, hooklist[func].vtid, hooklist[func].targetfunc, hooklist[func].isvoid, hooklist[func].needsretbuf, hooklist[func].paramcount, classname);
 	hooks[func].append(hook);
 
 	if (post)
@@ -847,10 +847,23 @@ static cell AMX_NATIVE_CALL EnableHamForward(AMX *amx, cell *params)
 	fwd->state=FSTATE_OK;
 	return 0;
 }
+
+static cell AMX_NATIVE_CALL RegisterHam_Disabled(AMX *amx, cell *params)
+{
+	MF_LogError(amx, AMX_ERR_NATIVE, "RegisterHamL is disabled: hamsandwichl local hooking is turned off to avoid conflicts with hamsandwich. Use original RegisterHam or the future patch bridge.");
+	return 0;
+}
+
+static cell AMX_NATIVE_CALL RegisterHamFromEntity_Disabled(AMX *amx, cell *params)
+{
+	MF_LogError(amx, AMX_ERR_NATIVE, "RegisterHamFromEntityL is disabled: hamsandwichl local hooking is turned off to avoid conflicts with hamsandwich. Use original RegisterHamFromEntity or the future patch bridge.");
+	return 0;
+}
+
 AMX_NATIVE_INFO RegisterNatives[] =
 {
-	{ "RegisterHamL",			RegisterHam },
-	{ "RegisterHamFromEntityL",	RegisterHamFromEntity },
+	{ "RegisterHamL",			RegisterHam_Disabled },
+	{ "RegisterHamFromEntityL",	RegisterHamFromEntity_Disabled },
 	{ "ExecuteHamL",				ExecuteHam },
 	{ "ExecuteHamBL",			ExecuteHamB },
 	{ "IsHamValidL",				IsHamValid },

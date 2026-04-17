@@ -22,9 +22,11 @@
 #include <amtl/am-vector.h>
 #include <amtl/am-string.h>
 #include <sh_stack.h>
+#include "lualib/lua.hpp"
 
 #include "hook.h"
 #include "forward.h"
+#include "hooklist.h"
 
 #include "ham_const.h"	
 #include "ham_utils.h"
@@ -32,6 +34,104 @@
 #include "DataHandler.h"
 
 extern bool gDoForwards;
+extern lua_State* g_L;
+extern hook_t hooklist[];
+
+static void PushHamDataToLua(lua_State* L, Data* dat)
+{
+	switch (dat->GetType())
+	{
+	case RET_VOID:
+		lua_pushnil(L);
+		break;
+	case RET_BOOL:
+		lua_pushboolean(L, *reinterpret_cast<bool*>(dat->GetRawPtr()) ? 1 : 0);
+		break;
+	case RET_INTEGER:
+	case RET_SHORT:
+	case RET_ITEMINFO:
+	case RET_TRACE:
+		lua_pushinteger(L, *reinterpret_cast<int*>(dat->GetRawPtr()));
+		break;
+	case RET_FLOAT:
+		lua_pushnumber(L, *reinterpret_cast<float*>(dat->GetRawPtr()));
+		break;
+	case RET_VECTOR:
+		{
+			Vector* vec = reinterpret_cast<Vector*>(dat->GetRawPtr());
+			lua_newtable(L);
+			lua_pushnumber(L, vec->x); lua_rawseti(L, -2, 1);
+			lua_pushnumber(L, vec->y); lua_rawseti(L, -2, 2);
+			lua_pushnumber(L, vec->z); lua_rawseti(L, -2, 3);
+			break;
+		}
+	case RET_STRING:
+		lua_pushstring(L, reinterpret_cast<ke::AString*>(dat->GetRawPtr())->chars());
+		break;
+	case RET_CBASE:
+		lua_pushinteger(L, TypeConversion.cbase_to_id(*reinterpret_cast<void**>(dat->GetRawPtr())));
+		break;
+	case RET_ENTVAR:
+		lua_pushinteger(L, TypeConversion.entvars_to_id(*reinterpret_cast<entvars_t**>(dat->GetRawPtr())));
+		break;
+	case RET_EDICT:
+		lua_pushinteger(L, TypeConversion.edict_to_id(*reinterpret_cast<edict_t**>(dat->GetRawPtr())));
+		break;
+	default:
+		lua_pushnil(L);
+		break;
+	}
+}
+
+static int ExecuteLuaHamForward(Hook* hook, bool post, int iThis)
+{
+	if (!g_L)
+	{
+		return HAM_UNSET;
+	}
+
+	const char* hamName = hooklist[hook->hamId].name;
+	if (!hamName)
+	{
+		return HAM_UNSET;
+	}
+
+	char callbackName[128];
+	ke::SafeSprintf(callbackName, sizeof(callbackName), "ham_%s%s", hamName, post ? "_post" : "");
+	lua_getglobal(g_L, callbackName);
+	if (!lua_isfunction(g_L, -1))
+	{
+		lua_pop(g_L, 1);
+		return HAM_UNSET;
+	}
+
+	lua_pushinteger(g_L, iThis);
+	ke::Vector<Data *> *vec = ParamStack.front();
+	for (size_t i = 1; i < vec->length(); ++i)
+	{
+		PushHamDataToLua(g_L, vec->at(i));
+	}
+
+	int nargs = static_cast<int>(vec->length());
+	if (lua_pcall(g_L, nargs, 1, 0) != 0)
+	{
+		const char* err = lua_tostring(g_L, -1);
+		if (err)
+		{
+			MF_Log("[hamsandwichl] Lua ham callback error in %s: %s", callbackName, err);
+		}
+		lua_pop(g_L, 1);
+		return HAM_UNSET;
+	}
+
+	int result = HAM_UNSET;
+	if (lua_isnumber(g_L, -1) || lua_isboolean(g_L, -1))
+	{
+		result = static_cast<int>(lua_tointeger(g_L, -1));
+	}
+	lua_pop(g_L, 1);
+	return result;
+}
 
 // Return value pushes
 #define PUSH_VOID() ReturnStack.push(new Data(RET_VOID, NULL));				OrigReturnStack.push(new Data(RET_VOID, NULL));
@@ -96,6 +196,11 @@ extern bool gDoForwards;
 				result=thisresult;								\
 			}													\
 		}														\
+		thisresult = ExecuteLuaHamForward(hook, false, iThis); \
+		if (thisresult > result)								\
+		{														\
+			result=thisresult;									\
+		}														\
 	}															\
 	if (result < HAM_SUPERCEDE)									\
 	{
@@ -117,6 +222,11 @@ extern bool gDoForwards;
 			{															\
 				result=thisresult;										\
 			}															\
+		}																\
+		thisresult = ExecuteLuaHamForward(hook, true, iThis);			\
+		if (thisresult > result)										\
+		{																\
+			result=thisresult;											\
 		}																\
 	}																	\
 	ReturnStatus.pop();

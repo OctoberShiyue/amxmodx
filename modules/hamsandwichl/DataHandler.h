@@ -103,6 +103,16 @@ public:
 		return m_type;
 	};
 
+	void *GetRawPtr()
+	{
+		return m_data;
+	}
+
+	int *GetRawIndexPtr()
+	{
+		return m_index;
+	}
+
 	// All Get/Set value natives return < 0 on failure.
 	// -1: Wrong type
 	// -2: Bad data pointer (void, etc).
