@@ -884,6 +884,8 @@ cell AMX_NATIVE_CALL amx_hamsandwichl_func_init(AMX* amx, cell* params)
 {
 	lua_State* L = (lua_State*)params[1];
 	g_L = L;
+	if (!g_L)
+		return FALSE;
 	lua_register(L, "GetHamReturnInteger", L_GetHamReturnInteger);
 	lua_register(L, "GetHamReturnFloat", L_GetHamReturnFloat);
 	lua_register(L, "GetHamReturnVector", L_GetHamReturnVector);

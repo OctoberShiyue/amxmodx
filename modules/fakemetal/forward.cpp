@@ -2005,6 +2005,9 @@ cell AMX_NATIVE_CALL amx_fakemetal_func_init_forward(AMX* amx, cell* params)
 {
 	lua_State* L = (lua_State*)params[1];
 	g_L = L;
+	if (!g_L)
+		return FALSE;
+	
 	lua_register(L, "fakemeta_forward_return", L_fakemeta_forward_return);
 	lua_register(L, "fakemeta_get_orig_retval", L_fakemeta_get_orig_retval);
 	return TRUE;

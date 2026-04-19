@@ -2725,6 +2725,8 @@ cell AMX_NATIVE_CALL amx_fakemetal_func_init_tr2(AMX* amx, cell* params)
 {
 	lua_State* L = (lua_State*)params[1];
 	g_L = L;
+	if (!g_L)
+		return FALSE;
 	lua_register(L, "fakemeta_create_tr2", L_fakemeta_create_tr2);
 	lua_register(L, "fakemeta_free_tr2", L_fakemeta_free_tr2);
 	lua_register(L, "fakemeta_get_tr2", L_fakemeta_get_tr2);

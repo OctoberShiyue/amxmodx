@@ -1704,6 +1704,8 @@ cell AMX_NATIVE_CALL amx_fakemetal_func_init_eng(AMX* amx, cell* params)
 {
 	lua_State* L = (lua_State*)params[1];
 	g_L = L;
+	if (!g_L)
+		return FALSE;
 	lua_register(L, "fakemeta_engfunc", L_fakemeta_engfunc);
 	return TRUE;
 }
