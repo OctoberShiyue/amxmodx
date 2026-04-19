@@ -22,7 +22,7 @@
 #define MODULE_VERSION AMXX_VERSION
 #define MODULE_AUTHOR "AMX Mod X Dev Team"
 #define MODULE_URL "http://www.amxmodx.org"
-#define MODULE_LOGTAG "HAMSANDWICH"
+#define MODULE_LOGTAG "HAMSANDWICHL"
 #define MODULE_LIBRARY "hamsandwich"
 #define MODULE_LIBCLASS ""
 // If you want the module not to be reloaded on mapchange, remove / comment out the next line

@@ -147,14 +147,14 @@ static cell AMX_NATIVE_CALL set_pdata_cbase(AMX *amx, cell *params)
 
 AMX_NATIVE_INFO pdata_natives_safe[] =
 {
-	{ "get_pdata_cbase_safeL",	get_pdata_cbase_safe },
+	{ "get_pdata_cbase_safe",	get_pdata_cbase_safe },
 
 	{ NULL,						NULL }
 };
 AMX_NATIVE_INFO pdata_natives[] =
 {
-	{ "get_pdata_cbaseL",		get_pdata_cbase },
-	{ "set_pdata_cbaseL",		set_pdata_cbase },
+	{ "get_pdata_cbase",		get_pdata_cbase },
+	{ "set_pdata_cbase",		set_pdata_cbase },
 
 	{ NULL,						NULL }
 };

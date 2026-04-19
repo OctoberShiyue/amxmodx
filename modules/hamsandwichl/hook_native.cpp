@@ -862,13 +862,13 @@ static cell AMX_NATIVE_CALL RegisterHamFromEntity_Disabled(AMX *amx, cell *param
 
 AMX_NATIVE_INFO RegisterNatives[] =
 {
-	{ "RegisterHamL",			RegisterHam_Disabled },
-	{ "RegisterHamFromEntityL",	RegisterHamFromEntity_Disabled },
-	{ "ExecuteHamL",				ExecuteHam },
-	{ "ExecuteHamBL",			ExecuteHamB },
-	{ "IsHamValidL",				IsHamValid },
-	{ "DisableHamForwardL",		DisableHamForward },
-	{ "EnableHamForwardL",		EnableHamForward },
+	{ "RegisterHam",			RegisterHam },
+	{ "RegisterHamFromEntity",	RegisterHamFromEntity },
+	{ "ExecuteHam",				ExecuteHam },
+	{ "ExecuteHamB",			ExecuteHamB },
+	{ "IsHamValid",				IsHamValid },
+	{ "DisableHamForward",		DisableHamForward },
+	{ "EnableHamForward",		EnableHamForward },
 
 	{ NULL,						NULL }
 };
