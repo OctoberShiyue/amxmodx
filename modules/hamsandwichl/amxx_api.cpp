@@ -69,6 +69,7 @@ void OnAmxxAttach(void)
 	assert(strcmp(hooklist[Ham_SC_Player_EnteredObserver].name, "sc_player_enteredobserver") == 0);
 
 	MF_AddNatives(pdata_natives_safe);
+	MF_OverrideNatives(pdata_natives_safe,MODULE_NAME);
 
 	if (ReadConfig() > 0)
 	{
