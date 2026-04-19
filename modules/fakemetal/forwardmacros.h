@@ -18,14 +18,14 @@
 #define SIMPLE_CONSTSTRING_HOOK_VOID(call) \
 	const char* call () \
 	{ \
-		FM_ENG_HANDLE(FM_##call, (Engine[FM_##call].at(i))); \
+		FM_ENG_HANDLE0(FM_##call, (Engine[FM_##call].at(i))); \
 		LUA_SIMPLE_CONSTSTRING_HOOK_VOID(call, ) \
 		RETURN_META_VALUE(mswi(lastFmRes), mlStringResult); \
 	} \
 	const char* call##_post () \
 	{ \
 		origStringRet = META_RESULT_ORIG_RET(const char *); \
-		FM_ENG_HANDLE_POST(FM_##call, (EnginePost[FM_##call].at(i))); \
+		FM_ENG_HANDLE_POST0(FM_##call, (EnginePost[FM_##call].at(i))); \
 		LUA_SIMPLE_CONSTSTRING_HOOK_VOID(call, POST) \
 		RETURN_META_VALUE(MRES_IGNORED, mlStringResult); \
 	}
@@ -909,6 +909,167 @@
 	LUA_HOOK_PUSH_INT((bah) > 0 ? 1 : 0) \
 	LUA_HOOK_CALL(3)
 
+#define FM_MakeLuaForward(_0, ...) FM_ExecuteCurrentLuaForwardArgs(__VA_ARGS__)
+
+#define FM_ENG_HANDLE0(pfnCall, pfnArgs) \
+	register unsigned int i = 0; \
+	clfm(); \
+	int fmres = FMRES_IGNORED; \
+	int lastFmRes = FMRES_IGNORED; \
+	for (i=0; i<Engine[pfnCall].length(); i++) \
+	{ \
+		fmres = MF_ExecuteForward pfnArgs; \
+		if (fmres >= lastFmRes) { \
+			if (retType == FMV_STRING) \
+				mlStringResult = mStringResult; \
+			else if (retType == FMV_CELL) \
+				mlCellResult = mCellResult; \
+			else if (retType == FMV_FLOAT) \
+				mlFloatResult = mFloatResult; \
+			lastFmRes = fmres; \
+		} \
+	} \
+	FM_MakeLuaForwardName(#pfnCall + 3, false); \
+	fmres = FM_MakeLuaForward pfnArgs; \
+	if (fmres >= lastFmRes) { \
+		if (retType == FMV_STRING) \
+			mlStringResult = mStringResult; \
+		else if (retType == FMV_CELL) \
+			mlCellResult = mCellResult; \
+		else if (retType == FMV_FLOAT) \
+			mlFloatResult = mFloatResult; \
+		lastFmRes = fmres; \
+	}
+
+#define LUA_SIMPLE_HOOK_DISABLED(...) 
+
+#undef LUA_SIMPLE_CHAR_HOOK_CONSTSTRING_RETURN
+#define LUA_SIMPLE_CHAR_HOOK_CONSTSTRING_RETURN(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_STRING_HOOK_STRING_CONSTSTRING_RW
+#define LUA_SIMPLE_STRING_HOOK_STRING_CONSTSTRING_RW(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_BOOL_HOOK_EDICT_CONSTSTRING_CONSTSTRING_STRING128_RW
+#define LUA_SIMPLE_BOOL_HOOK_EDICT_CONSTSTRING_CONSTSTRING_STRING128_RW(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_STRING_CONSTSTRING_CONSTSTRING_RW
+#define LUA_SIMPLE_VOID_HOOK_STRING_CONSTSTRING_CONSTSTRING_RW(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_INT_STRING_CONSTSTRING_CONSTSTRING_RW
+#define LUA_SIMPLE_VOID_HOOK_INT_STRING_CONSTSTRING_CONSTSTRING_RW(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_VOID
+#define LUA_SIMPLE_VOID_HOOK_VOID(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_INT
+#define LUA_SIMPLE_VOID_HOOK_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_FLOAT
+#define LUA_SIMPLE_VOID_HOOK_FLOAT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_EDICT
+#define LUA_SIMPLE_VOID_HOOK_EDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_EDICT_EDICT
+#define LUA_SIMPLE_VOID_HOOK_EDICT_EDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTSTRING
+#define LUA_SIMPLE_VOID_HOOK_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_INT_CONSTSTRING
+#define LUA_SIMPLE_VOID_HOOK_INT_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTSTRING_CONSTSTRING
+#define LUA_SIMPLE_VOID_HOOK_CONSTSTRING_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTSTRING_FLOAT
+#define LUA_SIMPLE_VOID_HOOK_CONSTSTRING_FLOAT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_INT_INT
+#define LUA_SIMPLE_VOID_HOOK_INT_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_INT_HOOK_VOID
+#define LUA_SIMPLE_INT_HOOK_VOID(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_INT_HOOK_INT
+#define LUA_SIMPLE_INT_HOOK_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_INT_HOOK_EDICT
+#define LUA_SIMPLE_INT_HOOK_EDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_INT_HOOK_CONSTEDICT
+#define LUA_SIMPLE_INT_HOOK_CONSTEDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_FLOAT_HOOK_VOID
+#define LUA_SIMPLE_FLOAT_HOOK_VOID(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_FLOAT_HOOK_CONSTSTRING
+#define LUA_SIMPLE_FLOAT_HOOK_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_CONSTSTRING_HOOK_VOID
+#define LUA_SIMPLE_CONSTSTRING_HOOK_VOID(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_CONSTSTRING_HOOK_CONSTSTRING
+#define LUA_SIMPLE_CONSTSTRING_HOOK_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_CONSTSTRING_HOOK_INT
+#define LUA_SIMPLE_CONSTSTRING_HOOK_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_CONSTSTRING_HOOK_CONSTEDICT
+#define LUA_SIMPLE_CONSTSTRING_HOOK_CONSTEDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_CONSTSTRING_HOOK_CONSTEDICT_CONSTSTRING
+#define LUA_SIMPLE_CONSTSTRING_HOOK_CONSTEDICT_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_STRING_HOOK_STRING_STRING
+#define LUA_SIMPLE_STRING_HOOK_STRING_STRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_STRING_HOOK_STRING_CONSTSTRING
+#define LUA_SIMPLE_STRING_HOOK_STRING_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_CHAR_HOOK_STRING
+#define LUA_SIMPLE_CHAR_HOOK_STRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_CHAR_HOOK_CONSTSTRING
+#define LUA_SIMPLE_CHAR_HOOK_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_EDICT_HOOK_VOID
+#define LUA_SIMPLE_EDICT_HOOK_VOID(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_EDICT_HOOK_INT
+#define LUA_SIMPLE_EDICT_HOOK_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_EDICT_HOOK_EDICT
+#define LUA_SIMPLE_EDICT_HOOK_EDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_EDICT_HOOK_CONSTSTRING
+#define LUA_SIMPLE_EDICT_HOOK_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_CONSTSTRING_HOOK_EDICT
+#define LUA_SIMPLE_CONSTSTRING_HOOK_EDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTEDICT
+#define LUA_SIMPLE_VOID_HOOK_CONSTEDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTEDICT_FLOAT
+#define LUA_SIMPLE_VOID_HOOK_CONSTEDICT_FLOAT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTEDICT_FLOAT_FLOAT
+#define LUA_SIMPLE_VOID_HOOK_CONSTEDICT_FLOAT_FLOAT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTEDICT_CONSTEDICT
+#define LUA_SIMPLE_VOID_HOOK_CONSTEDICT_CONSTEDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTEDICT_INT_INT_INT_INT
+#define LUA_SIMPLE_VOID_HOOK_CONSTEDICT_INT_INT_INT_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTEDICT_CONSTSTRING_CONSTSTRING
+#define LUA_SIMPLE_VOID_HOOK_CONSTEDICT_CONSTSTRING_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_UINT_HOOK_EDICT
+#define LUA_SIMPLE_UINT_HOOK_EDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_BOOL_HOOK_EDICT_CONSTSTRING_CONSTSTRING_STRING128
+#define LUA_SIMPLE_BOOL_HOOK_EDICT_CONSTSTRING_CONSTSTRING_STRING128(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_EDICT_INT_CONSTSTRING_FLOAT_FLOAT_INT_INT
+#define LUA_SIMPLE_VOID_HOOK_EDICT_INT_CONSTSTRING_FLOAT_FLOAT_INT_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_EDICT_VECT_CONSTSTRING_FLOAT_FLOAT_INT_INT
+#define LUA_SIMPLE_VOID_HOOK_EDICT_VECT_CONSTSTRING_FLOAT_FLOAT_INT_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_EDICT_HOOK_EDICT_CONSTVECT_FLOAT
+#define LUA_SIMPLE_EDICT_HOOK_EDICT_CONSTVECT_FLOAT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_HOOK_PLAYBACK_EVENT
+#define LUA_SIMPLE_HOOK_PLAYBACK_EVENT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_INT_HOOK_STRING
+#define LUA_SIMPLE_INT_HOOK_STRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_INT_HOOK_CONSTSTRING
+#define LUA_SIMPLE_INT_HOOK_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_INT_HOOK_CONSTSTRING_INT
+#define LUA_SIMPLE_INT_HOOK_CONSTSTRING_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_USHORT_HOOK_INT_CONSTSTRING
+#define LUA_SIMPLE_USHORT_HOOK_INT_CONSTSTRING(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_FLOAT_HOOK_CONSTVECT
+#define LUA_SIMPLE_FLOAT_HOOK_CONSTVECT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_INT_HOOK_CONSTVECT
+#define LUA_SIMPLE_INT_HOOK_CONSTVECT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTVECT
+#define LUA_SIMPLE_VOID_HOOK_CONSTVECT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_EDICT_CONSTVECT
+#define LUA_SIMPLE_VOID_HOOK_EDICT_CONSTVECT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_EDICT_FLOAT_VECT
+#define LUA_SIMPLE_VOID_HOOK_EDICT_FLOAT_VECT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_EDICT_CONSTVECT_CONSTVECT
+#define LUA_SIMPLE_VOID_HOOK_EDICT_CONSTVECT_CONSTVECT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTVECT_CONSTVECT_FLOAT_FLOAT
+#define LUA_SIMPLE_VOID_HOOK_CONSTVECT_CONSTVECT_FLOAT_FLOAT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_VOID_HOOK_CONSTVECT_VECT_VECT_VECT
+#define LUA_SIMPLE_VOID_HOOK_CONSTVECT_VECT_VECT_VECT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_INT_HOOK_EDICT_EDICT
+#define LUA_SIMPLE_INT_HOOK_EDICT_EDICT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_INT_HOOK_EDICT_FLOAT_FLOAT_INT
+#define LUA_SIMPLE_INT_HOOK_EDICT_FLOAT_FLOAT_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_BOOL_HOOK_INT_INT
+#define LUA_SIMPLE_BOOL_HOOK_INT_INT(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+#undef LUA_SIMPLE_BOOL_HOOK_INT_INT_BOOL
+#define LUA_SIMPLE_BOOL_HOOK_INT_INT_BOOL(...) LUA_SIMPLE_HOOK_DISABLED(__VA_ARGS__)
+
 #define SIMPLE_VOID_HOOK_EDICT(call) \
 	void call (edict_t *ent) \
 	{ \
@@ -925,14 +1086,14 @@
 #define SIMPLE_EDICT_HOOK_VOID(call) \
 	edict_t* call () \
 	{ \
-		FM_ENG_HANDLE(FM_##call, (Engine[FM_##call].at(i))); \
+		FM_ENG_HANDLE0(FM_##call, (Engine[FM_##call].at(i))); \
 		LUA_SIMPLE_EDICT_HOOK_VOID(call, ) \
 		RETURN_META_VALUE(mswi(lastFmRes),TypeConversion.id_to_edict((int)mlCellResult)); \
 	} \
 	edict_t* call##_post () \
 	{ \
 		origCellRet = ENTINDEX(META_RESULT_ORIG_RET(edict_t *)); \
-		FM_ENG_HANDLE_POST(FM_##call, (EnginePost[FM_##call].at(i))); \
+		FM_ENG_HANDLE_POST0(FM_##call, (EnginePost[FM_##call].at(i))); \
 		LUA_SIMPLE_EDICT_HOOK_VOID(call, POST) \
 		RETURN_META_VALUE(MRES_IGNORED,TypeConversion.id_to_edict((int)mlCellResult)); \
 	} 
@@ -1015,13 +1176,13 @@
 #define SIMPLE_VOID_HOOK_VOID(call) \
 	void call (void) \
 	{ \
-		FM_ENG_HANDLE(FM_##call, (Engine[FM_##call].at(i))); \
+		FM_ENG_HANDLE0(FM_##call, (Engine[FM_##call].at(i))); \
 		LUA_SIMPLE_VOID_HOOK_VOID(call, ) \
 		RETURN_META(mswi(lastFmRes)); \
 	} \
 	void call##_post (void) \
 	{ \
-		FM_ENG_HANDLE_POST(FM_##call, (EnginePost[FM_##call].at(i))); \
+		FM_ENG_HANDLE_POST0(FM_##call, (EnginePost[FM_##call].at(i))); \
 		LUA_SIMPLE_VOID_HOOK_VOID(call, POST) \
 		RETURN_META(MRES_IGNORED); \
 	} 
@@ -1132,28 +1293,28 @@
 #define SIMPLE_INT_HOOK_VOID(call) \
 	int call () \
 	{ \
-		FM_ENG_HANDLE(FM_##call, (Engine[FM_##call].at(i))); \
+		FM_ENG_HANDLE0(FM_##call, (Engine[FM_##call].at(i))); \
 		LUA_SIMPLE_INT_HOOK_VOID(call, ) \
 		RETURN_META_VALUE(mswi(lastFmRes), (int)mlCellResult); \
 	} \
 	int call##_post () \
 	{ \
 		origCellRet = META_RESULT_ORIG_RET(int); \
-		FM_ENG_HANDLE_POST(FM_##call, (EnginePost[FM_##call].at(i))); \
+		FM_ENG_HANDLE_POST0(FM_##call, (EnginePost[FM_##call].at(i))); \
 		LUA_SIMPLE_INT_HOOK_VOID(call, POST) \
 		RETURN_META_VALUE(MRES_IGNORED, (int)mlCellResult); \
 	}
 #define SIMPLE_FLOAT_HOOK_VOID(call) \
 	float call () \
 	{ \
-		FM_ENG_HANDLE(FM_##call, (Engine[FM_##call].at(i))); \
+		FM_ENG_HANDLE0(FM_##call, (Engine[FM_##call].at(i))); \
 		LUA_SIMPLE_FLOAT_HOOK_VOID(call, ) \
 		RETURN_META_VALUE(mswi(lastFmRes), (float)mFloatResult); \
 	} \
 	float call##_post () \
 	{ \
 		origFloatRet = META_RESULT_ORIG_RET(float); \
-		FM_ENG_HANDLE_POST(FM_##call, (EnginePost[FM_##call].at(i))); \
+		FM_ENG_HANDLE_POST0(FM_##call, (EnginePost[FM_##call].at(i))); \
 		LUA_SIMPLE_FLOAT_HOOK_VOID(call, POST) \
 		RETURN_META_VALUE(MRES_IGNORED, (float)mFloatResult); \
 	}
@@ -1512,6 +1673,17 @@
 				mlFloatResult = mFloatResult; \
 			lastFmRes = fmres; \
 		} \
+	} \
+	FM_MakeLuaForwardName(#pfnCall + 3, false); \
+	fmres = FM_MakeLuaForward pfnArgs; \
+	if (fmres >= lastFmRes) { \
+		if (retType == FMV_STRING) \
+			mlStringResult = mStringResult; \
+		else if (retType == FMV_CELL) \
+			mlCellResult = mCellResult; \
+		else if (retType == FMV_FLOAT) \
+			mlFloatResult = mFloatResult; \
+		lastFmRes = fmres; \
 	}
 #define FM_ENG_HANDLE_POST(pfnCall, pfnArgs) \
 	register unsigned int i = 0; \
@@ -1530,6 +1702,50 @@
 				mlFloatResult = mFloatResult; \
 			lastFmRes = fmres; \
 		} \
+	} \
+	FM_MakeLuaForwardName(#pfnCall + 3, true); \
+	fmres = FM_MakeLuaForward pfnArgs; \
+	if (fmres >= lastFmRes) { \
+		if (retType == FMV_STRING) \
+			mlStringResult = mStringResult; \
+		else if (retType == FMV_CELL) \
+			mlCellResult = mCellResult; \
+		else if (retType == FMV_FLOAT) \
+			mlFloatResult = mFloatResult; \
+		lastFmRes = fmres; \
+	} \
+	origCellRet = 0; \
+	origFloatRet = 0.0; \
+	origStringRet = "";
+
+#define FM_ENG_HANDLE_POST0(pfnCall, pfnArgs) \
+	register unsigned int i = 0; \
+	clfm(); \
+	int fmres = FMRES_IGNORED; \
+	int lastFmRes = FMRES_IGNORED; \
+	for (i=0; i<EnginePost[pfnCall].length(); i++) \
+	{ \
+		fmres = MF_ExecuteForward pfnArgs; \
+		if (fmres >= lastFmRes) { \
+			if (retType == FMV_STRING) \
+				mlStringResult = mStringResult; \
+			else if (retType == FMV_CELL) \
+				mlCellResult = mCellResult; \
+			else if (retType == FMV_FLOAT) \
+				mlFloatResult = mFloatResult; \
+			lastFmRes = fmres; \
+		} \
+	} \
+	FM_MakeLuaForwardName(#pfnCall + 3, true); \
+	fmres = FM_MakeLuaForward pfnArgs; \
+	if (fmres >= lastFmRes) { \
+		if (retType == FMV_STRING) \
+			mlStringResult = mStringResult; \
+		else if (retType == FMV_CELL) \
+			mlCellResult = mCellResult; \
+		else if (retType == FMV_FLOAT) \
+			mlFloatResult = mFloatResult; \
+		lastFmRes = fmres; \
 	} \
 	origCellRet = 0; \
 	origFloatRet = 0.0; \

@@ -49,6 +49,155 @@ META_RES mswi(int fmres)
 	return (META_RES)0;
 }
 
+static void FM_PushLuaForwardArg(lua_State *L, cell value)
+{
+	lua_pushinteger(L, static_cast<lua_Integer>(value));
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, unsigned int value)
+{
+	lua_pushinteger(L, static_cast<lua_Integer>(value));
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, short value)
+{
+	lua_pushinteger(L, static_cast<lua_Integer>(value));
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, unsigned short value)
+{
+	lua_pushinteger(L, static_cast<lua_Integer>(value));
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, long value)
+{
+	lua_pushinteger(L, static_cast<lua_Integer>(value));
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, unsigned long value)
+{
+	lua_pushinteger(L, static_cast<lua_Integer>(value));
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, long long value)
+{
+	lua_pushinteger(L, static_cast<lua_Integer>(value));
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, unsigned long long value)
+{
+	lua_pushinteger(L, static_cast<lua_Integer>(value));
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, bool value)
+{
+	lua_pushboolean(L, value ? 1 : 0);
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, float value)
+{
+	lua_pushnumber(L, static_cast<lua_Number>(value));
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, double value)
+{
+	lua_pushnumber(L, static_cast<lua_Number>(value));
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, const char *value)
+{
+	lua_pushstring(L, value ? value : "");
+}
+
+static void FM_PushLuaForwardArg(lua_State *L, char *value)
+{
+	lua_pushstring(L, value ? value : "");
+}
+
+template <typename... Args>
+static void FM_PushLuaForwardArgs(lua_State *L, Args... args)
+{
+	int unused[] = {0, (FM_PushLuaForwardArg(L, args), 0)...};
+	(void)unused;
+}
+
+static char g_FMLuaForwardName[128];
+static bool g_FMLuaForwardPost = false;
+
+int FM_ExecuteLuaForward(const char *name, bool post)
+{
+	lua_State *L = g_L;
+	if (!L || !name)
+		return FMRES_IGNORED;
+
+	char callback[128];
+	ke::SafeSprintf(callback, sizeof(callback), "fakemeta_%s%s", name, post ? "_post" : "");
+	lua_getglobal(L, callback);
+
+	if (!lua_isfunction(L, -1))
+	{
+		lua_pop(L, 1);
+		return FMRES_IGNORED;
+	}
+
+	if (lua_pcall(L, 0, 1, 0) != 0)
+	{
+		lua_pop(L, 1);
+		return FMRES_IGNORED;
+	}
+
+	int fmres = FMRES_IGNORED;
+	if (lua_isnumber(L, -1) || lua_isboolean(L, -1))
+		fmres = static_cast<int>(lua_tointeger(L, -1));
+
+	lua_pop(L, 1);
+	return fmres;
+}
+
+template <typename... Args>
+int FM_ExecuteCurrentLuaForwardArgs(Args... args)
+{
+	lua_State *L = g_L;
+	if (!L || !g_FMLuaForwardName[0])
+		return FMRES_IGNORED;
+
+	char callback[128];
+	ke::SafeSprintf(callback, sizeof(callback), "fakemeta_%s%s", g_FMLuaForwardName, g_FMLuaForwardPost ? "_post" : "");
+	lua_getglobal(L, callback);
+
+	if (!lua_isfunction(L, -1))
+	{
+		lua_pop(L, 1);
+		return FMRES_IGNORED;
+	}
+
+	FM_PushLuaForwardArgs(L, args...);
+
+	if (lua_pcall(L, sizeof...(Args), 1, 0) != 0)
+	{
+		lua_pop(L, 1);
+		return FMRES_IGNORED;
+	}
+
+	int fmres = FMRES_IGNORED;
+	if (lua_isnumber(L, -1) || lua_isboolean(L, -1))
+		fmres = static_cast<int>(lua_tointeger(L, -1));
+
+	lua_pop(L, 1);
+	return fmres;
+}
+
+void FM_MakeLuaForwardName(const char *name, bool post)
+{
+	ke::SafeSprintf(g_FMLuaForwardName, sizeof(g_FMLuaForwardName), "%s", name ? name : "");
+	g_FMLuaForwardPost = post;
+}
+
+int FM_ExecuteCurrentLuaForward(void)
+{
+	return FM_ExecuteLuaForward(g_FMLuaForwardName, g_FMLuaForwardPost);
+}
+
 void clfm()
 {
 	mCellResult = 0;
@@ -1858,16 +2007,14 @@ cell AMX_NATIVE_CALL amx_fakemetal_func_init_forward(AMX* amx, cell* params)
 	g_L = L;
 	lua_register(L, "fakemeta_forward_return", L_fakemeta_forward_return);
 	lua_register(L, "fakemeta_get_orig_retval", L_fakemeta_get_orig_retval);
-	lua_register(L, "fakemeta_register_forward", L_fakemeta_register_forward);
-	lua_register(L, "fakemeta_unregister_forward", L_fakemeta_unregister_forward);
 	return TRUE;
 }
 
 AMX_NATIVE_INFO forward_natives[] = {
-	{ "register_forwardL",	register_forward },
-	{ "unregister_forwardL", unregister_forward },
-	{ "forward_returnL",		fm_return },
-	{ "get_orig_retvalL",	get_orig_retval },
+	{ "register_forward",	register_forward },
+	{ "unregister_forward", unregister_forward },
+	{ "forward_return",		fm_return },
+	{ "get_orig_retval",	get_orig_retval },
 	{ "Lfakemetal_func_init_forward",	amx_fakemetal_func_init_forward },
 	{ "fakemeta_register_lua_forward",	amx_fakemeta_register_lua_forward },
 	{ "fakemeta_unregister_lua_forward",	amx_fakemeta_unregister_lua_forward },

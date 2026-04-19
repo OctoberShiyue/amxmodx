@@ -502,11 +502,11 @@ cell AMX_NATIVE_CALL amx_fakemetal_func_init(AMX* amx, cell* params)
 	return TRUE;
 }
 AMX_NATIVE_INFO pev_natives[] = {
-	{ "pevL",			amx_pev },
-	{ "set_pevL",		amx_set_pev },
-	{ "set_pev_stringL",	amx_set_pev_string },
-	{ "pev_validL",		amx_pev_valid },
-	{ "pev_serialL",		amx_pev_serial },
+	{ "pev",			amx_pev },
+	{ "set_pev",		amx_set_pev },
+	{ "set_pev_string",	amx_set_pev_string },
+	{ "pev_valid",		amx_pev_valid },
+	{ "pev_serial",		amx_pev_serial },
 	{ "Lfakemetal_func_init", amx_fakemetal_func_init },
 	{NULL,				NULL},
 };

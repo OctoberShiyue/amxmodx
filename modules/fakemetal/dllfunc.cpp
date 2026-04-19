@@ -381,7 +381,7 @@ static cell AMX_NATIVE_CALL dllfunc(AMX *amx,cell *params)
 }
 
 AMX_NATIVE_INFO dllfunc_natives[] = {
-	{"dllfuncL",			dllfunc},
+	{"dllfunc",			dllfunc},
 	{"Lfakemetal_func_init_dll",	amx_fakemetal_func_init_dll},
 	{NULL,				NULL},
 };

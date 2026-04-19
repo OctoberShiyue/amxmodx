@@ -195,5 +195,12 @@ extern float mlFloatResult;
 extern const char *mlStringResult;
 extern int retType;
 
+int FM_ExecuteLuaForward(const char *name, bool post);
+void FM_MakeLuaForwardName(const char *name, bool post);
+int FM_ExecuteCurrentLuaForward(void);
+
+template <typename... Args>
+int FM_ExecuteCurrentLuaForwardArgs(Args... args);
+
 #endif //_INCLUDE_FORWARD_H
 

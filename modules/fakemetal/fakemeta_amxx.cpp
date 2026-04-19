@@ -47,6 +47,17 @@ void OnAmxxAttach()
 	MF_AddNatives(misc_natives);
 	MF_AddNatives(pdata_entities_natives);
 	MF_AddNatives(pdata_gamerules_natives);
+	MF_OverrideNatives(engfunc_natives,MODULE_NAME);
+	MF_OverrideNatives(dllfunc_natives,MODULE_NAME);
+	MF_OverrideNatives(pev_natives,MODULE_NAME);
+	MF_OverrideNatives(forward_natives,MODULE_NAME);
+	MF_OverrideNatives(pdata_natives,MODULE_NAME);
+	MF_OverrideNatives(tr_Natives,MODULE_NAME);
+	MF_OverrideNatives(glb_natives,MODULE_NAME);
+	MF_OverrideNatives(ext2_natives,MODULE_NAME);
+	MF_OverrideNatives(misc_natives,MODULE_NAME);
+	MF_OverrideNatives(pdata_entities_natives,MODULE_NAME);
+	MF_OverrideNatives(pdata_gamerules_natives,MODULE_NAME);
 
 	g_kvd_glb.kvd.szClassName = const_cast<char *>(g_kvd_glb.cls.chars());
 	g_kvd_glb.kvd.szKeyName = const_cast<char *>(g_kvd_glb.key.chars());

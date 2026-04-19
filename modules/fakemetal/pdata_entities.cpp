@@ -230,17 +230,17 @@ static cell AMX_NATIVE_CALL find_ent_data_info(AMX *amx, cell *params)
 
 AMX_NATIVE_INFO pdata_entities_natives[] =
 {
-	{ "get_ent_dataL"        , get_ent_data         },
-	{ "set_ent_dataL"        , set_ent_data         },
-	{ "get_ent_data_floatL"  , get_ent_data_float   },
-	{ "set_ent_data_floatL"  , set_ent_data_float   },
-	{ "get_ent_data_vectorL" , get_ent_data_vector  },
-	{ "set_ent_data_vectorL" , set_ent_data_vector  },
-	{ "get_ent_data_entityL" , get_ent_data_entity  },
-	{ "set_ent_data_entityL" , set_ent_data_entity  },
-	{ "get_ent_data_stringL" , get_ent_data_string  },
-	{ "set_ent_data_stringL" , set_ent_data_string  },
-	{ "get_ent_data_sizeL"   , get_ent_data_size    },
-	{ "find_ent_data_infoL"  , find_ent_data_info   },
+	{ "get_ent_data"        , get_ent_data         },
+	{ "set_ent_data"        , set_ent_data         },
+	{ "get_ent_data_float"  , get_ent_data_float   },
+	{ "set_ent_data_float"  , set_ent_data_float   },
+	{ "get_ent_data_vector" , get_ent_data_vector  },
+	{ "set_ent_data_vector" , set_ent_data_vector  },
+	{ "get_ent_data_entity" , get_ent_data_entity  },
+	{ "set_ent_data_entity" , set_ent_data_entity  },
+	{ "get_ent_data_string" , get_ent_data_string  },
+	{ "set_ent_data_string" , set_ent_data_string  },
+	{ "get_ent_data_size"   , get_ent_data_size    },
+	{ "find_ent_data_info"  , find_ent_data_info   },
 	{ nullptr               , nullptr              }
 };

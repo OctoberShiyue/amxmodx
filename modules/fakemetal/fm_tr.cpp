@@ -187,8 +187,8 @@ static cell AMX_NATIVE_CALL get_tr(AMX *amx, cell *params)
 
 AMX_NATIVE_INFO tr_Natives[] = 
 {
-	{"get_trL",			get_tr},
-	{"set_trL",			set_tr},
+	{"get_tr",			get_tr},
+	{"set_tr",			set_tr},
 	{NULL,				NULL},
 };
 

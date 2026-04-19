@@ -224,17 +224,17 @@ static cell AMX_NATIVE_CALL find_gamerules_info(AMX *amx, cell *params)
 
 AMX_NATIVE_INFO pdata_gamerules_natives[] =
 {
-	{ "get_gamerules_intL"   , get_gamerules_int    },
-	{ "set_gamerules_intL"   , set_gamerules_int    },
-	{ "get_gamerules_floatL" , get_gamerules_float  },
-	{ "set_gamerules_floatL" , set_gamerules_float  },
-	{ "get_gamerules_vectorL", get_gamerules_vector },
-	{ "set_gamerules_vectorL", set_gamerules_vector },
-	{ "get_gamerules_entityL", get_gamerules_entity },
-	{ "set_gamerules_entityL", set_gamerules_entity },
-	{ "get_gamerules_stringL", get_gamerules_string },
-	{ "set_gamerules_stringL", set_gamerules_string },
-	{ "get_gamerules_sizeL"  , get_gamerules_size   },
-	{ "find_gamerules_infoL" , find_gamerules_info  },
+	{ "get_gamerules_int"   , get_gamerules_int    },
+	{ "set_gamerules_int"   , set_gamerules_int    },
+	{ "get_gamerules_float" , get_gamerules_float  },
+	{ "set_gamerules_float" , set_gamerules_float  },
+	{ "get_gamerules_vector", get_gamerules_vector },
+	{ "set_gamerules_vector", set_gamerules_vector },
+	{ "get_gamerules_entity", get_gamerules_entity },
+	{ "set_gamerules_entity", set_gamerules_entity },
+	{ "get_gamerules_string", get_gamerules_string },
+	{ "set_gamerules_string", set_gamerules_string },
+	{ "get_gamerules_size"  , get_gamerules_size   },
+	{ "find_gamerules_info" , find_gamerules_info  },
 	{ nullptr               , nullptr              }
 };

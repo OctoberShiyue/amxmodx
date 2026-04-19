@@ -257,7 +257,7 @@ cell AMX_NATIVE_CALL amx_fakemetal_func_init_glb(AMX* amx, cell* params)
 
 AMX_NATIVE_INFO glb_natives[] = 
 {
-	{"global_getL",		amx_glb}, 
+	{"global_get",		amx_glb}, 
 	{"Lfakemetal_func_init_glb",	amx_fakemetal_func_init_glb},
 	{NULL,				NULL},
 };

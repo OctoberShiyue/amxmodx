@@ -1109,7 +1109,7 @@ static cell AMX_NATIVE_CALL engfunc(AMX *amx, cell *params)
 }
 
 AMX_NATIVE_INFO engfunc_natives[] = {
-	{"engfuncL",			engfunc},
+	{"engfunc",			engfunc},
 	{"Lfakemetal_func_init_eng",	amx_fakemetal_func_init_eng},
 	{NULL,				NULL},
 };

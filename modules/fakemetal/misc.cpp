@@ -208,9 +208,9 @@ static cell AMX_NATIVE_CALL GetModelBoundingBox(AMX *amx, cell *params)
 
 
 AMX_NATIVE_INFO misc_natives[] = {
-	{ "copy_infokey_bufferL",		copy_infokey_buffer },
-	{ "lookup_sequenceL",			lookup_sequence },
-	{ "set_controllerL",				set_controller },
-	{ "GetModelBoundingBoxL",		GetModelBoundingBox },
+	{ "copy_infokey_buffer",		copy_infokey_buffer },
+	{ "lookup_sequence",			lookup_sequence },
+	{ "set_controller",				set_controller },
+	{ "GetModelBoundingBox",		GetModelBoundingBox },
 	{NULL,							NULL},
 };
