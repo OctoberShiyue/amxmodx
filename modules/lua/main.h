@@ -14,6 +14,7 @@
 #define CURL_STATICLIB  // 必须在 include 之前
 #include "curl/curl.h"
 #include <string>
+#include <hiredis/hiredis.h>
 
 void StartFrame2();
 void OnPluginsLoaded2();

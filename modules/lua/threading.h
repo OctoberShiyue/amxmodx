@@ -19,6 +19,7 @@
 #include "ISQLDriver.h"
 #include <amtl/am-string.h>
 #include <sh_stack.h>
+#include <vector>
 
 struct QueuedResultInfo
 {
@@ -137,6 +138,37 @@ private:
     ke::AString m_error;
     long m_statusCode;
     bool m_success;
+};
+
+class RedisThread : public IThread
+{
+public:
+    RedisThread();
+    virtual ~RedisThread();
+
+    void SetLuaCallback(int cbRef, int dataRef);
+    void SetLuaState(lua_State *L) { m_L = L; }
+    void SetRequest(const char *host, int port, const char *password, const std::vector<ke::AString> &argv, unsigned int timeoutMs);
+
+    virtual void RunThread(IThreadHandle *pHandle);
+    virtual void OnTerminate(IThreadHandle *pHandle, bool cancel);
+
+    void Execute();
+    void Invalidate();
+
+private:
+    int m_luaCallbackRef;
+    int m_luaDataRef;
+    lua_State *m_L;
+
+    ke::AString m_host;
+    ke::AString m_password;
+    std::vector<ke::AString> m_argv;
+    ke::AString m_error;
+    int m_port;
+    unsigned int m_timeoutMs;
+    bool m_success;
+    redisReply *m_reply;
 };
 
 class MysqlThread : public IThread

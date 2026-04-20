@@ -27,6 +27,8 @@ CStack<MysqlThread *> g_ThreadQueue;
 CStack<MysqlThread *> g_FreeThreads;
 CStack<HttpThread *> g_HttpThreadQueue;
 CStack<HttpThread *> g_HttpFreeThreads;
+CStack<RedisThread *> g_RedisThreadQueue;
+CStack<RedisThread *> g_RedisFreeThreads;
 CStack<ConsoleThread *> g_ConsoleThreadQueue;
 CStack<ConsoleThread *> g_ConsoleFreeThreads;
 float g_lasttime = 0.0f;
@@ -62,6 +64,16 @@ void ShutdownThreading()
 	{
 		delete g_HttpFreeThreads.front();
 		g_HttpFreeThreads.pop();
+	}
+	while (!g_RedisThreadQueue.empty())
+	{
+		delete g_RedisThreadQueue.front();
+		g_RedisThreadQueue.pop();
+	}
+	while (!g_RedisFreeThreads.empty())
+	{
+		delete g_RedisFreeThreads.front();
+		g_RedisFreeThreads.pop();
 	}
 	while (!g_ConsoleThreadQueue.empty())
 	{
@@ -273,6 +285,70 @@ static int Lua_http_post(lua_State *L)
     // 返回 true 给 Lua，表示请求已成功加入队列
     lua_pushboolean(L, 1);
 
+	return 1;
+}
+static int Lua_redis_query(lua_State *L)
+{
+    if (!g_pWorker)
+    {
+        return luaL_error(L, "Thread worker was unable to start.");
+    }
+
+    const char *host = luaL_checkstring(L, 1);
+    int port = (int)luaL_optinteger(L, 2, 6379);
+    const char *password = luaL_optstring(L, 3, "");
+    luaL_checktype(L, 4, LUA_TTABLE);
+
+    if (!lua_isfunction(L, 5)) {
+        return luaL_argerror(L, 5, "Expected function callback");
+    }
+
+    unsigned int timeoutMs = (unsigned int)luaL_optinteger(L, 6, 3000);
+    if (port <= 0 || port > 65535) {
+        return luaL_argerror(L, 2, "Invalid redis port");
+    }
+
+    std::vector<ke::AString> argv;
+    size_t argc = lua_objlen(L, 4);
+    if (argc == 0) {
+        return luaL_argerror(L, 4, "Expected non-empty argv table");
+    }
+
+    argv.reserve(argc);
+    for (size_t i = 1; i <= argc; ++i) {
+        lua_rawgeti(L, 4, (int)i);
+        size_t argLen = 0;
+        const char *arg = luaL_checklstring(L, -1, &argLen);
+        argv.push_back(ke::AString(arg, argLen));
+        lua_pop(L, 1);
+    }
+
+    lua_pushvalue(L, 5);
+    int cbRef = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    int dataRef = -1;
+    if (lua_gettop(L) >= 7) {
+        lua_pushvalue(L, 7);
+        dataRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
+    RedisThread *redisThread = NULL;
+    g_QueueLock->Lock();
+    if (g_RedisFreeThreads.empty()) {
+        redisThread = new RedisThread();
+    } else {
+        redisThread = g_RedisFreeThreads.front();
+        g_RedisFreeThreads.pop();
+    }
+    g_QueueLock->Unlock();
+
+    redisThread->SetRequest(host, port, password, argv, timeoutMs);
+    redisThread->SetLuaState(L);
+    redisThread->SetLuaCallback(cbRef, dataRef);
+
+    g_pWorker->MakeThread(redisThread);
+
+    lua_pushboolean(L, 1);
     return 1;
 }
 static int Lua_console_callback(lua_State *L)
@@ -347,6 +423,7 @@ void LuaInit(lua_State *L)
 	lua_register(L, "mysql_query", Lua_SQL_ThreadQuery);
 
 	lua_register(L, "http_post", Lua_http_post);
+	lua_register(L, "redis_query", Lua_redis_query);
 
 	lua_register(L, "console_callback", Lua_console_callback);
 
@@ -668,6 +745,25 @@ void StartFrame2()
 			} while (!g_HttpThreadQueue.empty());
 		}
 
+		remaining = g_RedisThreadQueue.size();
+
+		if (remaining)
+		{
+			RedisThread *redisThread;
+			do
+			{
+				redisThread = g_RedisThreadQueue.front();
+				g_RedisThreadQueue.pop();
+				g_QueueLock->Unlock();
+
+				redisThread->Execute();
+				redisThread->Invalidate();
+
+				g_QueueLock->Lock();
+				g_RedisFreeThreads.push(redisThread);
+			} while (!g_RedisThreadQueue.empty());
+		}
+
 		remaining = g_ConsoleThreadQueue.size();
 
 		if (remaining)
@@ -741,6 +837,24 @@ void OnPluginsUnloading()
 			g_HttpFreeThreads.push(httpThread);
 			g_QueueLock->Lock();
 		} while (!g_HttpThreadQueue.empty());
+	}
+
+	remaining = g_RedisThreadQueue.size();
+
+	if (remaining)
+	{
+		RedisThread *redisThread;
+		do
+		{
+			redisThread = g_RedisThreadQueue.front();
+			g_RedisThreadQueue.pop();
+			g_QueueLock->Unlock();
+			redisThread->SetLuaState(nullptr);
+			redisThread->Execute();
+			redisThread->Invalidate();
+			g_RedisFreeThreads.push(redisThread);
+			g_QueueLock->Lock();
+		} while (!g_RedisThreadQueue.empty());
 	}
 
 	remaining = g_ConsoleThreadQueue.size();
@@ -1022,6 +1136,56 @@ static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* use
     str->append(static_cast<char*>(contents), total_size);
     return total_size;
 }
+static void PushRedisReplyToLua(lua_State *L, const redisReply *reply)
+{
+    if (!reply) {
+        lua_pushnil(L);
+        return;
+    }
+
+    switch (reply->type)
+    {
+        case REDIS_REPLY_NIL:
+            lua_pushnil(L);
+            return;
+        case REDIS_REPLY_STATUS:
+        case REDIS_REPLY_STRING:
+        case REDIS_REPLY_ERROR:
+        case REDIS_REPLY_BIGNUM:
+        case REDIS_REPLY_VERB:
+            lua_pushlstring(L, reply->str ? reply->str : "", reply->len);
+            return;
+        case REDIS_REPLY_INTEGER:
+            lua_pushinteger(L, (lua_Integer)reply->integer);
+            return;
+        case REDIS_REPLY_DOUBLE:
+            lua_pushnumber(L, reply->dval);
+            return;
+        case REDIS_REPLY_BOOL:
+            lua_pushboolean(L, reply->integer != 0);
+            return;
+        case REDIS_REPLY_ARRAY:
+        case REDIS_REPLY_SET:
+        case REDIS_REPLY_PUSH:
+            lua_newtable(L);
+            for (size_t i = 0; i < reply->elements; ++i) {
+                PushRedisReplyToLua(L, reply->element[i]);
+                lua_rawseti(L, -2, (int)i + 1);
+            }
+            return;
+        case REDIS_REPLY_MAP:
+        case REDIS_REPLY_ATTR:
+            lua_newtable(L);
+            for (size_t i = 0; i + 1 < reply->elements; i += 2) {
+                PushRedisReplyToLua(L, reply->element[i]);
+                PushRedisReplyToLua(L, reply->element[i + 1]);
+                lua_settable(L, -3);
+            }
+            return;
+    }
+
+    lua_pushnil(L);
+}
 void HttpThread::RunThread(IThreadHandle *pHandle)
 {
     // 初始化结果状态
@@ -1122,6 +1286,169 @@ void HttpThread::Execute()
     }
 
     // 4. 清理引用
+    Invalidate();
+}
+
+
+// ---------------------------------------------------------
+// RedisThread 实现
+// ---------------------------------------------------------
+
+RedisThread::RedisThread()
+{
+    m_luaCallbackRef = -1;
+    m_luaDataRef = -1;
+    m_L = NULL;
+    m_port = 6379;
+    m_timeoutMs = 3000;
+    m_success = false;
+    m_reply = NULL;
+}
+
+RedisThread::~RedisThread()
+{
+    Invalidate();
+}
+
+void RedisThread::SetLuaCallback(int cbRef, int dataRef)
+{
+    m_luaCallbackRef = cbRef;
+    m_luaDataRef = dataRef;
+}
+
+void RedisThread::SetRequest(const char *host, int port, const char *password, const std::vector<ke::AString> &argv, unsigned int timeoutMs)
+{
+    m_host = host ? host : "127.0.0.1";
+    m_port = port;
+    m_password = password ? password : "";
+    m_argv = argv;
+    m_timeoutMs = timeoutMs;
+}
+
+void RedisThread::RunThread(IThreadHandle *pHandle)
+{
+    m_success = false;
+    m_error = "";
+    if (m_reply) {
+        freeReplyObject(m_reply);
+        m_reply = NULL;
+    }
+
+    struct timeval timeout;
+    timeout.tv_sec = m_timeoutMs / 1000;
+    timeout.tv_usec = (m_timeoutMs % 1000) * 1000;
+
+    redisContext *ctx = redisConnectWithTimeout(m_host.chars(), m_port, timeout);
+    if (!ctx) {
+        m_error = "Failed to allocate redis context.";
+        return;
+    }
+
+    if (ctx->err) {
+        m_error = ctx->errstr;
+        redisFree(ctx);
+        return;
+    }
+
+    if (m_password.length() > 0) {
+        const char *authArgv[] = {"AUTH", m_password.chars()};
+        size_t authArgvLen[] = {4, m_password.length()};
+        redisReply *authReply = (redisReply *)redisCommandArgv(ctx, 2, authArgv, authArgvLen);
+        if (!authReply) {
+            m_error = ctx->err ? ctx->errstr : "Redis AUTH failed.";
+            redisFree(ctx);
+            return;
+        }
+        if (authReply->type == REDIS_REPLY_ERROR) {
+            m_error = authReply->str ? authReply->str : "Redis AUTH failed.";
+            freeReplyObject(authReply);
+            redisFree(ctx);
+            return;
+        }
+        freeReplyObject(authReply);
+    }
+
+    std::vector<const char *> redisArgv;
+    std::vector<size_t> redisArgvLen;
+    redisArgv.reserve(m_argv.size());
+    redisArgvLen.reserve(m_argv.size());
+
+    for (size_t i = 0; i < m_argv.size(); ++i) {
+        redisArgv.push_back(m_argv[i].chars());
+        redisArgvLen.push_back(m_argv[i].length());
+    }
+
+    m_reply = (redisReply *)redisCommandArgv(ctx, (int)redisArgv.size(), redisArgv.data(), redisArgvLen.data());
+    if (!m_reply) {
+        m_error = ctx->err ? ctx->errstr : "Redis command failed.";
+    } else if (m_reply->type == REDIS_REPLY_ERROR) {
+        m_error = m_reply->str ? m_reply->str : "Redis returned an error reply.";
+    } else {
+        m_success = true;
+    }
+
+    redisFree(ctx);
+}
+
+void RedisThread::Invalidate()
+{
+    if (m_reply) {
+        freeReplyObject(m_reply);
+        m_reply = NULL;
+    }
+
+    if (m_L) {
+        if (m_luaCallbackRef != -1) {
+            luaL_unref(m_L, LUA_REGISTRYINDEX, m_luaCallbackRef);
+            m_luaCallbackRef = -1;
+        }
+        if (m_luaDataRef != -1) {
+            luaL_unref(m_L, LUA_REGISTRYINDEX, m_luaDataRef);
+            m_luaDataRef = -1;
+        }
+    }
+}
+
+void RedisThread::OnTerminate(IThreadHandle *pHandle, bool cancel)
+{
+    if (cancel)
+    {
+        Invalidate();
+        g_QueueLock->Lock();
+        g_RedisFreeThreads.push(this);
+        g_QueueLock->Unlock();
+    }
+    else
+    {
+        g_QueueLock->Lock();
+        g_RedisThreadQueue.push(this);
+        g_QueueLock->Unlock();
+    }
+}
+
+void RedisThread::Execute()
+{
+    if (m_luaCallbackRef == -1 || !m_L)
+        return;
+
+    lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_luaCallbackRef);
+
+    lua_pushboolean(m_L, m_success);
+    PushRedisReplyToLua(m_L, m_reply);
+    lua_pushstring(m_L, m_error.chars());
+
+    if (m_luaDataRef != -1) {
+        lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_luaDataRef);
+    } else {
+        lua_pushnil(m_L);
+    }
+
+    if (lua_pcall(m_L, 4, 0, 0) != LUA_OK) {
+        const char* err = lua_tostring(m_L, -1);
+        printf("Lua Redis Callback Error: %s\n", err);
+        lua_pop(m_L, 1);
+    }
+
     Invalidate();
 }
 

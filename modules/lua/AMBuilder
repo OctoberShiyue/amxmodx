@@ -15,6 +15,7 @@ binary.compiler.cxxincludes += [
   os.path.join(builder.currentSourcePath, 'thread'),
   os.path.join(builder.currentSourcePath, 'lualib'),
   os.path.join(builder.currentSourcePath, 'json'),
+  os.path.join(builder.currentSourcePath, 'hiredis'),
   os.path.join(builder.currentSourcePath, 'curl', 'include'),
 ]
 
@@ -34,6 +35,13 @@ binary.sources = [
   'json/JsonMngr.cpp',
   'json/JsonNatives.cpp',
   'minidump.cpp',
+  'hiredis/alloc.c',
+  'hiredis/async.c',
+  'hiredis/hiredis.c',
+  'hiredis/net.c',
+  'hiredis/read.c',
+  'hiredis/sds.c',
+  'hiredis/sockcompat.c',
 ]
 
 binary.sources += [
