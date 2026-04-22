@@ -805,6 +805,7 @@ void OnPluginsUnloading()
 
 	g_QueueLock->Lock();
 	size_t remaining = g_ThreadQueue.size();
+    MF_Log("OnPluginsUnloading g_ThreadQueue size=%d",remaining);
 	if (remaining)
 	{
 		MysqlThread *kmThread;
@@ -822,6 +823,7 @@ void OnPluginsUnloading()
 	}
 
     remaining = g_HttpThreadQueue.size();
+    MF_Log("OnPluginsUnloading g_HttpThreadQueue size=%d",remaining);
 
 	if (remaining)
 	{
@@ -840,6 +842,7 @@ void OnPluginsUnloading()
 	}
 
 	remaining = g_RedisThreadQueue.size();
+    MF_Log("OnPluginsUnloading g_RedisThreadQueue size=%d",remaining);
 
 	if (remaining)
 	{
@@ -858,6 +861,7 @@ void OnPluginsUnloading()
 	}
 
 	remaining = g_ConsoleThreadQueue.size();
+    MF_Log("OnPluginsUnloading g_ConsoleThreadQueue size=%d",remaining);
 
 	if (remaining)
 	{
