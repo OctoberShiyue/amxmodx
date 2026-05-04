@@ -1209,6 +1209,8 @@ void HttpThread::RunThread(IThreadHandle *pHandle)
         }
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBuffer);
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5000);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5000);
         
         // 绑定写回调，将结果写入 m_response ...
         
