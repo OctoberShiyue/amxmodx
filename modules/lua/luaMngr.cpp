@@ -1,5 +1,6 @@
 
 #include "luaMngr.h"
+#include <chrono>
 bool HasReHlds;
 bool HasReGameDll;
 
@@ -1746,7 +1747,18 @@ static cell AMX_NATIVE_CALL n_lua_close(AMX *amx, cell *params)
 {
     lua_State *L = (lua_State *)params[1];
     if (L)
+    {
+        int kb = lua_gc(L, LUA_GCCOUNT, 0);
+        int b = lua_gc(L, LUA_GCCOUNTB, 0);
+        MF_Log("[Lua] Closing Lua state. Memory usage: %d KB %d bytes", kb, b);
+
+        auto start = std::chrono::high_resolution_clock::now();
         lua_close(L);
+        auto end = std::chrono::high_resolution_clock::now();
+        double ms = std::chrono::duration<double, std::milli>(end - start).count();
+        
+        MF_Log("[Lua] Lua state closed. Elapsed time: %.3f ms", ms);
+    }
     g_L = nullptr;
     return 0;
 }
