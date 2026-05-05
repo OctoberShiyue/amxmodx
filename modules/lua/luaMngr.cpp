@@ -1,6 +1,5 @@
 
 #include "luaMngr.h"
-#include <chrono>
 bool HasReHlds;
 bool HasReGameDll;
 
@@ -2355,6 +2354,10 @@ void OnAmxxAttach()
     
     MF_AddNatives(LuaNatives);
 
+}
+void OnAmxxDetach()
+{
+    OnAmxxDetach2();
 }
 void TrimString(char *str)
 {

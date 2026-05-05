@@ -15,9 +15,11 @@
 #include "curl/curl.h"
 #include <string>
 #include <hiredis/hiredis.h>
+#include <chrono>
 
 void StartFrame2();
 void OnPluginsLoaded2();
+void OnAmxxDetach2();
 void LuaInit(lua_State *L);
 
 extern "C" int luaopen_json(lua_State *L);

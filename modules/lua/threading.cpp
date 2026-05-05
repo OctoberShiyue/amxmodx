@@ -16,6 +16,7 @@
 #include "threading.h"
 #include <stdio.h>
 #include <vector>
+#include <chrono>
 using namespace SourceMod;
 
 MysqlDriver g_Mysql;
@@ -91,7 +92,10 @@ void ShutdownThreading()
 
 	FreeHandleTable();
 }
-
+void OnAmxxDetach2(void)
+{
+    ShutdownThreading();
+}
 //public QueryHandler(state, Handle:query, error[], errnum, data[], size)
 //native SQL_ThreadQuery(Handle:cn_tuple, const handler[], const query[], const data[]="", dataSize=0);
 // static cell AMX_NATIVE_CALL SQL_ThreadQuery(AMX *amx, cell *params)
@@ -1198,7 +1202,7 @@ void HttpThread::RunThread(IThreadHandle *pHandle)
     m_response = "";
     m_error = "";
 
-   	 // libcurl 示例伪代码：
+   	// libcurl 示例伪代码：
     CURL *curl = curl_easy_init();
     if (curl) {
 		std::string responseBuffer;
@@ -1209,8 +1213,8 @@ void HttpThread::RunThread(IThreadHandle *pHandle)
         }
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBuffer);
-        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5000);
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5000);
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 3);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3);
         
         // 绑定写回调，将结果写入 m_response ...
         
@@ -1225,6 +1229,7 @@ void HttpThread::RunThread(IThreadHandle *pHandle)
         curl_easy_cleanup(curl);
     } else {
         m_error = "Failed to initialize HTTP client.";
+        curl_easy_cleanup(curl);
     }
 }
 
