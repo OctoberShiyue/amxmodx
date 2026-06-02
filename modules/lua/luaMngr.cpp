@@ -2504,8 +2504,9 @@ bool SV_EmitSound2(IRehldsHook_SV_EmitSound2 *chain,
                     lua_getglobal(g_L, "Rehlds_SV_EmitSound_filter");
                     lua_pushentity(g_L, entity);
                     lua_pushinteger(g_L, i); 
+                    lua_pushstring(g_L, sample);
 
-                    if (lua_pcall(g_L, 2, 1, 0) == 0)
+                    if (lua_pcall(g_L, 3, 1, 0) == 0)
                     {
                         bool disable = lua_toboolean(g_L, -1) != 0;
                         lua_pop(g_L, 1);
