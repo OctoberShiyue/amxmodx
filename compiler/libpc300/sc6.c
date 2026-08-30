@@ -611,8 +611,17 @@ SC_FUNC int assemble(FILE *fout,FILE *fin)
   for (sym=glbtab.next; sym!=NULL; sym=sym->next) {
     int match=0;
     if (sym->ident==iFUNCTN) {
-      if ((sym->usage & uNATIVE)!=0 && (sym->usage & uREAD)!=0 && sym->addr>=0)
+      if ((sym->usage & uNATIVE)!=0 && sym->addr>=0) {
+        /* AMXX 定制: native 声明即保留 —— 不再要求被源码引用 (uREAD)。
+         * 未引用的 native 在此补分配 SYSREQ id 并标记 uREAD, 使其正常进入
+         * natives 表; 已引用的 native 已在 ffcall() 代码生成阶段分配过 id,
+         * 此处续接 ntv_funcid 不产生冲突。 */
+        if ((sym->usage & uREAD)==0) {
+          sym->usage|=uREAD;
+          sym->addr=ntv_funcid++;
+        } /* if */
         match=++numnatives;
+      } /* if */
       if ((sym->usage & uPUBLIC)!=0 && (sym->usage & uDEFINE)!=0)
         match=++numpublics;
       if (strcmp(sym->name,uMAINFUNC)==0) {

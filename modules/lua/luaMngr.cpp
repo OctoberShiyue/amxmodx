@@ -1676,6 +1676,545 @@ cell AMX_NATIVE_CALL Native_LuaRegisterFunction(AMX *amx, cell *params)
     return 1;
 }
 // ---------------------------------------------------------
+// Lua 直接调用 SMA (Pawn): public 函数与 native
+// 无需 function.txt / lua_register_function 中转，直接通过 AMX API 执行
+//
+// 用法: amxx2_call_pawn(plugin, func, spec, ...)     -- 调用插件 public 函数
+//       amxx2_call_native(name, spec, ...)           -- 调用 native (自动跨插件搜索上下文)
+//       amxx2_call_native(plugin, name, spec, ...)   -- 限定插件 (.amxx 后缀识别, 可传 nil)
+//   plugin: 插件文件名 (如 "test.amxx"); 传 nil 或 "" 表示在所有已加载插件中搜索该函数
+//   func:   public 函数名
+//   spec:   "[ret]:args" 类型描述串
+//           ret:  i=整数(默认) f=浮点 v=忽略返回值(返回 true)
+//           args: i=整数 b=布尔 f=浮点 s=字符串 v=向量 {x,y,z}
+//                 a=整数数组(table) n=浮点数组(table)
+//                 I=整数引用(追加返回) F=浮点引用(追加返回) S=字符串缓冲(追加返回)
+//                 A=整数数组输出(固定32 cell, 追加返回为 table)
+//           无冒号时整个串视为 args, 返回类型为 i; "" 表示无参数
+//   返回: 成功返回函数返回值(按 ret 类型), 之后按 spec 顺序追加引用参数的值
+//         失败返回 nil + 错误信息
+// ---------------------------------------------------------
+#define LUA_PAWNCALL_MAX_ARGS 32
+#define LUA_PAWNCALL_STRBUF 1024
+#define LUA_PAWNCALL_ARRBUF  32 // 'A' 整数数组输出固定大小 (get_players 等)
+
+struct LuaPawnByref
+{
+    char  type;     // 'I', 'F', 'S', 'A'
+    cell *phys;     // AMX 堆上分配缓冲的物理地址
+    int   cells;    // 分配的 cell 数
+};
+
+// callNative=false: 调用插件 public 函数 (amx_Exec)
+// callNative=true:  调用 native (从插件 natives 表取 C 函数指针直接调用;
+//                   核心/模块/register_native 动态桩统一为 cell(AMX_NATIVE_CALL)(AMX*, cell*))
+static int LuaCallPawnOrNative(lua_State *L, bool callNative)
+{
+    const char *apiName    = callNative ? "amxx2_call_native" : "amxx2_call_pawn";
+    const char *pluginName = "";
+    const char *funcName   = nullptr;
+    const char *spec       = nullptr;
+    int argBase            = 4; // 可变参数起始 Lua 栈位置
+
+    // amxx2_call_native 的 plugin 参数可省略:
+    //   amxx2_call_native("get_mapname", "v:Si", "", 63)          -- 自动跨插件搜索
+    //   amxx2_call_native("zp50_main.amxx", "zp_x", "i:i", id)    -- 限定插件 (.amxx 后缀识别)
+    //   amxx2_call_native(nil, "get_mapname", "v:Si", "", 63)     -- 显式省略
+    if (callNative && !lua_isnoneornil(L, 1))
+    {
+        const char *a1 = luaL_checkstring(L, 1);
+        size_t l1 = strlen(a1);
+        if (l1 > 5 && !stricmp(a1 + l1 - 5, ".amxx"))
+        {
+            pluginName = a1;
+            funcName   = luaL_checkstring(L, 2);
+            spec       = luaL_optstring(L, 3, "");
+        }
+        else
+        {
+            funcName = a1;
+            spec     = luaL_optstring(L, 2, "");
+            argBase  = 3;
+        }
+    }
+    else
+    {
+        pluginName = luaL_optstring(L, 1, "");
+        funcName   = luaL_checkstring(L, 2);
+        spec       = luaL_optstring(L, 3, "");
+    }
+
+    // 解析返回类型: 存在冒号则左侧为返回类型
+    char retType = 'i';
+    const char *argSpec = spec;
+    if (spec[0] && spec[1] == ':')
+    {
+        retType = spec[0];
+        argSpec = spec + 2;
+    }
+
+    // 1. 查找目标 AMX 与函数入口
+    AMX *target = nullptr;
+    int funcIndex = -1;
+    AMX_NATIVE nativeFn = nullptr;
+
+    if (callNative)
+    {
+        // native 存在于每个声明过它的插件的 natives 表中 (JIT 后地址仍有效)
+        // 遍历已加载脚本, 找到第一个绑定了该 native 的插件作为调用上下文
+        bool pluginFound = false;
+        for (int id = 0; ; ++id)
+        {
+            AMX *script = MF_GetScriptAmx(id);
+            if (!script)
+            {
+                break;
+            }
+            if (pluginName[0])
+            {
+                const char *scriptName = MF_GetScriptName(id);
+                if (!scriptName)
+                {
+                    continue;
+                }
+                const char *base = scriptName;
+                for (const char *p = scriptName; *p; ++p)
+                {
+                    if (*p == '/' || *p == '\\')
+                    {
+                        base = p + 1;
+                    }
+                }
+                if (stricmp(scriptName, pluginName) && stricmp(base, pluginName))
+                {
+                    continue;
+                }
+                pluginFound = true;
+            }
+            int idx;
+            if (MF_AmxFindNative(script, funcName, &idx) == AMX_ERR_NONE)
+            {
+                AMX_HEADER *hdr = (AMX_HEADER *)script->base;
+                AMX_FUNCSTUBNT *stub = (AMX_FUNCSTUBNT *)(script->base + (int)hdr->natives + idx * hdr->defsize);
+                if (stub->address)
+                {
+                    target = script;
+                    nativeFn = (AMX_NATIVE)(uintptr_t)stub->address;
+                    break;
+                }
+            }
+            if (pluginName[0])
+            {
+                break; // 指定了插件: 不再继续搜索其他插件
+            }
+        }
+        if (!target)
+        {
+            lua_pushnil(L);
+            if (pluginName[0] && !pluginFound)
+            {
+                lua_pushfstring(L, "%s: plugin '%s' not found", apiName, pluginName);
+            }
+            else if (pluginName[0])
+            {
+                lua_pushfstring(L, "%s: native '%s' not found in plugin '%s'", apiName, funcName, pluginName);
+            }
+            else
+            {
+                lua_pushfstring(L, "%s: native '%s' not found in any loaded plugin", apiName, funcName);
+            }
+            return 2;
+        }
+    }
+    else if (!pluginName[0])
+    {
+        // 未指定插件: 遍历所有已加载脚本, 找到第一个含该 public 函数的
+        for (int id = 0; ; ++id)
+        {
+            AMX *script = MF_GetScriptAmx(id);
+            if (!script)
+            {
+                break;
+            }
+            int idx;
+            if (MF_AmxFindPublic(script, funcName, &idx) == AMX_ERR_NONE)
+            {
+                target = script;
+                funcIndex = idx;
+                break;
+            }
+        }
+        if (!target)
+        {
+            lua_pushnil(L);
+            lua_pushfstring(L, "amxx2_call_pawn: function '%s' not found in any loaded plugin", funcName);
+            return 2;
+        }
+    }
+    else
+    {
+        // 按文件名匹配已加载脚本: 支持完整相对路径或纯文件名, 不区分大小写
+        // (MF_FindScriptByName 比对的是完整路径, 直接传文件名会失配, 故自行遍历)
+        for (int id = 0; ; ++id)
+        {
+            const char *scriptName = MF_GetScriptName(id);
+            if (!scriptName)
+            {
+                break;
+            }
+            // 取路径中的文件名部分
+            const char *base = scriptName;
+            for (const char *p = scriptName; *p; ++p)
+            {
+                if (*p == '/' || *p == '\\')
+                {
+                    base = p + 1;
+                }
+            }
+            if (!stricmp(scriptName, pluginName) || !stricmp(base, pluginName))
+            {
+                target = MF_GetScriptAmx(id);
+                break;
+            }
+        }
+        if (!target)
+        {
+            lua_pushnil(L);
+            lua_pushfstring(L, "amxx2_call_pawn: plugin '%s' not found", pluginName);
+            return 2;
+        }
+        if (MF_AmxFindPublic(target, funcName, &funcIndex) != AMX_ERR_NONE)
+        {
+            lua_pushnil(L);
+            lua_pushfstring(L, "amxx2_call_pawn: function '%s' not found in plugin '%s'", funcName, pluginName);
+            return 2;
+        }
+    }
+
+    // 2. 解析参数到 params 数组 (与 Pawn native 调用约定一致: params[0] 为参数字节数)
+    int numArgs = (int)strlen(argSpec);
+    if (numArgs > LUA_PAWNCALL_MAX_ARGS)
+    {
+        lua_pushnil(L);
+        lua_pushfstring(L, "%s: too many arguments (max %d)", apiName, LUA_PAWNCALL_MAX_ARGS);
+        return 2;
+    }
+
+    cell origHea = target->hea; // 保存堆指针, 调用结束后恢复 (等价 amx_Release, 防止堆泄漏)
+    // 数组整体清零: 部分核心 native 不检查 params[0] 直接读"可选"参数槽
+    // (如 get_players 无条件读 params[3] 当 flags 字符串地址), 栈垃圾被当 AMX 地址
+    // 解引用会造成随机访问冲突; 清 0 后未传槽位读到的是数据段偏移 0, 不会野指针
+    cell params[LUA_PAWNCALL_MAX_ARGS + 1];
+    memset(params, 0, sizeof(params));
+    params[0] = numArgs * (cell)sizeof(cell);
+    LuaPawnByref byrefs[LUA_PAWNCALL_MAX_ARGS];
+    int numByrefs = 0;
+    const char *errMsg = nullptr;
+
+    for (int i = 0; i < numArgs && !errMsg; ++i)
+    {
+        char t = argSpec[i];
+        int luaIdx = argBase + i;
+        cell amxAddr, *phys;
+
+        switch (t)
+        {
+        case 'i':
+            params[i + 1] = (cell)lua_tointeger(L, luaIdx);
+            break;
+        case 'b':
+            params[i + 1] = lua_toboolean(L, luaIdx) ? 1 : 0;
+            break;
+        case 'f':
+        {
+            union { float f; cell c; } u;
+            u.f = (float)lua_tonumber(L, luaIdx);
+            params[i + 1] = u.c;
+            break;
+        }
+        case 's': // 字符串 (传入): unpacked 格式写入 AMX 堆
+        {
+            size_t len = 0;
+            const char *str = lua_tolstring(L, luaIdx, &len);
+            if (!str) { str = ""; len = 0; }
+            if (MF_AmxAllot(target, (int)len + 1, &amxAddr, &phys) != AMX_ERR_NONE)
+            {
+                errMsg = "failed to allot string on AMX heap";
+                break;
+            }
+            for (size_t k = 0; k < len; ++k) { phys[k] = (cell)(unsigned char)str[k]; }
+            phys[len] = 0;
+            params[i + 1] = amxAddr;
+            break;
+        }
+        case 'S': // 字符串缓冲 (传入可选 + 输出): 固定大小, 调用后读回
+        {
+            size_t len = 0;
+            const char *str = lua_tolstring(L, luaIdx, &len);
+            if (MF_AmxAllot(target, LUA_PAWNCALL_STRBUF, &amxAddr, &phys) != AMX_ERR_NONE)
+            {
+                errMsg = "failed to allot string buffer on AMX heap";
+                break;
+            }
+            int pos = 0;
+            if (str)
+            {
+                for (; pos < (int)len && pos < LUA_PAWNCALL_STRBUF - 1; ++pos)
+                {
+                    phys[pos] = (cell)(unsigned char)str[pos];
+                }
+            }
+            phys[pos] = 0;
+            params[i + 1] = amxAddr;
+            byrefs[numByrefs].type = 'S';
+            byrefs[numByrefs].phys = phys;
+            byrefs[numByrefs].cells = LUA_PAWNCALL_STRBUF;
+            ++numByrefs;
+            break;
+        }
+        case 'v': // 向量 {x, y, z} -> Float[3]
+        {
+            float vec[3];
+            get_vec_from_table(L, luaIdx, vec);
+            if (MF_AmxAllot(target, 3, &amxAddr, &phys) != AMX_ERR_NONE)
+            {
+                errMsg = "failed to allot vector on AMX heap";
+                break;
+            }
+            for (int k = 0; k < 3; ++k)
+            {
+                union { float f; cell c; } u;
+                u.f = vec[k];
+                phys[k] = u.c;
+            }
+            params[i + 1] = amxAddr;
+            break;
+        }
+        case 'a': // 整数数组 (table)
+        case 'n': // 浮点数组 (table)
+        {
+            if (!lua_istable(L, luaIdx))
+            {
+                errMsg = "array argument must be a table";
+                break;
+            }
+            int count = (int)lua_objlen(L, luaIdx);
+            if (count < 1) { count = 1; }
+            if (MF_AmxAllot(target, count, &amxAddr, &phys) != AMX_ERR_NONE)
+            {
+                errMsg = "failed to allot array on AMX heap";
+                break;
+            }
+            int realCount = (int)lua_objlen(L, luaIdx);
+            for (int k = 1; k <= realCount; ++k)
+            {
+                lua_rawgeti(L, luaIdx, k);
+                if (t == 'a')
+                {
+                    phys[k - 1] = (cell)lua_tointeger(L, -1);
+                }
+                else
+                {
+                    union { float f; cell c; } u;
+                    u.f = (float)lua_tonumber(L, -1);
+                    phys[k - 1] = u.c;
+                }
+                lua_pop(L, 1);
+            }
+            params[i + 1] = amxAddr;
+            break;
+        }
+        case 'I': // 整数引用 (传入初始值 + 输出)
+        {
+            if (MF_AmxAllot(target, 1, &amxAddr, &phys) != AMX_ERR_NONE)
+            {
+                errMsg = "failed to allot reference on AMX heap";
+                break;
+            }
+            phys[0] = (cell)lua_tointeger(L, luaIdx);
+            params[i + 1] = amxAddr;
+            byrefs[numByrefs].type = 'I';
+            byrefs[numByrefs].phys = phys;
+            byrefs[numByrefs].cells = 1;
+            ++numByrefs;
+            break;
+        }
+        case 'F': // 浮点引用 (传入初始值 + 输出)
+        {
+            if (MF_AmxAllot(target, 1, &amxAddr, &phys) != AMX_ERR_NONE)
+            {
+                errMsg = "failed to allot reference on AMX heap";
+                break;
+            }
+            union { float f; cell c; } u;
+            u.f = (float)lua_tonumber(L, luaIdx);
+            phys[0] = u.c;
+            params[i + 1] = amxAddr;
+            byrefs[numByrefs].type = 'F';
+            byrefs[numByrefs].phys = phys;
+            byrefs[numByrefs].cells = 1;
+            ++numByrefs;
+            break;
+        }
+        case 'A': // 整数数组输出 (固定 32 cell, 调用后读回为 Lua table)
+        {
+            if (MF_AmxAllot(target, LUA_PAWNCALL_ARRBUF, &amxAddr, &phys) != AMX_ERR_NONE)
+            {
+                errMsg = "failed to allot array buffer on AMX heap";
+                break;
+            }
+            for (int k = 0; k < LUA_PAWNCALL_ARRBUF; ++k) { phys[k] = 0; }
+            params[i + 1] = amxAddr;
+            byrefs[numByrefs].type = 'A';
+            byrefs[numByrefs].phys = phys;
+            byrefs[numByrefs].cells = LUA_PAWNCALL_ARRBUF;
+            ++numByrefs;
+            break;
+        }
+        default:
+            errMsg = "invalid spec character (expected i/b/f/s/v/a/n/I/F/S/A)";
+        }
+    }
+
+    if (errMsg)
+    {
+        target->hea = origHea; // 释放已分配的临时内存
+        lua_pushnil(L);
+        lua_pushfstring(L, "%s: %s", apiName, errMsg);
+        return 2;
+    }
+
+    // 3. 执行
+    cell pawnRet = 0;
+    int err = AMX_ERR_NONE;
+
+    if (callNative)
+    {
+        // native 为 C 函数, 直接调用; 约定与虚拟机内部调用一致
+        pawnRet = nativeFn(target, params);
+        err = target->error;
+    }
+    else
+    {
+        // public 函数: 参数逆序压栈后 amx_Exec
+        for (int i = numArgs; i >= 1; --i)
+        {
+            MF_AmxPush(target, params[i]);
+        }
+        // 这里的 amx_Exec 不经核心 forward 流程, Debugger::BeginExec/EndExec 不会配对调用;
+        // 对 debug 模式加载的插件, 逐指令调试钩子 (StepI) 会因 m_Top 越界触发断言。
+        // 执行期间临时摘除调试钩子, 结束后还原 (register_native 路径由核心 amxx_DynaCallback
+        // 自行配对 BeginExec/EndExec, 无需此处理)
+        AMX_DEBUG saveDebug = target->debug;
+        target->debug = nullptr;
+        err = MF_AmxExec(target, &pawnRet, funcIndex);
+        target->debug = saveDebug;
+    }
+
+    if (err != AMX_ERR_NONE)
+    {
+        // 与 AMXX 核心 forward 行为一致: 复位错误状态, 避免插件被标记为出错
+        target->error = AMX_ERR_NONE;
+        target->hea = origHea;
+        lua_pushnil(L);
+        lua_pushfstring(L, "%s: call '%s' failed (error %d)", apiName, funcName, err);
+        return 2;
+    }
+
+    // 4. 压入返回值 (引用值须在恢复堆之前读取)
+    int pushed = 0;
+
+    if (retType == 'f')
+    {
+        union { cell c; float f; } u;
+        u.c = pawnRet;
+        lua_pushnumber(L, u.f);
+    }
+    else if (retType == 'v')
+    {
+        lua_pushboolean(L, 1);
+    }
+    else
+    {
+        lua_pushinteger(L, pawnRet);
+    }
+    ++pushed;
+
+    // 引用输出与 spec 声明顺序一致
+    for (int i = 0; i < numByrefs; ++i)
+    {
+        if (byrefs[i].type == 'I')
+        {
+            lua_pushinteger(L, byrefs[i].phys[0]);
+        }
+        else if (byrefs[i].type == 'F')
+        {
+            union { cell c; float f; } u;
+            u.c = byrefs[i].phys[0];
+            lua_pushnumber(L, u.f);
+        }
+        else if (byrefs[i].type == 'S')
+        {
+            char buf[LUA_PAWNCALL_STRBUF];
+            int max = byrefs[i].cells - 1;
+            int k = 0;
+            for (; k < max && byrefs[i].phys[k]; ++k)
+            {
+                buf[k] = (char)(byrefs[i].phys[k] & 0xFF);
+            }
+            buf[k] = '\0';
+            lua_pushstring(L, buf);
+        }
+        else // 'A'
+        {
+            lua_createtable(L, byrefs[i].cells, 0);
+            for (int k = 0; k < byrefs[i].cells; ++k)
+            {
+                lua_pushinteger(L, byrefs[i].phys[k]);
+                lua_rawseti(L, -2, k + 1);
+            }
+        }
+        ++pushed;
+    }
+
+    // 5. 恢复堆指针, 释放本次调用全部分配
+    target->hea = origHea;
+
+    return pushed;
+}
+
+// ---------------------------------------------------------
+// 在指定 AMX 上直接调用 native: 从 natives 表取函数指针
+// params[0] 必须为参数字节数, 与 Pawn native 调用约定一致
+// ---------------------------------------------------------
+cell UTIL_ExecNative(AMX *amx, const char *Nativename, cell *params)
+{
+    int index;
+    if (!amx || MF_AmxFindNative(amx, Nativename, &index) != AMX_ERR_NONE)
+    {
+        return 0;
+    }
+    AMX_HEADER *hdr = (AMX_HEADER *)amx->base;
+    AMX_FUNCSTUBNT *stub = (AMX_FUNCSTUBNT *)(amx->base + (int)hdr->natives + index * hdr->defsize);
+    if (!stub->address)
+    {
+        return 0;
+    }
+    return ((AMX_NATIVE)(uintptr_t)stub->address)(amx, params);
+}
+
+static int L_call_pawn(lua_State *L)
+{
+    return LuaCallPawnOrNative(L, false);
+}
+
+static int L_call_native(lua_State *L)
+{
+    return LuaCallPawnOrNative(L, true);
+}
+
+
+// ---------------------------------------------------------
 // Native 实现: 生命周期
 // ---------------------------------------------------------
 void InitLuaAPI(lua_State* L) {
@@ -1730,6 +2269,10 @@ void InitLuaAPI(lua_State* L) {
     lua_register(L, "amxx2_set_es", L_set_es);
     lua_register(L, "amxx2_get_cd", L_get_cd);
     lua_register(L, "amxx2_set_cd", L_set_cd);
+    // 直接调用 SMA 插件 public 函数 (无需中转注册)
+    lua_register(L, "amxx2_call_pawn", L_call_pawn);
+    // 直接调用 AMXX native (核心/模块/register_native 注册的都行)
+    lua_register(L, "amxx2_call_native", L_call_native);
 }
 static cell AMX_NATIVE_CALL n_lua_open(AMX *amx, cell *params)
 {   
